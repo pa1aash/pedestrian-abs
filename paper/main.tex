@@ -1,0 +1,96 @@
+\documentclass[a4paper,twoside]{article}
+
+\usepackage{epsfig}
+\usepackage{subcaption}
+\usepackage{calc}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{multicol}
+\usepackage{pslatex}
+\usepackage{apalike}
+\usepackage[bottom]{footmisc}
+% Add your own packages BEFORE SCITEPRESS:
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{algorithm2e}
+\usepackage{SCITEPRESS}
+
+\begin{document}
+
+\title{Your Paper Title Here}
+
+\author{\authorname{First Author\sup{1}\orcidAuthor{0000-0000-0000-0000}, Second Author\sup{1}\orcidAuthor{0000-0000-0000-0000} and Third Author\sup{2}\orcidAuthor{0000-0000-0000-0000}}
+\affiliation{\sup{1}Department, University, City, Country}
+\affiliation{\sup{2}Department, University, City, Country}
+\email{first@example.com, second@example.com}
+}
+
+\keywords{Keyword One, Keyword Two, Keyword Three.}
+
+\abstract{Your abstract goes here. It should summarize the contents of the paper and contain between 70 and 200 words. The text must be set to 9-point font size and end with a period.}
+
+\onecolumn \maketitle \normalsize \setcounter{footnote}{0} \vfill
+
+\section{\uppercase{Introduction}}
+\label{sec:introduction}
+
+Your introduction here \cite{Smith98}.
+
+\section{\uppercase{Related Work}}
+
+Your related work here \cite{Moore99}.
+
+\section{\uppercase{Methodology}}
+
+Your methodology here.
+
+\subsection{Subsection Example}
+
+Subsection content here.
+
+% Example table:
+% \begin{table}[h]
+% \caption{Caption here.}\label{tab:example}
+% \centering
+% \begin{tabular}{|c|c|}
+%   \hline
+%   Column 1 & Column 2 \\
+%   \hline
+%   Text 1 & Text 2 \\
+%   \hline
+% \end{tabular}
+% \end{table}
+
+% Example figure:
+% \begin{figure}[!h]
+%   \centering
+%   {\epsfig{file = yourfigure.eps, width = 5.5cm}}
+%   \caption{Caption here.}
+%   \label{fig:example}
+% \end{figure}
+
+% Example equation:
+% \begin{equation}\label{eq1}
+%     a = b + c
+% \end{equation}
+
+\section{\uppercase{Results}}
+
+Your results here.
+
+\section{\uppercase{Conclusions}}
+\label{sec:conclusion}
+
+Your conclusions here.
+
+\section*{\uppercase{Acknowledgements}}
+
+Optional acknowledgements here.
+
+\bibliographystyle{apalike}
+{\small
+\bibliography{references}}
+
+\end{document}
