@@ -27,3 +27,10 @@
 - **Tests:** 6 new, 53 total, 53 passing
 - **Gates:** analytical τ=0.75 ✓, pytest 53/53 ✓, audit.sh ✓
 - **Issues:** none
+
+## Phase 5 — ORCA
+- **Date:** 2026-04-02
+- **Built:** sim/steering/orca.py (341 lines), tests/test_orca.py
+- **Tests:** 5 new, 58 total, 58 passing
+- **Gates:** incremental LP ✓, scipy fallback ✓, four-agent crossing min_dist>0.3 ✓, pytest 58/58 ✓, audit.sh ✓
+- **Issues:** severe overlaps produce infeasible LP constraints (by design — SFM body forces handle contact separation)
