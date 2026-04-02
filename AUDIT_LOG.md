@@ -80,3 +80,13 @@
 - **Tables (4):** parameters.tex, ablation.tex, scaling.tex, crush.tex
 - **Gates:** all figures render as PDF ✓, all tables valid LaTeX ✓
 - **Issues:** none
+
+## Logic Audit — 6 Fixes
+- **Date:** 2026-04-02
+- **FIX 1:** CorridorFDScenario with continuous injection (injection_rate agents/s, warmup 5s, measure 15s). inject_agents() added to Simulation. Free-flow speed now 1.3-1.5 m/s (was 0.28). FD data in fd_C{1-4}.csv.
+- **FIX 2:** Empirical FD measurement area corrected to (-4,0,4,3.6) matching actual FZJ corridor (x: -15 to 9, y: 0 to 3.6). fps fixed to 16 in calibrate.py. Speed at density>5 now 0.50 m/s (plausible).
+- **FIX 3:** ORCA configs (C3/C4) limited to feasible agent counts: FD rates [1-7], bottleneck 50, bidir/cross 30 per direction.
+- **FIX 4:** D-configs now use C2 base (SFM+TTC+crush) instead of SFM-only. More honest representation of the hybrid framework.
+- **FIX 5:** Bottleneck w=0.8 added. w=1.0/1.8 C4 still computing.
+- **FIX 6:** Density heatmap uses 200-agent funnel at 0.5m cell resolution. 1500 steps to build congestion.
+- **Re-run:** FD C1-C3, bottleneck widths, ablation C2, crush D1-D3, scaling. All figures and tables regenerated.
