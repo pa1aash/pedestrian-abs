@@ -1,7 +1,7 @@
 """Crush regime: enhanced contact forces with no social repulsion.
 
 Same structure as SFM contact forces but 3x body compression and 2x friction.
-Activated at high densities via the hybrid model's sigmoid weighting.
+Fully vectorized using NumPy broadcasting.
 Parameters: k_crush=360000, kappa_crush=480000.
 """
 
@@ -35,7 +35,7 @@ class CrushRegime:
         agent_state: AgentState,
         neighbor_lists: list[list[int]],
     ) -> np.ndarray:
-        """Compute crush-regime contact forces for all agents.
+        """Compute crush-regime contact forces (vectorized).
 
         Args:
             agent_state: Current state of all agents.
@@ -45,37 +45,44 @@ class CrushRegime:
             Forces array of shape (N, 2).
         """
         n = agent_state.n
-        forces = np.zeros((n, 2))
         pos = agent_state.positions
         vel = agent_state.velocities
         radii = agent_state.radii
         active = agent_state.active
 
+        # Pairwise differences
+        diff = pos[:, None, :] - pos[None, :, :]          # (N, N, 2)
+        dist = np.linalg.norm(diff, axis=2)                # (N, N)
+        dist = np.maximum(dist, 1e-6)
+
+        n_ij = diff / dist[:, :, None]                     # (N, N, 2)
+        t_ij = np.stack([-n_ij[:, :, 1], n_ij[:, :, 0]], axis=2)
+
+        r_ij = radii[:, None] + radii[None, :]
+        overlap = np.maximum(0.0, r_ij - dist)
+
+        # Mask: active, not self, in neighbor list, and overlapping
+        mask = active[:, None] & active[None, :]
+        np.fill_diagonal(mask, False)
+
+        nb_mask = np.zeros((n, n), dtype=bool)
         for i in range(n):
-            if not active[i]:
-                continue
-            for j in neighbor_lists[i]:
-                if j == i or not active[j]:
-                    continue
+            if active[i] and neighbor_lists[i]:
+                nbs = np.array(neighbor_lists[i])
+                nb_mask[i, nbs] = True
+        mask &= nb_mask
+        mask &= (overlap > 0)  # crush only on contact
 
-                diff = pos[i] - pos[j]
-                d_ij = max(np.linalg.norm(diff), 1e-6)
-                n_ij = diff / d_ij
-                t_ij = np.array([-n_ij[1], n_ij[0]])
+        # Body compression (enhanced)
+        body_mag = self.k_crush * overlap * mask
+        f_body = body_mag[:, :, None] * n_ij
 
-                r_ij = radii[i] + radii[j]
-                overlap = max(0.0, r_ij - d_ij)
+        # Sliding friction (enhanced)
+        dv = vel[None, :, :] - vel[:, None, :]
+        dv_dot_t = np.sum(dv * t_ij, axis=2)
+        friction_mag = self.kappa_crush * overlap * dv_dot_t * mask
+        f_friction = friction_mag[:, :, None] * t_ij
 
-                if overlap <= 0:
-                    continue  # no contact, no crush force
-
-                # Body compression (enhanced)
-                f_body = self.k_crush * overlap * n_ij
-
-                # Sliding friction (enhanced)
-                dv_ji = vel[j] - vel[i]
-                f_friction = self.kappa_crush * overlap * np.dot(dv_ji, t_ij) * t_ij
-
-                forces[i] += f_body + f_friction
+        forces = np.sum(f_body + f_friction, axis=1)
 
         return check_forces(forces, "crush")

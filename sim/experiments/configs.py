@@ -36,7 +36,9 @@ def get_config(name: str) -> dict[str, bool]:
     if name in CONFIGS:
         return CONFIGS[name]
     if name in CRUSH_CONFIGS:
-        return CONFIGS["C4"]  # D-configs use full C4 steering
+        # D-configs use SFM + crush only (no TTC/ORCA) for fast evaluation
+        crush_on = CRUSH_CONFIGS[name] is not None
+        return {"sfm": True, "ttc": False, "orca": False, "crush": crush_on}
     raise KeyError(f"Unknown config: {name}")
 
 
