@@ -4,55 +4,35 @@ import numpy as np
 import pandas as pd
 
 
-def extract_speed_density(
+def compute_empirical_fd(
     df: pd.DataFrame,
+    measurement_area: tuple[float, float, float, float],
     fps: float = 25.0,
-    radius: float = 2.0,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Compute per-pedestrian speed and local density from tracking data.
+) -> pd.DataFrame:
+    """Compute speed-density per frame within a measurement area.
 
     Args:
-        df: DataFrame with frame_id, ped_id, x, y columns.
-        fps: Frame rate of the tracking data.
-        radius: Counting radius for local density.
+        df: DataFrame with frame_id, ped_id, x, y, speed columns.
+        measurement_area: (x_min, y_min, x_max, y_max) bounding box.
+        fps: Frame rate (unused, speeds should already be computed).
 
     Returns:
-        (densities, speeds) arrays.
+        DataFrame with frame_id, mean_density, mean_speed columns.
     """
-    df = df.sort_values(["ped_id", "frame_id"])
+    x0, y0, x1, y1 = measurement_area
+    area = (x1 - x0) * (y1 - y0)
 
-    # Compute speeds: displacement / time between frames
-    speeds_list = []
-    densities_list = []
+    mask = (df["x"] >= x0) & (df["x"] <= x1) & (df["y"] >= y0) & (df["y"] <= y1)
+    filtered = df[mask]
 
-    frames = sorted(df["frame_id"].unique())
-    if len(frames) < 2:
-        return np.array([]), np.array([])
-
-    dt = 1.0 / fps
-
-    for i in range(1, len(frames)):
-        f_prev, f_curr = frames[i - 1], frames[i]
-        prev = df[df["frame_id"] == f_prev].set_index("ped_id")
-        curr = df[df["frame_id"] == f_curr].set_index("ped_id")
-
-        common = prev.index.intersection(curr.index)
-        if len(common) < 2:
+    rows = []
+    for fid, g in filtered.groupby("frame_id"):
+        if len(g) < 2:
             continue
+        rows.append({
+            "frame_id": fid,
+            "mean_density": len(g) / area,
+            "mean_speed": g["speed"].mean(),
+        })
 
-        for pid in common:
-            p0 = prev.loc[pid, ["x", "y"]].values.astype(float)
-            p1 = curr.loc[pid, ["x", "y"]].values.astype(float)
-            speed = np.linalg.norm(p1 - p0) / (dt * (f_curr - f_prev))
-
-            # Local density: count neighbors within radius
-            all_pos = curr.loc[common, ["x", "y"]].values.astype(float)
-            pos_i = curr.loc[pid, ["x", "y"]].values.astype(float)
-            dists = np.linalg.norm(all_pos - pos_i, axis=1)
-            n_neighbors = np.sum(dists < radius) - 1  # exclude self
-            density = n_neighbors / (np.pi * radius * radius)
-
-            speeds_list.append(speed)
-            densities_list.append(density)
-
-    return np.array(densities_list), np.array(speeds_list)
+    return pd.DataFrame(rows)

@@ -55,3 +55,10 @@
 - **Tests:** 92 total, 92 passing (simulation.py _compile_results updated for full metrics)
 - **Gates:** CSV output ✓ (bottleneck C1 2 reps, evac=53.5s), optimizer ✓ (nelder-mead 5 evals), pytest 92/92 ✓, audit.sh ✓
 - **Issues:** none
+
+## Phase 9 — Data Loading + Calibration
+- **Date:** 2026-04-02
+- **Built:** sim/data/loader.py rewritten (98 lines), sim/data/fundamental_diagram.py rewritten (30 lines), scripts/calibrate.py (53 lines)
+- **Tests:** 92 total, 92 passing
+- **Gates:** FZJ data loaded ✓ (2.6M rows, 952 peds, mean speed=0.82 m/s), empirical FD extracted ✓ (4436 frames, density [0.19, 11.20]), Weidmann curve ✓, calibrate.py produces CSV+PDF ✓, pytest 92/92 ✓
+- **Issues:** fixed FZJ column order (ped_id frame_id x y z, not frame_id ped_id x y), fixed fps=16 (not 25), fixed add_velocities to use actual frame gaps
