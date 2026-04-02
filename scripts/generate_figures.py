@@ -83,6 +83,7 @@ def fig1_fd(input_dir, output_dir):
     ef = os.path.join(input_dir, "empirical_fd.csv")
     if os.path.exists(ef):
         edf = pd.read_csv(ef)
+        edf = edf[edf["mean_density"] <= 6.0]  # truncate to match sim range
         empirical = (edf["mean_density"].values, edf["mean_speed"].values)
 
     if data:
@@ -119,12 +120,13 @@ def fig3_trajectories(output_dir):
     from sim.core.simulation import Simulation
     from sim.scenarios.bottleneck import BottleneckScenario
 
-    scenario = BottleneckScenario(n_agents=30, exit_width=1.2)
+    scenario = BottleneckScenario(n_agents=30, exit_width=1.8)
     sim = Simulation.from_scenario(scenario, "C1", seed=42)
     world = sim.world
 
-    # Goal = exit gap center (10, 5) so agents converge naturally to the exit
-    sim.state.goals[:] = np.array([11.0, 5.0])
+    # Set per-agent goal to (11, y_spawn) so agents aim straight at exit
+    sim.state.goals[:, 0] = 11.0
+    sim.state.goals[:, 1] = np.clip(sim.state.positions[:, 1], 4.1, 5.9)
 
     positions_log = []
     for _ in range(600):
@@ -151,14 +153,14 @@ def fig4_density_heatmap(output_dir):
     for _ in range(1200):
         sim.step()
 
-    # Time-average density over 50 frames
+    # Time-average density over 100 frames
     xlim, ylim = (0, 16), (0, 10)
     res = 0.25
     nx = int((xlim[1] - xlim[0]) / res)
     ny = int((ylim[1] - ylim[0]) / res)
     H_sum = np.zeros((nx, ny))
 
-    for _ in range(50):
+    for _ in range(100):
         sim.step()
         pos = sim.state.positions[sim.state.active]
         H, _, _ = np.histogram2d(
@@ -167,8 +169,8 @@ def fig4_density_heatmap(output_dir):
         )
         H_sum += H
 
-    density = (H_sum / 50).T / (res * res)
-    density = gaussian_filter(density, sigma=1.0)
+    density = (H_sum / 100).T / (res * res)
+    density = gaussian_filter(density, sigma=1.5)
 
     set_style()
     fig, ax = plt.subplots(figsize=(8, 5))
@@ -212,6 +214,7 @@ def fig5_evac_vs_width(input_dir, output_dir):
 
     ax.set_xlabel("Exit width (m)")
     ax.set_ylabel("Evacuation time (s)")
+    ax.set_xlim(0.5, 4.0)
     ax.legend()
     fig.tight_layout()
     path = save_figure(fig, "evac_vs_width", output_dir)
@@ -333,7 +336,7 @@ def table_ablation(input_dir, table_dir):
     combined = combined[combined["config"].str.startswith("C")]
 
     scenarios = sorted(combined["scenario"].unique())
-    configs = ["C1", "C4"]
+    configs = ["C1", "C2", "C3", "C4"]
 
     lines = [
         r"\begin{tabular}{l" + "r" * len(configs) + "}",

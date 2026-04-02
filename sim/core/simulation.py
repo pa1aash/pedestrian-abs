@@ -157,8 +157,8 @@ class Simulation:
         """
         new = AgentState.create(
             n,
-            spawn_area=(0.3, 1.5, 0.15, 0.85),
-            goals=np.array([21.0, 0.5]),
+            spawn_area=(0.3, 2.0, 0.3, 3.3),
+            goals=np.array([26.0, 1.8]),
             seed=seed,
         )
         # Append to existing state
@@ -210,10 +210,10 @@ class Simulation:
 
             self.step()
 
-            # Deactivate agents past corridor exit (x > 19.5)
+            # Deactivate agents past corridor exit
             if inj_rate > 0:
                 past_exit = np.where(
-                    self.state.active & (self.state.positions[:, 0] > 19.5)
+                    self.state.active & (self.state.positions[:, 0] > 24.5)
                 )[0]
                 self.state.deactivate(past_exit)
 

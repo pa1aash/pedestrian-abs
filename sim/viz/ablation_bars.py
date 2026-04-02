@@ -24,8 +24,8 @@ def plot_ablation_bars(
         Path to saved figure.
     """
     set_style()
-    scenarios = df["scenario"].unique()
-    configs = sorted(df["config"].unique())
+    scenarios = sorted(df["scenario"].unique())
+    configs = ["C1", "C2", "C3", "C4"]  # force all 4 in order
 
     x = np.arange(len(scenarios))
     width = 0.8 / len(configs)

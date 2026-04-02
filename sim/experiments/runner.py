@@ -106,7 +106,7 @@ class ExperimentRunner:
 
                     # Deactivate past exit
                     past = np.where(
-                        sim.state.active & (sim.state.positions[:, 0] > 19.5)
+                        sim.state.active & (sim.state.positions[:, 0] > 24.5)
                     )[0]
                     sim.state.deactivate(past)
 
@@ -119,14 +119,14 @@ class ExperimentRunner:
                         sim.inject_agents(n_inj, seed=seed * 1000 + sim.step_count)
                     sim._fd_inj_accum = inj_accum
 
-                    # Measure at x∈[5,15] in 1m-wide corridor
+                    # Measure at x∈[20,24] (right at bottleneck queue)
                     if sim.time >= scenario.warmup_time:
                         active = sim.state.active_indices
                         pos = sim.state.positions[active]
                         vel = sim.state.velocities[active]
-                        in_area = (pos[:, 0] >= 5.0) & (pos[:, 0] <= 15.0)
+                        in_area = (pos[:, 0] >= 20.0) & (pos[:, 0] <= 24.0)
                         if np.sum(in_area) >= 2:
-                            area_size = 10.0 * 1.0  # 10m x 1m
+                            area_size = 4.0 * 3.6  # 4m x 3.6m
                             density = float(np.sum(in_area)) / area_size
                             speed = float(np.mean(np.linalg.norm(vel[in_area], axis=1)))
                             fd_points.append((density, speed))

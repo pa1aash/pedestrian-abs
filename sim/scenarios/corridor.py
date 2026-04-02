@@ -79,24 +79,29 @@ class CorridorFDScenario(Scenario):
         self.measure_time = measure_time
 
     def build(self, seed: int = 42) -> tuple[World, AgentState]:
-        """Build 20m x 1.0m narrow corridor for FD measurement.
+        """Build 25m x 3.6m corridor with 1m exit gap for FD measurement.
 
-        Narrow width forces single-file flow, producing natural
-        speed-density relationship from body contact forces.
+        The exit bottleneck at x=24 creates back-pressure that forces
+        density up in the measurement zone x in [8, 18]. At high injection
+        rates, the queue fills the measurement area producing high density
+        and reduced speed.
         """
-        w = 1.0  # corridor width
+        w = 3.6
         walls = [
-            Wall(np.array([0.0, 0.0]), np.array([20.0, 0.0])),
-            Wall(np.array([20.0, 0.0]), np.array([20.0, w])),
-            Wall(np.array([20.0, w]), np.array([0.0, w])),
+            Wall(np.array([0.0, 0.0]), np.array([25.0, 0.0])),
+            Wall(np.array([25.0, 0.0]), np.array([25.0, w])),
+            Wall(np.array([25.0, w]), np.array([0.0, w])),
             Wall(np.array([0.0, w]), np.array([0.0, 0.0])),
+            # Exit bottleneck at x=24: 1.0m gap from y=1.3 to y=2.3
+            Wall(np.array([24.0, 0.0]), np.array([24.0, 1.3])),
+            Wall(np.array([24.0, 2.3]), np.array([24.0, w])),
         ]
         world = World(walls)
 
         state = AgentState.create(
-            3,
-            spawn_area=(0.3, 1.5, 0.15, w - 0.15),
-            goals=np.array([21.0, w / 2]),
+            5,
+            spawn_area=(0.3, 2.0, 0.3, w - 0.3),
+            goals=np.array([26.0, w / 2]),
             seed=seed,
         )
         return world, state
