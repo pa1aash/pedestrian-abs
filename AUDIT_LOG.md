@@ -72,3 +72,11 @@
 - **Gates:** CSV outputs ✓, scaling data ✓, all families represented ✓
 - **Issues:** C4/ORCA experiments CPU-intensive (ORCA per-agent LP)
 - **Final:** 22 CSV files, 1 optimizer JSON. All 6 families complete. Optimizer best=65.0 (barrier at x=5.5,y=5.0,len=1.84,angle=π/2)
+
+## Phase 11 — Generate All Figures + Tables
+- **Date:** 2026-04-02
+- **Built:** scripts/generate_figures.py rewritten (290 lines), paper/tables/ directory
+- **Figures (11):** fundamental_diagram, ablation_mean_speed, ablation_max_density, ablation_collision_count, trajectories (bottleneck live sim), density_heatmap (funnel live sim), evac_vs_width, scaling, risk_heatmap (funnel live + composite risk), convergence, empirical_fd
+- **Tables (4):** parameters.tex, ablation.tex, scaling.tex, crush.tex
+- **Gates:** all figures render as PDF ✓, all tables valid LaTeX ✓
+- **Issues:** none

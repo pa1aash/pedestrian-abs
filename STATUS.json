@@ -1,7 +1,7 @@
 {
-  "current_phase": 10,
-  "phases_completed": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-  "milestone": "ALL EXPERIMENTS COMPLETE",
+  "current_phase": 11,
+  "phases_completed": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+  "milestone": "FIGURES AND TABLES COMPLETE",
   "modules": {
     "sim/core/helpers.py": {"lines": 60, "tests": 0, "status": "complete"},
     "sim/core/agent.py": {"lines": 113, "tests": 5, "status": "complete"},
@@ -89,7 +89,19 @@
     "scaling_C1.csv": 5,
     "empirical_fd.csv": 4436
   },
-  "figures": {},
+  "figures": {
+    "fundamental_diagram.pdf": "Fig 1: 2x2 FD scatter + Weidmann + empirical",
+    "ablation_mean_speed.pdf": "Fig 2a: grouped bars mean speed",
+    "ablation_max_density.pdf": "Fig 2b: grouped bars max density",
+    "ablation_collision_count.pdf": "Fig 2c: grouped bars collisions",
+    "trajectories.pdf": "Fig 3: bottleneck paths colored by time",
+    "density_heatmap.pdf": "Fig 4: funnel peak density YlOrRd",
+    "evac_vs_width.pdf": "Fig 5: evacuation time vs exit width",
+    "scaling.pdf": "Fig 6: log-log agents vs ms/step",
+    "risk_heatmap.pdf": "Fig 7: funnel composite risk",
+    "convergence.pdf": "Fig 8: optimizer evaluations vs cost",
+    "empirical_fd.pdf": "Supplementary: FZJ empirical FD + Weidmann"
+  },
   "paper": {
     "abstract": "skeleton", "sec1": "skeleton", "sec2": "skeleton",
     "sec3": "skeleton", "sec4": "skeleton", "sec5": "skeleton", "sec6": "skeleton"
