@@ -68,17 +68,15 @@ def main():
 # ============================================================
 
 def fig1_fd(input_dir, output_dir):
-    """Fundamental diagram 2x2 with empirical + Weidmann."""
+    """Fundamental diagram 2x2 from continuous-injection fd_*.csv files."""
     from sim.viz.fundamental_diagram import plot_fundamental_diagram, weidmann_speed
 
-    # Build simulated density/speed from corridor CSVs (use mean_speed as proxy)
     data = {}
     for cfg in ["C1", "C2", "C3", "C4"]:
-        f = os.path.join(input_dir, f"CorridorScenario_{cfg}.csv")
+        f = os.path.join(input_dir, f"fd_{cfg}.csv")
         if os.path.exists(f):
             df = pd.read_csv(f)
-            # Use max_density and mean_speed per run as FD points
-            data[cfg] = (df["max_density"].values, df["mean_speed"].values)
+            data[cfg] = (df["density"].values, df["speed"].values)
 
     # Empirical data
     empirical = None
@@ -87,8 +85,11 @@ def fig1_fd(input_dir, output_dir):
         edf = pd.read_csv(ef)
         empirical = (edf["mean_density"].values, edf["mean_speed"].values)
 
-    path = plot_fundamental_diagram(data, empirical=empirical, output_dir=output_dir)
-    print(f"Fig 1: {path}")
+    if data:
+        path = plot_fundamental_diagram(data, empirical=empirical, output_dir=output_dir)
+        print(f"Fig 1: {path}")
+    else:
+        print("Fig 1: skipped (no fd_*.csv files)")
 
 
 def fig2_ablation(input_dir, output_dir):
@@ -134,16 +135,16 @@ def fig3_trajectories(output_dir):
 
 
 def fig4_density_heatmap(output_dir):
-    """Run funnel sim and capture peak-density snapshot."""
+    """Run 200-agent funnel sim and capture peak-density snapshot."""
     from sim.core.simulation import Simulation
     from sim.scenarios.funnel import FunnelScenario
 
-    scenario = FunnelScenario(n_agents=150)
+    scenario = FunnelScenario(n_agents=200)
     sim = Simulation.from_scenario(scenario, "C1", seed=42,
                                     param_overrides={"neighbor_radius": 1.5})
 
     # Run until congestion builds
-    for _ in range(800):
+    for _ in range(1500):
         sim.step()
 
     from sim.viz.heatmaps import plot_density_heatmap
@@ -198,7 +199,7 @@ def fig6_scaling(input_dir, output_dir):
 
 
 def fig7_risk_heatmap(output_dir):
-    """Run funnel sim and compute composite risk."""
+    """Run 200-agent funnel sim and compute composite risk."""
     from sim.core.simulation import Simulation
     from sim.scenarios.funnel import FunnelScenario
     from sim.density.grid import GridDensityEstimator
@@ -206,10 +207,10 @@ def fig7_risk_heatmap(output_dir):
     from sim.density.risk import CompositeRiskMetric
     from scipy.spatial import KDTree
 
-    scenario = FunnelScenario(n_agents=150)
+    scenario = FunnelScenario(n_agents=200)
     sim = Simulation.from_scenario(scenario, "C1", seed=42,
                                     param_overrides={"neighbor_radius": 1.5})
-    for _ in range(800):
+    for _ in range(1500):
         sim.step()
 
     active = sim.state.active
@@ -361,7 +362,7 @@ def table_crush(input_dir, table_dir):
     ]
     thresholds = {"D1": "none", "D2": "5.0", "D3": "5.5", "D4": "7.0"}
     for d in ["D1", "D2", "D3", "D4"]:
-        f = os.path.join(input_dir, f"FunnelScenario_200_{d}.csv")
+        f = os.path.join(input_dir, f"Crush_{d}.csv")
         if os.path.exists(f):
             df = pd.read_csv(f)
             lines.append(

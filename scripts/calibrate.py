@@ -17,7 +17,7 @@ from sim.data.fundamental_diagram import compute_empirical_fd
 
 def main():
     data_dir = "data/fzj/unidirectional/"
-    df = load_fzj_all(data_dir, fps=25.0)
+    df = load_fzj_all(data_dir, fps=16.0)
 
     if df.empty:
         print(f"No FZJ data in {data_dir}.")
@@ -28,7 +28,8 @@ def main():
     print(f"Speed: mean={df['speed'].mean():.2f}, std={df['speed'].std():.2f}")
 
     # Measurement area (adjust per experiment geometry)
-    fd = compute_empirical_fd(df, measurement_area=(2.0, 0.0, 8.0, 1.8))
+    # FZJ corridor: x ~[-15, 9], y ~[0, 3.6]. Measure central section.
+    fd = compute_empirical_fd(df, measurement_area=(-4.0, 0.0, 4.0, 3.6))
 
     os.makedirs("results", exist_ok=True)
     fd.to_csv("results/empirical_fd.csv", index=False)

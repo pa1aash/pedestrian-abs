@@ -50,3 +50,54 @@ class CorridorScenario(Scenario):
     def is_complete(self, agent_state: AgentState, time: float) -> bool:
         """Complete when all agents have exited."""
         return agent_state.n_active == 0
+
+
+class CorridorFDScenario(Scenario):
+    """Corridor with continuous agent injection for fundamental diagram measurement.
+
+    Agents are injected at a configurable rate at the left boundary.
+    Density-speed pairs are measured in the area x in [2, 8] after warmup.
+
+    Args:
+        injection_rate: Agents per second to inject.
+        warmup_time: Seconds before measurement starts.
+        measure_time: Seconds of data collection.
+    """
+
+    injection_rate: float
+    warmup_time: float
+    measure_time: float
+
+    def __init__(
+        self,
+        injection_rate: float = 5.0,
+        warmup_time: float = 5.0,
+        measure_time: float = 15.0,
+    ):
+        self.injection_rate = injection_rate
+        self.warmup_time = warmup_time
+        self.measure_time = measure_time
+
+    def build(self, seed: int = 42) -> tuple[World, AgentState]:
+        """Build corridor with a small initial batch of agents."""
+        walls = [
+            Wall(np.array([0.0, 0.0]), np.array([10.0, 0.0])),
+            Wall(np.array([10.0, 0.0]), np.array([10.0, 3.6])),
+            Wall(np.array([10.0, 3.6]), np.array([0.0, 3.6])),
+            Wall(np.array([0.0, 3.6]), np.array([0.0, 0.0])),
+        ]
+        world = World(walls)
+
+        # Start with 5 agents
+        state = AgentState.create(
+            5,
+            spawn_area=(0.3, 1.5, 0.3, 3.3),
+            goals=np.array([10.5, 1.8]),
+            seed=seed,
+        )
+        state.goals[:, 1] = state.positions[:, 1]
+        return world, state
+
+    def is_complete(self, agent_state: AgentState, time: float) -> bool:
+        """Complete after warmup + measure time."""
+        return time >= self.warmup_time + self.measure_time

@@ -148,6 +148,31 @@ class Simulation:
         self.metrics_log.append(metrics)
         return metrics
 
+    def inject_agents(self, n: int, seed: int) -> None:
+        """Inject new agents at the left boundary of the corridor.
+
+        Args:
+            n: Number of agents to inject.
+            seed: Random seed for placement.
+        """
+        new = AgentState.create(
+            n,
+            spawn_area=(0.3, 1.5, 0.3, 3.3),
+            goals=np.array([10.5, 1.8]),
+            seed=seed,
+        )
+        new.goals[:, 1] = new.positions[:, 1]
+        # Append to existing state
+        s = self.state
+        s.positions = np.vstack([s.positions, new.positions])
+        s.velocities = np.vstack([s.velocities, new.velocities])
+        s.goals = np.vstack([s.goals, new.goals])
+        s.radii = np.concatenate([s.radii, new.radii])
+        s.desired_speeds = np.concatenate([s.desired_speeds, new.desired_speeds])
+        s.masses = np.concatenate([s.masses, new.masses])
+        s.taus = np.concatenate([s.taus, new.taus])
+        s.active = np.concatenate([s.active, new.active])
+
     def run(
         self, max_steps: int = 10000, max_time: float | None = None
     ) -> dict:
@@ -162,12 +187,37 @@ class Simulation:
         """
         if max_time is None:
             max_time = self.params.get("max_time", 300.0)
+
+        # Check if scenario uses continuous injection
+        scenario = getattr(self, '_scenario', None)
+        inj_rate = getattr(scenario, 'injection_rate', 0) if scenario else 0
+        inj_accum = 0.0
+        inj_seed_counter = 10000
+
         while (
             self.step_count < max_steps
             and self.time < max_time
             and self.state.n_active > 0
         ):
+            # Inject agents if configured
+            if inj_rate > 0:
+                dt = self.params.get("dt", 0.01)
+                inj_accum += inj_rate * dt
+                if inj_accum >= 1.0:
+                    n_inject = int(inj_accum)
+                    inj_accum -= n_inject
+                    self.inject_agents(n_inject, seed=inj_seed_counter)
+                    inj_seed_counter += 1
+
             self.step()
+
+            # Deactivate agents past corridor exit (x > 9.5)
+            if inj_rate > 0:
+                past_exit = np.where(
+                    self.state.active & (self.state.positions[:, 0] > 9.5)
+                )[0]
+                self.state.deactivate(past_exit)
+
         return self._compile_results()
 
     @classmethod
@@ -207,7 +257,9 @@ class Simulation:
             flat.update(param_overrides)
         config = get_config(config_name)
         steering = HybridSteeringModel(config, flat)
-        return cls(world, agent_state, steering, EulerIntegrator(), flat)
+        sim = cls(world, agent_state, steering, EulerIntegrator(), flat)
+        sim._scenario = scenario
+        return sim
 
     def _compile_results(self) -> dict:
         """Compile summary statistics from the simulation run.
