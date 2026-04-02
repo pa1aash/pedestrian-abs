@@ -13,3 +13,10 @@
 - **Tests:** 20 new, 32 total, 32 passing
 - **Gates:** all imports OK, pytest 32/32 ✓, audit.sh ✓
 - **Issues:** none
+
+## Phase 3 — SFM + Wall Forces
+- **Date:** 2026-04-02
+- **Built:** sim/steering/sfm.py (92 lines), sim/steering/walls.py (94 lines), tests/test_sfm.py, tests/test_walls.py
+- **Tests:** 15 new, 47 total, 47 passing
+- **Gates:** all imports OK, pytest 47/47 ✓, physics sanity (30 agents corridor 300 steps, mean_speed=1.10) ✓, audit.sh ✓
+- **Issues:** none
