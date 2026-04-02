@@ -119,28 +119,28 @@ class ExperimentRunner:
                         sim.inject_agents(n_inj, seed=seed * 1000 + sim.step_count)
                     sim._fd_inj_accum = inj_accum
 
-                    # Measure in x∈[10,15] (just upstream of narrowing at x=16)
+                    # Measure at x∈[12,16] (congestion zone upstream of narrowing)
                     if sim.time >= scenario.warmup_time:
                         active = sim.state.active_indices
                         pos = sim.state.positions[active]
                         vel = sim.state.velocities[active]
-                        in_area = (pos[:, 0] >= 10.0) & (pos[:, 0] <= 15.0)
+                        in_area = (pos[:, 0] >= 12.0) & (pos[:, 0] <= 16.0)
                         if np.sum(in_area) >= 2:
-                            area_size = 5.0 * 3.6  # 5m x 3.6m
+                            area_size = 4.0 * 3.6  # 4m x 3.6m
                             density = float(np.sum(in_area)) / area_size
                             speed = float(np.mean(np.linalg.norm(vel[in_area], axis=1)))
                             fd_points.append((density, speed))
 
-                # Average over measurement window
-                if fd_points:
-                    densities = [p[0] for p in fd_points]
-                    speeds = [p[1] for p in fd_points]
+                # Record per-frame measurements, subsample for manageable size
+                step = max(1, len(fd_points) // 50)  # ~50 points per rep
+                for idx in range(0, len(fd_points), step):
+                    d, s = fd_points[idx]
                     rows.append({
                         "config": config_name,
                         "injection_rate": rate,
                         "rep": rep,
-                        "density": float(np.mean(densities)),
-                        "speed": float(np.mean(speeds)),
+                        "density": d,
+                        "speed": s,
                     })
                 print(f"  FD {config_name} rate={rate} rep={rep}: "
                       f"rho={rows[-1]['density']:.2f} v={rows[-1]['speed']:.2f}" if rows else "  (no data)")

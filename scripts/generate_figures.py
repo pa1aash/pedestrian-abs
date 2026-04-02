@@ -123,8 +123,8 @@ def fig3_trajectories(output_dir):
     sim = Simulation.from_scenario(scenario, "C1", seed=42)
     world = sim.world
 
-    # Fix goal to (11, y_spawn) so agents aim straight through
-    sim.state.goals[:, 1] = sim.state.positions[:, 1]
+    # Goal = exit gap center (10, 5) so agents converge naturally to the exit
+    sim.state.goals[:] = np.array([11.0, 5.0])
 
     positions_log = []
     for _ in range(600):

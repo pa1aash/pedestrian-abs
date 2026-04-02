@@ -89,9 +89,9 @@ class CorridorFDScenario(Scenario):
             Wall(np.array([20.0, 0.0]), np.array([20.0, 3.6])),   # right
             Wall(np.array([20.0, 3.6]), np.array([0.0, 3.6])),    # top
             Wall(np.array([0.0, 3.6]), np.array([0.0, 0.0])),     # left
-            # Exit narrowing at x=16: gap from y=1.3 to y=2.3 (1m wide)
-            Wall(np.array([16.0, 0.0]), np.array([16.0, 1.3])),   # bottom barrier
-            Wall(np.array([16.0, 2.3]), np.array([16.0, 3.6])),   # top barrier
+            # Exit narrowing at x=16: gap from y=1.5 to y=2.1 (0.6m wide)
+            Wall(np.array([16.0, 0.0]), np.array([16.0, 1.5])),   # bottom barrier
+            Wall(np.array([16.0, 2.1]), np.array([16.0, 3.6])),   # top barrier
         ]
         world = World(walls)
 
