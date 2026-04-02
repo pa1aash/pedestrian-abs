@@ -6,3 +6,10 @@
 - **Tests:** 12 new, 12 total, 12 passing
 - **Gates:** pip install ✓, all imports ✓, pytest 12/12 ✓, audit.sh ✓
 - **Issues:** pyproject.toml build-backend corrected from `setuptools.backends._legacy:_Backend` to `setuptools.build_meta`
+
+## Phase 2 — Core Loop
+- **Date:** 2026-04-02
+- **Built:** sim/core/integrator.py (90 lines), sim/steering/base.py (33 lines), sim/steering/desired.py (37 lines), sim/core/simulation.py (172 lines), tests/test_integrator.py, tests/test_desired.py, tests/test_simulation.py
+- **Tests:** 20 new, 32 total, 32 passing
+- **Gates:** all imports OK, pytest 32/32 ✓, audit.sh ✓
+- **Issues:** none

@@ -1,14 +1,14 @@
 {
-  "current_phase": 1,
-  "phases_completed": [1],
+  "current_phase": 2,
+  "phases_completed": [1, 2],
   "modules": {
     "sim/core/helpers.py": {"lines": 60, "tests": 0, "status": "complete"},
     "sim/core/agent.py": {"lines": 113, "tests": 5, "status": "complete"},
     "sim/core/world.py": {"lines": 139, "tests": 7, "status": "complete"},
-    "sim/core/simulation.py": {"lines": 0, "tests": 0, "status": "stub"},
-    "sim/core/integrator.py": {"lines": 0, "tests": 0, "status": "stub"},
-    "sim/steering/base.py": {"lines": 0, "tests": 0, "status": "stub"},
-    "sim/steering/desired.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/core/integrator.py": {"lines": 90, "tests": 8, "status": "complete"},
+    "sim/core/simulation.py": {"lines": 172, "tests": 7, "status": "complete"},
+    "sim/steering/base.py": {"lines": 33, "tests": 0, "status": "complete"},
+    "sim/steering/desired.py": {"lines": 37, "tests": 5, "status": "complete"},
     "sim/steering/sfm.py": {"lines": 0, "tests": 0, "status": "stub"},
     "sim/steering/ttc.py": {"lines": 0, "tests": 0, "status": "stub"},
     "sim/steering/orca.py": {"lines": 0, "tests": 0, "status": "stub"},
@@ -41,7 +41,7 @@
     "sim/data/loader.py": {"lines": 0, "tests": 0, "status": "stub"},
     "sim/data/fundamental_diagram.py": {"lines": 0, "tests": 0, "status": "stub"}
   },
-  "tests": {"passing": 12, "total": 12},
+  "tests": {"passing": 32, "total": 32},
   "functions": {
     "check_forces": {
       "module": "sim.core.helpers",
@@ -70,6 +70,26 @@
     "agents_to_walls": {
       "module": "sim.core.world",
       "sig": "(positions: ndarray(N,2), walls: list[Wall]) -> (ndarray(N,W), ndarray(N,W,2))"
+    },
+    "EulerIntegrator.integrate": {
+      "module": "sim.core.integrator",
+      "sig": "(self, positions: ndarray(N,2), velocities: ndarray(N,2), forces: ndarray(N,2), masses: ndarray(N,), dt: float) -> (ndarray(N,2), ndarray(N,2))"
+    },
+    "RK4Integrator.integrate": {
+      "module": "sim.core.integrator",
+      "sig": "(self, positions: ndarray(N,2), velocities: ndarray(N,2), force_fn: Callable, masses: ndarray(N,), dt: float) -> (ndarray(N,2), ndarray(N,2))"
+    },
+    "compute_desired_force": {
+      "module": "sim.steering.desired",
+      "sig": "(positions: ndarray(N,2), velocities: ndarray(N,2), goals: ndarray(N,2), desired_speeds: ndarray(N,), masses: ndarray(N,), taus: ndarray(N,)) -> ndarray(N,2)"
+    },
+    "Simulation.step": {
+      "module": "sim.core.simulation",
+      "sig": "(self) -> dict"
+    },
+    "Simulation.run": {
+      "module": "sim.core.simulation",
+      "sig": "(self, max_steps: int = 10000, max_time: float | None = None) -> dict"
     }
   },
   "known_issues": [],
