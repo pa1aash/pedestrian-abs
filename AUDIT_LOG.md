@@ -70,4 +70,5 @@
 - **Scaling:** 50 agents=22ms/step, 100=64ms, 200=513ms, 500=2.8s, 1000=6.75s
 - **Tests:** 92 total, 92 passing
 - **Gates:** CSV outputs ✓, scaling data ✓, all families represented ✓
-- **Issues:** C4/ORCA experiments CPU-intensive (ORCA per-agent LP); remaining C4 runs still computing at commit time
+- **Issues:** C4/ORCA experiments CPU-intensive (ORCA per-agent LP)
+- **Final:** 22 CSV files, 1 optimizer JSON. All 6 families complete. Optimizer best=65.0 (barrier at x=5.5,y=5.0,len=1.84,angle=π/2)
