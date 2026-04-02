@@ -123,10 +123,13 @@ def fig3_trajectories(output_dir):
     sim = Simulation.from_scenario(scenario, "C1", seed=42)
     world = sim.world
 
+    # Fix goal to (11, y_spawn) so agents aim straight through
+    sim.state.goals[:, 1] = sim.state.positions[:, 1]
+
     positions_log = []
-    for _ in range(500):
+    for _ in range(600):
         sim.step()
-        if sim.step_count % 5 == 0:  # sample every 5 steps
+        if sim.step_count % 5 == 0:
             positions_log.append(sim.state.positions.copy())
 
     from sim.viz.trajectories import plot_trajectories
@@ -135,25 +138,54 @@ def fig3_trajectories(output_dir):
 
 
 def fig4_density_heatmap(output_dir):
-    """Run 200-agent funnel sim and capture peak-density snapshot."""
+    """Run 200-agent funnel sim, time-average density over 50 frames."""
     from sim.core.simulation import Simulation
     from sim.scenarios.funnel import FunnelScenario
+    from scipy.ndimage import gaussian_filter
 
     scenario = FunnelScenario(n_agents=200)
     sim = Simulation.from_scenario(scenario, "C1", seed=42,
                                     param_overrides={"neighbor_radius": 1.5})
 
     # Run until congestion builds
-    for _ in range(1500):
+    for _ in range(1200):
         sim.step()
 
-    from sim.viz.heatmaps import plot_density_heatmap
-    path = plot_density_heatmap(
-        sim.state.positions[sim.state.active],
-        xlim=(0, 16), ylim=(0, 10),
-        resolution=0.5, output_dir=output_dir,
-        name="density_heatmap",
+    # Time-average density over 50 frames
+    xlim, ylim = (0, 16), (0, 10)
+    res = 0.25
+    nx = int((xlim[1] - xlim[0]) / res)
+    ny = int((ylim[1] - ylim[0]) / res)
+    H_sum = np.zeros((nx, ny))
+
+    for _ in range(50):
+        sim.step()
+        pos = sim.state.positions[sim.state.active]
+        H, _, _ = np.histogram2d(
+            pos[:, 0], pos[:, 1],
+            bins=[nx, ny], range=[list(xlim), list(ylim)],
+        )
+        H_sum += H
+
+    density = (H_sum / 50).T / (res * res)
+    density = gaussian_filter(density, sigma=1.0)
+
+    set_style()
+    fig, ax = plt.subplots(figsize=(8, 5))
+    im = ax.imshow(
+        density, origin="lower", cmap="YlOrRd",
+        extent=[xlim[0], xlim[1], ylim[0], ylim[1]],
+        aspect="auto",
     )
+    # Draw funnel walls
+    ax.plot([0, 15], [0, 3.5], "k-", lw=1.5)
+    ax.plot([0, 15], [10, 6.5], "k-", lw=1.5)
+    ax.plot([0, 0], [0, 10], "k-", lw=1.5)
+    ax.set_xlabel("x (m)")
+    ax.set_ylabel("y (m)")
+    fig.colorbar(im, ax=ax, label="Density (ped/m²)")
+    fig.tight_layout()
+    path = save_figure(fig, "density_heatmap", output_dir)
     print(f"Fig 4: {path}")
 
 
@@ -164,7 +196,7 @@ def fig5_evac_vs_width(input_dir, output_dir):
 
     for cfg in ["C1", "C4"]:
         widths, evac_means, evac_lo, evac_hi = [], [], [], []
-        for w in [1.2, 2.4, 3.6]:
+        for w in [0.8, 1.0, 1.2, 1.8, 2.4, 3.6]:
             f = os.path.join(input_dir, f"Bottleneck_w{w}_{cfg}.csv")
             if os.path.exists(f):
                 df = pd.read_csv(f)

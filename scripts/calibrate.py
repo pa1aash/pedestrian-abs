@@ -17,7 +17,7 @@ from sim.data.fundamental_diagram import compute_empirical_fd
 
 def main():
     data_dir = "data/fzj/unidirectional/"
-    df = load_fzj_all(data_dir, fps=16.0)
+    df = load_fzj_all(data_dir)  # auto-reads fps from file headers
 
     if df.empty:
         print(f"No FZJ data in {data_dir}.")

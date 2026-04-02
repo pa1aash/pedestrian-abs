@@ -92,7 +92,7 @@ class ExperimentRunner:
             for rep in range(n_replications):
                 seed = 42 + rep
                 scenario = CorridorFDScenario(
-                    injection_rate=rate, warmup_time=5.0, measure_time=15.0,
+                    injection_rate=rate, warmup_time=10.0, measure_time=15.0,
                 )
                 sim = Simulation.from_scenario(scenario, config_name, seed=seed)
 
@@ -106,7 +106,7 @@ class ExperimentRunner:
 
                     # Deactivate past exit
                     past = np.where(
-                        sim.state.active & (sim.state.positions[:, 0] > 9.5)
+                        sim.state.active & (sim.state.positions[:, 0] > 19.5)
                     )[0]
                     sim.state.deactivate(past)
 
@@ -119,14 +119,14 @@ class ExperimentRunner:
                         sim.inject_agents(n_inj, seed=seed * 1000 + sim.step_count)
                     sim._fd_inj_accum = inj_accum
 
-                    # Measure during window
+                    # Measure in x∈[10,15] (just upstream of narrowing at x=16)
                     if sim.time >= scenario.warmup_time:
                         active = sim.state.active_indices
                         pos = sim.state.positions[active]
                         vel = sim.state.velocities[active]
-                        in_area = (pos[:, 0] >= 2.0) & (pos[:, 0] <= 8.0)
+                        in_area = (pos[:, 0] >= 10.0) & (pos[:, 0] <= 15.0)
                         if np.sum(in_area) >= 2:
-                            area_size = 6.0 * 3.6  # 6m x 3.6m
+                            area_size = 5.0 * 3.6  # 5m x 3.6m
                             density = float(np.sum(in_area)) / area_size
                             speed = float(np.mean(np.linalg.norm(vel[in_area], axis=1)))
                             fd_points.append((density, speed))

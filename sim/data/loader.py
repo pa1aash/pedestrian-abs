@@ -77,12 +77,31 @@ def add_velocities(df: pd.DataFrame, fps: float) -> pd.DataFrame:
     return df.dropna(subset=["vx"]).drop(columns=["dt"]).reset_index(drop=True)
 
 
-def load_fzj_all(directory: str, fps: float = 16.0) -> pd.DataFrame:
+def _read_fps_from_header(filepath: str) -> float:
+    """Read framerate from FZJ file header comment lines."""
+    try:
+        with open(filepath, "r", errors="ignore") as fh:
+            for line in fh:
+                if line.startswith("#") and "framerate" in line.lower():
+                    # e.g. "# framerate: 16 fps"
+                    parts = line.split(":")
+                    if len(parts) >= 2:
+                        return float(parts[1].strip().split()[0])
+                if not line.startswith("#"):
+                    break
+    except Exception:
+        pass
+    return 16.0  # default
+
+
+def load_fzj_all(directory: str, fps: float | None = None) -> pd.DataFrame:
     """Load all FZJ trajectory files from a directory and add velocities.
+
+    Reads per-file fps from headers. Falls back to provided fps or 16.0.
 
     Args:
         directory: Path to directory containing .txt files.
-        fps: Frame rate (FZJ default: 16 fps per file headers).
+        fps: Override frame rate (None = read from file headers).
 
     Returns:
         Combined DataFrame with velocities.
@@ -92,9 +111,11 @@ def load_fzj_all(directory: str, fps: float = 16.0) -> pd.DataFrame:
         return pd.DataFrame()
     dfs = []
     for f in files:
+        file_fps = fps if fps is not None else _read_fps_from_header(f)
         df = load_fzj(f)
-        df = add_velocities(df, fps)
+        df = add_velocities(df, file_fps)
         df["source_file"] = os.path.basename(f)
+        df["fps"] = file_fps
         dfs.append(df)
     return pd.concat(dfs, ignore_index=True)
 
