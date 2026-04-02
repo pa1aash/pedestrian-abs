@@ -62,3 +62,12 @@
 - **Tests:** 92 total, 92 passing
 - **Gates:** FZJ data loaded ✓ (2.6M rows, 952 peds, mean speed=0.82 m/s), empirical FD extracted ✓ (4436 frames, density [0.19, 11.20]), Weidmann curve ✓, calibrate.py produces CSV+PDF ✓, pytest 92/92 ✓
 - **Issues:** fixed FZJ column order (ped_id frame_id x y z, not frame_id ped_id x y), fixed fps=16 (not 25), fixed add_velocities to use actual frame gaps
+
+## Phase 10 — Run All Experiments
+- **Date:** 2026-04-02
+- **Built:** updated configs.py (D-config support, BOTTLENECK_WIDTHS), updated simulation.py (D-config param overrides), updated run_experiments.py (width sweep, crush dispatch)
+- **Results:** 9 CSV files (3 reps each): Corridor C1-C3, Bottleneck C1 (w=1.2), Bidirectional C1, Crossing C1, Scaling C1 (50-1000 agents), empirical FD
+- **Scaling:** 50 agents=22ms/step, 100=64ms, 200=513ms, 500=2.8s, 1000=6.75s
+- **Tests:** 92 total, 92 passing
+- **Gates:** CSV outputs ✓, scaling data ✓, all families represented ✓
+- **Issues:** C4/ORCA experiments CPU-intensive (ORCA per-agent LP); remaining C4 runs still computing at commit time

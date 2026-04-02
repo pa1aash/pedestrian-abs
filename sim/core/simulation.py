@@ -191,7 +191,7 @@ class Simulation:
         """
         import yaml
 
-        from sim.experiments.configs import get_config
+        from sim.experiments.configs import get_config, get_param_overrides
         from sim.steering.hybrid import HybridSteeringModel
 
         world, agent_state = scenario.build(seed=seed)
@@ -201,6 +201,8 @@ class Simulation:
         for v in params.values():
             if isinstance(v, dict):
                 flat.update(v)
+        # Apply D-config overrides first, then explicit overrides
+        flat.update(get_param_overrides(config_name))
         if param_overrides:
             flat.update(param_overrides)
         config = get_config(config_name)
