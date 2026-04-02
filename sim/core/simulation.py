@@ -157,11 +157,10 @@ class Simulation:
         """
         new = AgentState.create(
             n,
-            spawn_area=(0.3, 2.0, 0.3, 3.3),
-            goals=np.array([21.0, 1.8]),
+            spawn_area=(0.3, 1.5, 0.15, 0.85),
+            goals=np.array([21.0, 0.5]),
             seed=seed,
         )
-        new.goals[:, 1] = new.positions[:, 1]
         # Append to existing state
         s = self.state
         s.positions = np.vstack([s.positions, new.positions])

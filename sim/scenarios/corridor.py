@@ -79,30 +79,26 @@ class CorridorFDScenario(Scenario):
         self.measure_time = measure_time
 
     def build(self, seed: int = 42) -> tuple[World, AgentState]:
-        """Build 20m corridor with exit narrowing to create back-pressure.
+        """Build 20m x 1.0m narrow corridor for FD measurement.
 
-        A partial wall at x=18 leaves a 2m gap (y in [0.8, 2.8]),
-        forcing congestion upstream in the measurement area x in [5, 15].
+        Narrow width forces single-file flow, producing natural
+        speed-density relationship from body contact forces.
         """
+        w = 1.0  # corridor width
         walls = [
-            Wall(np.array([0.0, 0.0]), np.array([20.0, 0.0])),    # bottom
-            Wall(np.array([20.0, 0.0]), np.array([20.0, 3.6])),   # right
-            Wall(np.array([20.0, 3.6]), np.array([0.0, 3.6])),    # top
-            Wall(np.array([0.0, 3.6]), np.array([0.0, 0.0])),     # left
-            # Exit narrowing at x=16: gap from y=1.5 to y=2.1 (0.6m wide)
-            Wall(np.array([16.0, 0.0]), np.array([16.0, 1.5])),   # bottom barrier
-            Wall(np.array([16.0, 2.1]), np.array([16.0, 3.6])),   # top barrier
+            Wall(np.array([0.0, 0.0]), np.array([20.0, 0.0])),
+            Wall(np.array([20.0, 0.0]), np.array([20.0, w])),
+            Wall(np.array([20.0, w]), np.array([0.0, w])),
+            Wall(np.array([0.0, w]), np.array([0.0, 0.0])),
         ]
         world = World(walls)
 
-        # Start with 5 agents
         state = AgentState.create(
-            5,
-            spawn_area=(0.3, 2.0, 0.3, 3.3),
-            goals=np.array([21.0, 1.8]),
+            3,
+            spawn_area=(0.3, 1.5, 0.15, w - 0.15),
+            goals=np.array([21.0, w / 2]),
             seed=seed,
         )
-        state.goals[:, 1] = state.positions[:, 1]
         return world, state
 
     def is_complete(self, agent_state: AgentState, time: float) -> bool:
