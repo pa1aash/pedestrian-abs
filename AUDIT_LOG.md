@@ -34,3 +34,10 @@
 - **Tests:** 5 new, 58 total, 58 passing
 - **Gates:** incremental LP ✓, scipy fallback ✓, four-agent crossing min_dist>0.3 ✓, pytest 58/58 ✓, audit.sh ✓
 - **Issues:** severe overlaps produce infeasible LP constraints (by design — SFM body forces handle contact separation)
+
+## Phase 6 — Assembly (Crush + Hybrid + Smoke Tests) — **ENGINE COMPLETE**
+- **Date:** 2026-04-02
+- **Built:** sim/steering/crush.py (81 lines), sim/steering/hybrid.py (157 lines), sim/experiments/configs.py (34 lines), sim/core/simulation.py updated (+37 lines from_scenario), tests/test_crush.py, tests/test_hybrid.py, tests/test_smoke.py
+- **Tests:** 12 new, 70 total, 70 passing
+- **Gates:** C1-C4 all run ✓, evacuation C4 50 agents exits ✓, single-agent goal ✓, head-on deflection ✓, sigmoid weights ✓, pytest 70/70 ✓, audit.sh ✓
+- **Issues:** occasional force clamping warnings from TTC at high density (handled by check_forces)

@@ -1,20 +1,22 @@
 {
-  "current_phase": 5,
-  "phases_completed": [1, 2, 3, 4, 5],
+  "current_phase": 6,
+  "phases_completed": [1, 2, 3, 4, 5, 6],
+  "milestone": "ENGINE COMPLETE",
   "modules": {
     "sim/core/helpers.py": {"lines": 60, "tests": 0, "status": "complete"},
     "sim/core/agent.py": {"lines": 113, "tests": 5, "status": "complete"},
     "sim/core/world.py": {"lines": 139, "tests": 7, "status": "complete"},
     "sim/core/integrator.py": {"lines": 90, "tests": 8, "status": "complete"},
-    "sim/core/simulation.py": {"lines": 172, "tests": 7, "status": "complete"},
+    "sim/core/simulation.py": {"lines": 209, "tests": 7, "status": "complete"},
     "sim/steering/base.py": {"lines": 33, "tests": 0, "status": "complete"},
     "sim/steering/desired.py": {"lines": 37, "tests": 5, "status": "complete"},
     "sim/steering/sfm.py": {"lines": 92, "tests": 8, "status": "complete"},
     "sim/steering/walls.py": {"lines": 94, "tests": 7, "status": "complete"},
     "sim/steering/ttc.py": {"lines": 99, "tests": 6, "status": "complete"},
     "sim/steering/orca.py": {"lines": 341, "tests": 5, "status": "complete"},
-    "sim/steering/crush.py": {"lines": 0, "tests": 0, "status": "stub"},
-    "sim/steering/hybrid.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/steering/crush.py": {"lines": 81, "tests": 3, "status": "complete"},
+    "sim/steering/hybrid.py": {"lines": 157, "tests": 5, "status": "complete"},
+    "sim/experiments/configs.py": {"lines": 34, "tests": 0, "status": "complete"},
     "sim/density/base.py": {"lines": 0, "tests": 0, "status": "stub"},
     "sim/density/grid.py": {"lines": 0, "tests": 0, "status": "stub"},
     "sim/density/voronoi.py": {"lines": 0, "tests": 0, "status": "stub"},
@@ -28,7 +30,6 @@
     "sim/scenarios/bidirectional.py": {"lines": 0, "tests": 0, "status": "stub"},
     "sim/scenarios/crossing.py": {"lines": 0, "tests": 0, "status": "stub"},
     "sim/scenarios/funnel.py": {"lines": 0, "tests": 0, "status": "stub"},
-    "sim/experiments/configs.py": {"lines": 0, "tests": 0, "status": "stub"},
     "sim/experiments/runner.py": {"lines": 0, "tests": 0, "status": "stub"},
     "sim/experiments/analysis.py": {"lines": 0, "tests": 0, "status": "stub"},
     "sim/viz/style.py": {"lines": 0, "tests": 0, "status": "stub"},
@@ -41,7 +42,7 @@
     "sim/data/loader.py": {"lines": 0, "tests": 0, "status": "stub"},
     "sim/data/fundamental_diagram.py": {"lines": 0, "tests": 0, "status": "stub"}
   },
-  "tests": {"passing": 58, "total": 58},
+  "tests": {"passing": 70, "total": 70},
   "functions": {
     "check_forces": {
       "module": "sim.core.helpers",
@@ -91,6 +92,10 @@
       "module": "sim.core.simulation",
       "sig": "(self, max_steps: int = 10000, max_time: float | None = None) -> dict"
     },
+    "Simulation.from_scenario": {
+      "module": "sim.core.simulation",
+      "sig": "(cls, scenario, config_name: str = 'C1', seed: int = 42, param_overrides: dict | None = None) -> Simulation"
+    },
     "SocialForceModel.compute_agent_forces": {
       "module": "sim.steering.sfm",
       "sig": "(self, agent_state: AgentState, neighbor_lists: list[list[int]]) -> ndarray(N,2)"
@@ -106,9 +111,24 @@
     "ORCAModel.compute_orca_forces": {
       "module": "sim.steering.orca",
       "sig": "(self, agent_state: AgentState, neighbor_lists: list[list[int]]) -> ndarray(N,2)"
+    },
+    "CrushRegime.compute_crush_forces": {
+      "module": "sim.steering.crush",
+      "sig": "(self, agent_state: AgentState, neighbor_lists: list[list[int]]) -> ndarray(N,2)"
+    },
+    "HybridSteeringModel.compute_forces": {
+      "module": "sim.steering.hybrid",
+      "sig": "(self, agent_state: AgentState, neighbor_lists: list[list[int]], walls: list[Wall], local_densities: ndarray(N,)) -> ndarray(N,2)"
+    },
+    "get_config": {
+      "module": "sim.experiments.configs",
+      "sig": "(name: str) -> dict[str, bool]"
     }
   },
-  "known_issues": ["ORCA: severe overlaps produce infeasible LP constraints; SFM body forces handle contact separation"],
+  "known_issues": [
+    "ORCA: severe overlaps produce infeasible LP constraints; SFM body forces handle contact separation",
+    "Occasional TTC force clamping at high density (handled by check_forces)"
+  ],
   "last_audit": "2026-04-02",
   "experiments": {},
   "figures": {},

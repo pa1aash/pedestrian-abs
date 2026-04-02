@@ -154,6 +154,43 @@ class Simulation:
             self.step()
         return self._compile_results()
 
+    @classmethod
+    def from_scenario(
+        cls,
+        scenario,
+        config_name: str = "C1",
+        seed: int = 42,
+        param_overrides: dict | None = None,
+    ) -> "Simulation":
+        """Build a Simulation from a scenario object and config name.
+
+        Args:
+            scenario: Scenario with a build(seed) method returning (World, AgentState).
+            config_name: One of C1-C4.
+            seed: Random seed.
+            param_overrides: Optional dict to override params.yaml values.
+
+        Returns:
+            Configured Simulation instance.
+        """
+        import yaml
+
+        from sim.experiments.configs import get_config
+        from sim.steering.hybrid import HybridSteeringModel
+
+        world, agent_state = scenario.build(seed=seed)
+        with open("config/params.yaml") as f:
+            params = yaml.safe_load(f)
+        flat: dict = {}
+        for v in params.values():
+            if isinstance(v, dict):
+                flat.update(v)
+        if param_overrides:
+            flat.update(param_overrides)
+        config = get_config(config_name)
+        steering = HybridSteeringModel(config, flat)
+        return cls(world, agent_state, steering, EulerIntegrator(), flat)
+
     def _compile_results(self) -> dict:
         """Compile summary statistics from the simulation run.
 
