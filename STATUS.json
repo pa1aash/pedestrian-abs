@@ -1,0 +1,88 @@
+{
+  "current_phase": 1,
+  "phases_completed": [1],
+  "modules": {
+    "sim/core/helpers.py": {"lines": 60, "tests": 0, "status": "complete"},
+    "sim/core/agent.py": {"lines": 113, "tests": 5, "status": "complete"},
+    "sim/core/world.py": {"lines": 139, "tests": 7, "status": "complete"},
+    "sim/core/simulation.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/core/integrator.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/steering/base.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/steering/desired.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/steering/sfm.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/steering/ttc.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/steering/orca.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/steering/walls.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/steering/crush.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/steering/hybrid.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/density/base.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/density/grid.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/density/voronoi.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/density/kde.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/density/risk.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/optimization/barrier.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/optimization/optimizer.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/scenarios/base.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/scenarios/corridor.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/scenarios/bottleneck.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/scenarios/bidirectional.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/scenarios/crossing.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/scenarios/funnel.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/experiments/configs.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/experiments/runner.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/experiments/analysis.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/viz/style.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/viz/fundamental_diagram.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/viz/ablation_bars.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/viz/trajectories.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/viz/heatmaps.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/viz/scaling.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/viz/convergence.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/data/loader.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/data/fundamental_diagram.py": {"lines": 0, "tests": 0, "status": "stub"}
+  },
+  "tests": {"passing": 12, "total": 12},
+  "functions": {
+    "check_forces": {
+      "module": "sim.core.helpers",
+      "sig": "(forces: ndarray, name: str) -> ndarray"
+    },
+    "safe_normalize": {
+      "module": "sim.core.helpers",
+      "sig": "(v: ndarray, eps: float = 1e-8) -> ndarray"
+    },
+    "clamp_speed": {
+      "module": "sim.core.helpers",
+      "sig": "(velocities: ndarray(N,2), max_speeds: ndarray(N,)) -> ndarray(N,2)"
+    },
+    "AgentState.create": {
+      "module": "sim.core.agent",
+      "sig": "(cls, n, spawn_area, goals, seed=42, heterogeneous=True, ...) -> AgentState"
+    },
+    "AgentState.deactivate": {
+      "module": "sim.core.agent",
+      "sig": "(self, indices: ndarray) -> None"
+    },
+    "point_to_segment_distance": {
+      "module": "sim.core.world",
+      "sig": "(point: ndarray(2,), seg_start: ndarray(2,), seg_end: ndarray(2,)) -> (float, ndarray(2,), ndarray(2,))"
+    },
+    "agents_to_walls": {
+      "module": "sim.core.world",
+      "sig": "(positions: ndarray(N,2), walls: list[Wall]) -> (ndarray(N,W), ndarray(N,W,2))"
+    }
+  },
+  "known_issues": [],
+  "last_audit": "2026-04-02",
+  "experiments": {},
+  "figures": {},
+  "paper": {
+    "abstract": "skeleton",
+    "sec1": "skeleton",
+    "sec2": "skeleton",
+    "sec3": "skeleton",
+    "sec4": "skeleton",
+    "sec5": "skeleton",
+    "sec6": "skeleton"
+  }
+}
