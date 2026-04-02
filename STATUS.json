@@ -1,6 +1,6 @@
 {
-  "current_phase": 6,
-  "phases_completed": [1, 2, 3, 4, 5, 6],
+  "current_phase": 7,
+  "phases_completed": [1, 2, 3, 4, 5, 6, 7],
   "milestone": "ENGINE COMPLETE",
   "modules": {
     "sim/core/helpers.py": {"lines": 60, "tests": 0, "status": "complete"},
@@ -17,19 +17,19 @@
     "sim/steering/crush.py": {"lines": 81, "tests": 3, "status": "complete"},
     "sim/steering/hybrid.py": {"lines": 157, "tests": 5, "status": "complete"},
     "sim/experiments/configs.py": {"lines": 34, "tests": 0, "status": "complete"},
-    "sim/density/base.py": {"lines": 0, "tests": 0, "status": "stub"},
-    "sim/density/grid.py": {"lines": 0, "tests": 0, "status": "stub"},
-    "sim/density/voronoi.py": {"lines": 0, "tests": 0, "status": "stub"},
-    "sim/density/kde.py": {"lines": 0, "tests": 0, "status": "stub"},
-    "sim/density/risk.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/density/base.py": {"lines": 22, "tests": 0, "status": "complete"},
+    "sim/density/grid.py": {"lines": 51, "tests": 2, "status": "complete"},
+    "sim/density/voronoi.py": {"lines": 107, "tests": 2, "status": "complete"},
+    "sim/density/kde.py": {"lines": 37, "tests": 1, "status": "complete"},
+    "sim/density/risk.py": {"lines": 87, "tests": 3, "status": "complete"},
+    "sim/scenarios/base.py": {"lines": 38, "tests": 0, "status": "complete"},
+    "sim/scenarios/corridor.py": {"lines": 52, "tests": 3, "status": "complete"},
+    "sim/scenarios/bottleneck.py": {"lines": 50, "tests": 2, "status": "complete"},
+    "sim/scenarios/bidirectional.py": {"lines": 70, "tests": 2, "status": "complete"},
+    "sim/scenarios/crossing.py": {"lines": 81, "tests": 2, "status": "complete"},
+    "sim/scenarios/funnel.py": {"lines": 50, "tests": 2, "status": "complete"},
     "sim/optimization/barrier.py": {"lines": 0, "tests": 0, "status": "stub"},
     "sim/optimization/optimizer.py": {"lines": 0, "tests": 0, "status": "stub"},
-    "sim/scenarios/base.py": {"lines": 0, "tests": 0, "status": "stub"},
-    "sim/scenarios/corridor.py": {"lines": 0, "tests": 0, "status": "stub"},
-    "sim/scenarios/bottleneck.py": {"lines": 0, "tests": 0, "status": "stub"},
-    "sim/scenarios/bidirectional.py": {"lines": 0, "tests": 0, "status": "stub"},
-    "sim/scenarios/crossing.py": {"lines": 0, "tests": 0, "status": "stub"},
-    "sim/scenarios/funnel.py": {"lines": 0, "tests": 0, "status": "stub"},
     "sim/experiments/runner.py": {"lines": 0, "tests": 0, "status": "stub"},
     "sim/experiments/analysis.py": {"lines": 0, "tests": 0, "status": "stub"},
     "sim/viz/style.py": {"lines": 0, "tests": 0, "status": "stub"},
@@ -42,88 +42,37 @@
     "sim/data/loader.py": {"lines": 0, "tests": 0, "status": "stub"},
     "sim/data/fundamental_diagram.py": {"lines": 0, "tests": 0, "status": "stub"}
   },
-  "tests": {"passing": 70, "total": 70},
+  "tests": {"passing": 92, "total": 92},
   "functions": {
-    "check_forces": {
-      "module": "sim.core.helpers",
-      "sig": "(forces: ndarray, name: str) -> ndarray"
-    },
-    "safe_normalize": {
-      "module": "sim.core.helpers",
-      "sig": "(v: ndarray, eps: float = 1e-8) -> ndarray"
-    },
-    "clamp_speed": {
-      "module": "sim.core.helpers",
-      "sig": "(velocities: ndarray(N,2), max_speeds: ndarray(N,)) -> ndarray(N,2)"
-    },
-    "AgentState.create": {
-      "module": "sim.core.agent",
-      "sig": "(cls, n, spawn_area, goals, seed=42, heterogeneous=True, ...) -> AgentState"
-    },
-    "AgentState.deactivate": {
-      "module": "sim.core.agent",
-      "sig": "(self, indices: ndarray) -> None"
-    },
-    "point_to_segment_distance": {
-      "module": "sim.core.world",
-      "sig": "(point: ndarray(2,), seg_start: ndarray(2,), seg_end: ndarray(2,)) -> (float, ndarray(2,), ndarray(2,))"
-    },
-    "agents_to_walls": {
-      "module": "sim.core.world",
-      "sig": "(positions: ndarray(N,2), walls: list[Wall]) -> (ndarray(N,W), ndarray(N,W,2))"
-    },
-    "EulerIntegrator.integrate": {
-      "module": "sim.core.integrator",
-      "sig": "(self, positions: ndarray(N,2), velocities: ndarray(N,2), forces: ndarray(N,2), masses: ndarray(N,), dt: float) -> (ndarray(N,2), ndarray(N,2))"
-    },
-    "RK4Integrator.integrate": {
-      "module": "sim.core.integrator",
-      "sig": "(self, positions: ndarray(N,2), velocities: ndarray(N,2), force_fn: Callable, masses: ndarray(N,), dt: float) -> (ndarray(N,2), ndarray(N,2))"
-    },
-    "compute_desired_force": {
-      "module": "sim.steering.desired",
-      "sig": "(positions: ndarray(N,2), velocities: ndarray(N,2), goals: ndarray(N,2), desired_speeds: ndarray(N,), masses: ndarray(N,), taus: ndarray(N,)) -> ndarray(N,2)"
-    },
-    "Simulation.step": {
-      "module": "sim.core.simulation",
-      "sig": "(self) -> dict"
-    },
-    "Simulation.run": {
-      "module": "sim.core.simulation",
-      "sig": "(self, max_steps: int = 10000, max_time: float | None = None) -> dict"
-    },
-    "Simulation.from_scenario": {
-      "module": "sim.core.simulation",
-      "sig": "(cls, scenario, config_name: str = 'C1', seed: int = 42, param_overrides: dict | None = None) -> Simulation"
-    },
-    "SocialForceModel.compute_agent_forces": {
-      "module": "sim.steering.sfm",
-      "sig": "(self, agent_state: AgentState, neighbor_lists: list[list[int]]) -> ndarray(N,2)"
-    },
-    "WallForces.compute_wall_forces": {
-      "module": "sim.steering.walls",
-      "sig": "(self, agent_state: AgentState, walls: list[Wall]) -> ndarray(N,2)"
-    },
-    "TTCForceModel.compute_ttc_forces": {
-      "module": "sim.steering.ttc",
-      "sig": "(self, agent_state: AgentState, neighbor_lists: list[list[int]]) -> ndarray(N,2)"
-    },
-    "ORCAModel.compute_orca_forces": {
-      "module": "sim.steering.orca",
-      "sig": "(self, agent_state: AgentState, neighbor_lists: list[list[int]]) -> ndarray(N,2)"
-    },
-    "CrushRegime.compute_crush_forces": {
-      "module": "sim.steering.crush",
-      "sig": "(self, agent_state: AgentState, neighbor_lists: list[list[int]]) -> ndarray(N,2)"
-    },
-    "HybridSteeringModel.compute_forces": {
-      "module": "sim.steering.hybrid",
-      "sig": "(self, agent_state: AgentState, neighbor_lists: list[list[int]], walls: list[Wall], local_densities: ndarray(N,)) -> ndarray(N,2)"
-    },
-    "get_config": {
-      "module": "sim.experiments.configs",
-      "sig": "(name: str) -> dict[str, bool]"
-    }
+    "check_forces": {"module": "sim.core.helpers", "sig": "(forces: ndarray, name: str) -> ndarray"},
+    "safe_normalize": {"module": "sim.core.helpers", "sig": "(v: ndarray, eps: float = 1e-8) -> ndarray"},
+    "clamp_speed": {"module": "sim.core.helpers", "sig": "(velocities: ndarray(N,2), max_speeds: ndarray(N,)) -> ndarray(N,2)"},
+    "AgentState.create": {"module": "sim.core.agent", "sig": "(cls, n, spawn_area, goals, seed=42, ...) -> AgentState"},
+    "AgentState.deactivate": {"module": "sim.core.agent", "sig": "(self, indices: ndarray) -> None"},
+    "point_to_segment_distance": {"module": "sim.core.world", "sig": "(point, seg_start, seg_end) -> (float, ndarray, ndarray)"},
+    "agents_to_walls": {"module": "sim.core.world", "sig": "(positions, walls) -> (ndarray(N,W), ndarray(N,W,2))"},
+    "EulerIntegrator.integrate": {"module": "sim.core.integrator", "sig": "(self, pos, vel, forces, masses, dt) -> (pos, vel)"},
+    "RK4Integrator.integrate": {"module": "sim.core.integrator", "sig": "(self, pos, vel, force_fn, masses, dt) -> (pos, vel)"},
+    "compute_desired_force": {"module": "sim.steering.desired", "sig": "(pos, vel, goals, speeds, masses, taus) -> ndarray(N,2)"},
+    "Simulation.step": {"module": "sim.core.simulation", "sig": "(self) -> dict"},
+    "Simulation.run": {"module": "sim.core.simulation", "sig": "(self, max_steps, max_time) -> dict"},
+    "Simulation.from_scenario": {"module": "sim.core.simulation", "sig": "(cls, scenario, config_name, seed, param_overrides) -> Simulation"},
+    "SocialForceModel.compute_agent_forces": {"module": "sim.steering.sfm", "sig": "(self, agent_state, neighbor_lists) -> ndarray(N,2)"},
+    "WallForces.compute_wall_forces": {"module": "sim.steering.walls", "sig": "(self, agent_state, walls) -> ndarray(N,2)"},
+    "TTCForceModel.compute_ttc_forces": {"module": "sim.steering.ttc", "sig": "(self, agent_state, neighbor_lists) -> ndarray(N,2)"},
+    "ORCAModel.compute_orca_forces": {"module": "sim.steering.orca", "sig": "(self, agent_state, neighbor_lists) -> ndarray(N,2)"},
+    "CrushRegime.compute_crush_forces": {"module": "sim.steering.crush", "sig": "(self, agent_state, neighbor_lists) -> ndarray(N,2)"},
+    "HybridSteeringModel.compute_forces": {"module": "sim.steering.hybrid", "sig": "(self, agent_state, neighbor_lists, walls, densities) -> ndarray(N,2)"},
+    "get_config": {"module": "sim.experiments.configs", "sig": "(name: str) -> dict[str, bool]"},
+    "GridDensityEstimator.estimate": {"module": "sim.density.grid", "sig": "(self, positions, neighbor_lists=None) -> ndarray(N,)"},
+    "VoronoiDensityEstimator.estimate": {"module": "sim.density.voronoi", "sig": "(self, positions) -> ndarray(N,)"},
+    "KDEDensityEstimator.estimate": {"module": "sim.density.kde", "sig": "(self, positions) -> ndarray(N,)"},
+    "CompositeRiskMetric.compute": {"module": "sim.density.risk", "sig": "(self, positions, velocities, rho_V, rho_KDE, neighbor_lists) -> ndarray(N,)"},
+    "CorridorScenario.build": {"module": "sim.scenarios.corridor", "sig": "(self, seed=42) -> (World, AgentState)"},
+    "BottleneckScenario.build": {"module": "sim.scenarios.bottleneck", "sig": "(self, seed=42) -> (World, AgentState)"},
+    "BidirectionalScenario.build": {"module": "sim.scenarios.bidirectional", "sig": "(self, seed=42) -> (World, AgentState)"},
+    "CrossingScenario.build": {"module": "sim.scenarios.crossing", "sig": "(self, seed=42) -> (World, AgentState)"},
+    "FunnelScenario.build": {"module": "sim.scenarios.funnel", "sig": "(self, seed=42) -> (World, AgentState)"}
   },
   "known_issues": [
     "ORCA: severe overlaps produce infeasible LP constraints; SFM body forces handle contact separation",
@@ -133,12 +82,7 @@
   "experiments": {},
   "figures": {},
   "paper": {
-    "abstract": "skeleton",
-    "sec1": "skeleton",
-    "sec2": "skeleton",
-    "sec3": "skeleton",
-    "sec4": "skeleton",
-    "sec5": "skeleton",
-    "sec6": "skeleton"
+    "abstract": "skeleton", "sec1": "skeleton", "sec2": "skeleton",
+    "sec3": "skeleton", "sec4": "skeleton", "sec5": "skeleton", "sec6": "skeleton"
   }
 }

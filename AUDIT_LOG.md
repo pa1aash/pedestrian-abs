@@ -41,3 +41,10 @@
 - **Tests:** 12 new, 70 total, 70 passing
 - **Gates:** C1-C4 all run ✓, evacuation C4 50 agents exits ✓, single-agent goal ✓, head-on deflection ✓, sigmoid weights ✓, pytest 70/70 ✓, audit.sh ✓
 - **Issues:** occasional force clamping warnings from TTC at high density (handled by check_forces)
+
+## Phase 7 — Density + Risk + Scenarios
+- **Date:** 2026-04-02
+- **Built:** sim/density/base.py (22), grid.py (51), voronoi.py (107), kde.py (37), risk.py (87), sim/scenarios/base.py (38), corridor.py (52), bottleneck.py (50), bidirectional.py (70), crossing.py (81), funnel.py (50) — 645 new lines
+- **Tests:** 22 new, 92 total, 92 passing
+- **Gates:** all density estimators ✓, risk metric ✓, all 5 scenarios build+run ✓, from_scenario ✓, pytest 92/92 ✓
+- **Issues:** fixed np.ptp() removal in NumPy 2.0 (voronoi.py)
