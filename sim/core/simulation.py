@@ -117,17 +117,33 @@ class Simulation:
         self.time += dt
         self.step_count += 1
         active_now = self.state.active_indices
+        n_exited_this_step = len(reached)
+
         if len(active_now) > 0:
             mean_speed = float(
                 np.mean(np.linalg.norm(self.state.velocities[active_now], axis=1))
             )
+            max_density = float(np.max(densities[active_now]))
         else:
             mean_speed = 0.0
+            max_density = 0.0
+
+        # Collision count: pairs with distance < sum of radii
+        collision_count = 0
+        for i in active_now:
+            for j in neighbor_lists[i]:
+                if j > i and self.state.active[j]:
+                    d = np.linalg.norm(self.state.positions[i] - self.state.positions[j])
+                    if d < self.state.radii[i] + self.state.radii[j]:
+                        collision_count += 1
 
         metrics = {
             "time": self.time,
             "n_active": self.state.n_active,
             "mean_speed": mean_speed,
+            "max_density": max_density,
+            "collision_count": collision_count,
+            "agents_exited_step": n_exited_this_step,
         }
         self.metrics_log.append(metrics)
         return metrics
@@ -195,15 +211,41 @@ class Simulation:
         """Compile summary statistics from the simulation run.
 
         Returns:
-            Dict with n_steps, time, agents_exited, mean_speed.
+            Dict with all metrics from CLAUDE.md Section 19.
         """
+        if not self.metrics_log:
+            return {
+                "n_steps": 0, "evacuation_time": 0.0, "mean_speed": 0.0,
+                "max_density": 0.0, "collision_count": 0, "flow_rate": 0.0,
+                "agents_exited": 0, "mean_risk": 0.0, "max_risk": 0.0,
+                "time_above_critical": 0.0,
+            }
+
+        agents_exited = self.state.n - self.state.n_active
+        evac_time = self.time if self.state.n_active == 0 else self.time
+
+        mean_speed = float(np.mean([m["mean_speed"] for m in self.metrics_log]))
+        max_density = float(np.max([m["max_density"] for m in self.metrics_log]))
+        total_collisions = int(np.sum([m["collision_count"] for m in self.metrics_log]))
+
+        dt = self.params.get("dt", 0.01)
+        flow_rate = agents_exited / max(self.time, dt)
+
+        # Risk and time above critical (density > 5.5)
+        critical_threshold = self.params.get("rho_crit", 5.5)
+        time_above_critical = sum(
+            dt for m in self.metrics_log if m["max_density"] > critical_threshold
+        )
+
         return {
             "n_steps": self.step_count,
-            "time": self.time,
-            "agents_exited": self.state.n - self.state.n_active,
-            "mean_speed": (
-                float(np.mean([m["mean_speed"] for m in self.metrics_log]))
-                if self.metrics_log
-                else 0.0
-            ),
+            "evacuation_time": evac_time,
+            "mean_speed": mean_speed,
+            "max_density": max_density,
+            "collision_count": total_collisions,
+            "flow_rate": flow_rate,
+            "agents_exited": agents_exited,
+            "mean_risk": 0.0,  # populated by runner when density estimators used
+            "max_risk": 0.0,
+            "time_above_critical": time_above_critical,
         }

@@ -86,7 +86,7 @@ def test_run_terminates(simple_sim):
     """run() terminates and returns results."""
     results = simple_sim.run(max_steps=500, max_time=5.0)
     assert "n_steps" in results
-    assert "time" in results
+    assert "evacuation_time" in results
     assert "agents_exited" in results
     assert "mean_speed" in results
     assert results["n_steps"] > 0

@@ -48,3 +48,10 @@
 - **Tests:** 22 new, 92 total, 92 passing
 - **Gates:** all density estimators ✓, risk metric ✓, all 5 scenarios build+run ✓, from_scenario ✓, pytest 92/92 ✓
 - **Issues:** fixed np.ptp() removal in NumPy 2.0 (voronoi.py)
+
+## Phase 8 — Experiment Pipeline — **PIPELINE COMPLETE**
+- **Date:** 2026-04-02
+- **Built:** sim/experiments/runner.py (103), analysis.py (71), sim/optimization/barrier.py (61), optimizer.py (157), sim/viz/ 7 modules (382 total), sim/data/ 2 modules (125 total), scripts/ 2 CLIs (127 total), sim/core/simulation.py extended metrics — 1026 new lines
+- **Tests:** 92 total, 92 passing (simulation.py _compile_results updated for full metrics)
+- **Gates:** CSV output ✓ (bottleneck C1 2 reps, evac=53.5s), optimizer ✓ (nelder-mead 5 evals), pytest 92/92 ✓, audit.sh ✓
+- **Issues:** none
