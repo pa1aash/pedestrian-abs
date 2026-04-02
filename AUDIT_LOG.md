@@ -20,3 +20,10 @@
 - **Tests:** 15 new, 47 total, 47 passing
 - **Gates:** all imports OK, pytest 47/47 ✓, physics sanity (30 agents corridor 300 steps, mean_speed=1.10) ✓, audit.sh ✓
 - **Issues:** none
+
+## Phase 4 — TTC Force
+- **Date:** 2026-04-02
+- **Built:** sim/steering/ttc.py (99 lines), tests/test_ttc.py
+- **Tests:** 6 new, 53 total, 53 passing
+- **Gates:** analytical τ=0.75 ✓, pytest 53/53 ✓, audit.sh ✓
+- **Issues:** none

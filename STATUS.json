@@ -1,6 +1,6 @@
 {
-  "current_phase": 3,
-  "phases_completed": [1, 2, 3],
+  "current_phase": 4,
+  "phases_completed": [1, 2, 3, 4],
   "modules": {
     "sim/core/helpers.py": {"lines": 60, "tests": 0, "status": "complete"},
     "sim/core/agent.py": {"lines": 113, "tests": 5, "status": "complete"},
@@ -11,7 +11,7 @@
     "sim/steering/desired.py": {"lines": 37, "tests": 5, "status": "complete"},
     "sim/steering/sfm.py": {"lines": 92, "tests": 8, "status": "complete"},
     "sim/steering/walls.py": {"lines": 94, "tests": 7, "status": "complete"},
-    "sim/steering/ttc.py": {"lines": 0, "tests": 0, "status": "stub"},
+    "sim/steering/ttc.py": {"lines": 99, "tests": 6, "status": "complete"},
     "sim/steering/orca.py": {"lines": 0, "tests": 0, "status": "stub"},
     "sim/steering/crush.py": {"lines": 0, "tests": 0, "status": "stub"},
     "sim/steering/hybrid.py": {"lines": 0, "tests": 0, "status": "stub"},
@@ -41,7 +41,7 @@
     "sim/data/loader.py": {"lines": 0, "tests": 0, "status": "stub"},
     "sim/data/fundamental_diagram.py": {"lines": 0, "tests": 0, "status": "stub"}
   },
-  "tests": {"passing": 47, "total": 47},
+  "tests": {"passing": 53, "total": 53},
   "functions": {
     "check_forces": {
       "module": "sim.core.helpers",
@@ -98,6 +98,10 @@
     "WallForces.compute_wall_forces": {
       "module": "sim.steering.walls",
       "sig": "(self, agent_state: AgentState, walls: list[Wall]) -> ndarray(N,2)"
+    },
+    "TTCForceModel.compute_ttc_forces": {
+      "module": "sim.steering.ttc",
+      "sig": "(self, agent_state: AgentState, neighbor_lists: list[list[int]]) -> ndarray(N,2)"
     }
   },
   "known_issues": [],
