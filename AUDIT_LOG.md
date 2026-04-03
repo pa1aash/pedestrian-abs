@@ -105,3 +105,14 @@
 - **Sec 3 (Framework):** Hybrid force equation, desired force with Weidmann coupling, SFM, TTC, ORCA, sigmoid weighting, composite risk, crush regime, barrier optimization. 8 equations.
 - **Gates:** all 27 citation keys verified against references.bib ✓ (LaTeX not installed for compilation)
 - **Issues:** pdflatex not available on this machine — compilation deferred to user
+
+## Phase 13 — Paper Sections 4-6 + Abstract
+- **Date:** 2026-04-03
+- **Built:** paper/main.tex sections 4-6 + abstract (~6.5 additional pages)
+- **Abstract:** 150 words, all key numbers: FD 1.32→0.85, bottleneck 18%, crush 24.9→14.8, optimizer 13%, scaling 545ms
+- **Sec 4 (Experiments):** 6 subsections: setup+params table, FD validation (Fig 1), ablation (Fig 2 + Table 2), crush (Fig 4), optimization (Fig 8), scaling (Fig 6). All exact numbers from CSVs.
+- **Sec 5 (Discussion):** hybrid benefit explanation, calibration gap (0.85 vs 0.43), ORCA scalability, crush trade-off, DT maturity (L2), comparison with SPH Crowds/Cristiani
+- **Sec 6 (Conclusions):** 5 quantitative results, 3 future directions (sensors, learned ORCA, field validation)
+- **Citations:** 30 total, all verified against references.bib
+- **Gates:** all citation keys valid ✓
+- **Issues:** compilation deferred to user (no pdflatex)
