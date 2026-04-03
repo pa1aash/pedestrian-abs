@@ -15,6 +15,7 @@
 \usepackage{hyperref}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{algorithm2e}
 \usepackage{SCITEPRESS}
 
 \begin{document}
@@ -140,17 +141,18 @@ where $w_o(\rho_i)$ and $w_c(\rho_i)$ are density-dependent weights controlling 
 
 \textbf{Desired Force.}
 The goal-seeking force drives agents toward their destination with a density-dependent speed reduction following the Weidmann fundamental diagram~\cite{Seyfried05}:
-\begin{equation}\label{eq:desired}
-    \mathbf{F}_i^{\text{des}} = \frac{m_i}{\tau_i}\left(v_i^{\text{eff}}(\rho_i)\,\hat{\mathbf{e}}_i - \mathbf{v}_i\right), \quad
-    v_i^{\text{eff}} = v_i^0\left(1 - e^{-\gamma(1/\rho_i - 1/\rho_{\max})}\right)
-\end{equation}
+\begin{gather}\label{eq:desired}
+    \mathbf{F}_i^{\text{des}} = \frac{m_i}{\tau_i}\left(v_i^{\text{eff}}(\rho_i)\,\hat{\mathbf{e}}_i - \mathbf{v}_i\right) \\
+    v_i^{\text{eff}} = v_i^0\left(1 - e^{-\gamma(1/\rho_i - 1/\rho_{\max})}\right) \notag
+\end{gather}
 with $\gamma = 1.913$ and $\rho_{\max} = 5.4$~ped/m$^2$.
 
 \textbf{Social Force Model.}
 Agent-agent interaction follows Helbing et al.~\cite{Helbing00} with social repulsion, body compression, and sliding friction:
-\begin{equation}\label{eq:sfm}
-    \mathbf{f}_{ij} = A\,e^{(r_{ij} - d_{ij})/B}\,\hat{\mathbf{n}}_{ij} + k\,g(r_{ij} - d_{ij})\,\hat{\mathbf{n}}_{ij} + \kappa\,g(r_{ij} - d_{ij})\,(\Delta\mathbf{v}_{ji} \cdot \hat{\mathbf{t}}_{ij})\,\hat{\mathbf{t}}_{ij}
-\end{equation}
+\begin{multline}\label{eq:sfm}
+    \mathbf{f}_{ij} = A\,e^{(r_{ij} - d_{ij})/B}\,\hat{\mathbf{n}}_{ij} + k\,g(r_{ij} - d_{ij})\,\hat{\mathbf{n}}_{ij} \\
+    + \kappa\,g(r_{ij} - d_{ij})\,(\Delta\mathbf{v}_{ji} \cdot \hat{\mathbf{t}}_{ij})\,\hat{\mathbf{t}}_{ij}
+\end{multline}
 where $r_{ij} = r_i + r_j$ is the sum of radii, $d_{ij} = \|\mathbf{x}_i - \mathbf{x}_j\|$ the distance, $g(x) = \max(0, x)$, and parameters $A = 2000$~N, $B = 0.08$~m, $k = 1.2 \times 10^5$~kg/s$^2$, $\kappa = 2.4 \times 10^5$~kg/(m$\cdot$s).
 
 \textbf{Time-to-Collision Force.}
@@ -166,11 +168,11 @@ At low density, ORCA~\cite{VandenBerg11} constructs half-plane velocity constrai
 
 \textbf{Density-Dependent Weighting.}
 The ORCA and crush contributions are modulated by sigmoid functions of local density:
-\begin{equation}\label{eq:sigmoid}
-    w_o(\rho) = 1 - \sigma(\rho;\, 4.0,\, 2.0), \quad
-    w_c(\rho) = \sigma(\rho;\, 5.5,\, 3.0), \quad
-    \sigma(x; x_0, k) = \frac{1}{1 + e^{-k(x - x_0)}}
-\end{equation}
+\begin{gather}\label{eq:sigmoid}
+    w_o(\rho) = 1 - \sigma(\rho;\, 4.0,\, 2.0), \;\;
+    w_c(\rho) = \sigma(\rho;\, 5.5,\, 3.0) \\
+    \sigma(x; x_0, k) = \frac{1}{1 + e^{-k(x - x_0)}} \notag
+\end{gather}
 At low density ($\rho < 2$), ORCA dominates ($w_o \approx 1$); at high density ($\rho > 6$), crush forces take over ($w_c \approx 1$).
 The SFM contributes at all densities, providing the contact mechanics that prevent agent overlap.
 
@@ -194,9 +196,10 @@ Risk levels are classified as: normal ($R < 1$), elevated ($1 \leq R < 2$), high
 
 When local density exceeds a critical threshold $\rho_{\text{crit}}$, individual pedestrians lose the ability to control their movement and are instead subject to the forces exerted by the surrounding crowd~\cite{Helbing07,Moussaid11}.
 We model this through enhanced contact forces with no social repulsion:
-\begin{equation}\label{eq:crush}
-    \mathbf{f}_{ij}^{\text{crush}} = k_c\,g(r_{ij} - d_{ij})\,\hat{\mathbf{n}}_{ij} + \kappa_c\,g(r_{ij} - d_{ij})\,(\Delta\mathbf{v}_{ji} \cdot \hat{\mathbf{t}}_{ij})\,\hat{\mathbf{t}}_{ij}
-\end{equation}
+\begin{multline}\label{eq:crush}
+    \mathbf{f}_{ij}^{\text{crush}} = k_c\,g(r_{ij} - d_{ij})\,\hat{\mathbf{n}}_{ij} \\
+    + \kappa_c\,g(r_{ij} - d_{ij})\,(\Delta\mathbf{v}_{ji} \cdot \hat{\mathbf{t}}_{ij})\,\hat{\mathbf{t}}_{ij}
+\end{multline}
 with $k_c = 3.6 \times 10^5$~kg/s$^2$ and $\kappa_c = 4.8 \times 10^5$~kg/(m$\cdot$s), representing 3$\times$ and 2$\times$ the standard SFM contact parameters respectively.
 The desired force is simultaneously suppressed via the $(1 - w_c)$ factor in Eq.~\eqref{eq:hybrid}, modelling the loss of agency.
 
@@ -205,9 +208,10 @@ The desired force is simultaneously suppressed via the $(1 - w_c)$ factor in Eq.
 
 Physical barriers (e.g., fences, bollards) can redistribute crowd flow to reduce dangerous density concentrations.
 We formulate barrier placement as derivative-free optimization:
-\begin{equation}\label{eq:opt}
-    \boldsymbol{\theta}^* = \arg\min_{\boldsymbol{\theta}} \; J(\boldsymbol{\theta}) = \mathbb{E}_s\left[T_{\text{evac}}(\boldsymbol{\theta}, s) + \lambda \cdot \max_t R_{\max}(t)\right]
-\end{equation}
+\begin{multline}\label{eq:opt}
+    \boldsymbol{\theta}^* = \arg\min_{\boldsymbol{\theta}} \; J(\boldsymbol{\theta}) \\
+    = \mathbb{E}_s\left[T_{\text{evac}}(\boldsymbol{\theta}, s) + \lambda \cdot \max_t R_{\max}(t)\right]
+\end{multline}
 where $\boldsymbol{\theta} = (x, y, l, \alpha)$ parameterizes a rectangular barrier (position, length, angle), $T_{\text{evac}}$ is the evacuation time, and $R_{\max}$ the peak composite risk, averaged over random seeds~$s$.
 
 We solve this using Nelder-Mead or CMA-ES~\cite{Berseth15}, both of which require only function evaluations without gradient information.
