@@ -92,9 +92,9 @@ class CorridorFDScenario(Scenario):
             Wall(np.array([25.0, 0.0]), np.array([25.0, w])),
             Wall(np.array([25.0, w]), np.array([0.0, w])),
             Wall(np.array([0.0, w]), np.array([0.0, 0.0])),
-            # Exit bottleneck at x=24: 1.0m gap from y=1.3 to y=2.3
-            Wall(np.array([24.0, 0.0]), np.array([24.0, 1.3])),
-            Wall(np.array([24.0, 2.3]), np.array([24.0, w])),
+            # Exit bottleneck at x=24: 0.6m gap from y=1.5 to y=2.1
+            Wall(np.array([24.0, 0.0]), np.array([24.0, 1.5])),
+            Wall(np.array([24.0, 2.1]), np.array([24.0, w])),
         ]
         world = World(walls)
 
@@ -109,3 +109,55 @@ class CorridorFDScenario(Scenario):
     def is_complete(self, agent_state: AgentState, time: float) -> bool:
         """Complete after warmup + measure time."""
         return time >= self.warmup_time + self.measure_time
+
+
+class PeriodicCorridorScenario(Scenario):
+    """Periodic boundary corridor for fundamental diagram measurement.
+
+    Fixed number of agents in a corridor with wrap-around x boundaries.
+    Density = n_agents / (length * width). Speed measured at steady state.
+    Matches FZJ experimental protocol: controlled pedestrian count in a loop.
+
+    Args:
+        n_agents: Number of agents (controls density directly).
+        corridor_length: Length in meters.
+        corridor_width: Width in meters (1.8 for single-lane FZJ).
+        warmup_steps: Steps before measurement starts.
+        measure_steps: Steps to measure.
+    """
+
+    def __init__(
+        self,
+        n_agents: int = 50,
+        corridor_length: float = 18.0,
+        corridor_width: float = 1.8,
+        warmup_steps: int = 500,
+        measure_steps: int = 1000,
+    ):
+        self.n_agents = n_agents
+        self.length = corridor_length
+        self.width = corridor_width
+        self.warmup_steps = warmup_steps
+        self.measure_steps = measure_steps
+        self.periodic_length = corridor_length
+
+    def build(self, seed: int = 42) -> tuple[World, AgentState]:
+        """Build corridor with top/bottom walls only (x is periodic)."""
+        walls = [
+            Wall(np.array([0.0, 0.0]), np.array([self.length, 0.0])),
+            Wall(np.array([0.0, self.width]), np.array([self.length, self.width])),
+        ]
+        world = World(walls)
+
+        state = AgentState.create(
+            self.n_agents,
+            spawn_area=(0.5, self.length - 0.5, 0.3, self.width - 0.3),
+            goals=np.array([self.length + 10.0, self.width / 2]),
+            seed=seed,
+            heterogeneous=True,
+        )
+        return world, state
+
+    def is_complete(self, agent_state: AgentState, time: float) -> bool:
+        """Never completes on its own (run manually with step counts)."""
+        return False

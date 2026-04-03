@@ -116,7 +116,7 @@ class HybridSteeringModel(SteeringModel):
         else:
             w_crush = np.zeros(n)
 
-        # Desired force (scaled down in crush regime)
+        # Desired force with density-dependent speed reduction
         F_desire = compute_desired_force(
             agent_state.positions,
             agent_state.velocities,
@@ -124,6 +124,7 @@ class HybridSteeringModel(SteeringModel):
             agent_state.desired_speeds,
             agent_state.masses,
             agent_state.taus,
+            local_densities=local_densities,
         )
         F = (1.0 - w_crush)[:, None] * F_desire
 

@@ -46,6 +46,7 @@ class Simulation:
         self.time = 0.0
         self.step_count = 0
         self.metrics_log: list[dict] = []
+        self.periodic_length: float | None = None  # set for periodic corridors
 
     def step(self) -> dict:
         """Execute one simulation timestep.
@@ -57,12 +58,25 @@ class Simulation:
         if len(active) == 0:
             return {"time": self.time, "n_active": 0}
 
-        # 1. KDTree neighbor search
+        # 1. KDTree neighbor search (with periodic ghost copies if needed)
         all_pos = self.state.positions
-        tree = KDTree(all_pos)
-        neighbor_lists = tree.query_ball_point(
-            all_pos, r=self.params["neighbor_radius"]
-        )
+        N = len(all_pos)
+        if self.periodic_length is not None:
+            L = self.periodic_length
+            ghosts_r = all_pos.copy(); ghosts_r[:, 0] += L
+            ghosts_l = all_pos.copy(); ghosts_l[:, 0] -= L
+            extended = np.vstack([all_pos, ghosts_r, ghosts_l])
+            tree = KDTree(extended)
+            raw_nbs = tree.query_ball_point(all_pos, r=self.params["neighbor_radius"])
+            neighbor_lists = []
+            for i, nbrs in enumerate(raw_nbs):
+                real = list({j % N for j in nbrs} - {i})
+                neighbor_lists.append(real)
+        else:
+            tree = KDTree(all_pos)
+            neighbor_lists = tree.query_ball_point(
+                all_pos, r=self.params["neighbor_radius"]
+            )
 
         # 2. Simple grid density: count / (pi * R^2)
         r = self.params["neighbor_radius"]
@@ -84,6 +98,7 @@ class Simulation:
                 self.state.desired_speeds,
                 self.state.masses,
                 self.state.taus,
+                local_densities=densities,
             )
 
         # 4. Integrate
@@ -104,14 +119,21 @@ class Simulation:
         self.state.positions = new_pos
         self.state.velocities = new_vel
 
-        # 7. Deactivate agents that reached their goal
-        dists_to_goal = np.linalg.norm(
-            self.state.goals - self.state.positions, axis=1
-        )
-        reached = np.where(
-            self.state.active & (dists_to_goal < self.params["goal_reached_dist"])
-        )[0]
-        self.state.deactivate(reached)
+        # 6b. Periodic boundary: wrap x-coordinate, keep goals ahead
+        if self.periodic_length is not None:
+            L = self.periodic_length
+            self.state.positions[:, 0] = self.state.positions[:, 0] % L
+            self.state.goals[:, 0] = self.state.positions[:, 0] + 5.0
+            reached = np.array([], dtype=int)  # never deactivate
+        else:
+            # 7. Deactivate agents that reached their goal
+            dists_to_goal = np.linalg.norm(
+                self.state.goals - self.state.positions, axis=1
+            )
+            reached = np.where(
+                self.state.active & (dists_to_goal < self.params["goal_reached_dist"])
+            )[0]
+            self.state.deactivate(reached)
 
         # 8. Record metrics
         self.time += dt
@@ -258,6 +280,7 @@ class Simulation:
         steering = HybridSteeringModel(config, flat)
         sim = cls(world, agent_state, steering, EulerIntegrator(), flat)
         sim._scenario = scenario
+        sim.periodic_length = getattr(scenario, 'periodic_length', None)
         return sim
 
     def _compile_results(self) -> dict:

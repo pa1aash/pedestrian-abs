@@ -69,81 +69,67 @@ class ExperimentRunner:
     def run_fundamental_diagram(
         self,
         config_name: str,
-        injection_rates: list[float] | None = None,
+        agent_counts: list[int] | None = None,
         n_replications: int = 5,
+        corridor_length: float = 18.0,
+        corridor_width: float = 1.8,
     ) -> pd.DataFrame:
-        """Run continuous-injection corridor FD experiments.
+        """Produce speed-density FD using periodic corridor.
 
         Args:
             config_name: Steering config (C1-C4).
-            injection_rates: Agents/sec injection rates to test.
-            n_replications: Reps per rate.
+            agent_counts: Agent counts (each gives a density point).
+            n_replications: Reps per agent count.
+            corridor_length: Corridor length (m).
+            corridor_width: Corridor width (m). 1.8 for single-lane.
 
         Returns:
-            DataFrame with config, injection_rate, rep, density, speed columns.
+            DataFrame with config, n_agents, rep, density, speed columns.
         """
-        if injection_rates is None:
-            injection_rates = [1, 2, 3, 5, 7, 10, 13, 16, 20]
+        from sim.scenarios.corridor import PeriodicCorridorScenario
 
-        from sim.scenarios.corridor import CorridorFDScenario
+        if agent_counts is None:
+            area = corridor_length * corridor_width
+            target_rhos = [0.3, 0.5, 0.8, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]
+            agent_counts = [max(3, int(rho * area)) for rho in target_rhos]
 
         rows = []
-        for rate in injection_rates:
+        for n_agents in agent_counts:
             for rep in range(n_replications):
                 seed = 42 + rep
-                scenario = CorridorFDScenario(
-                    injection_rate=rate, warmup_time=10.0, measure_time=15.0,
+                scenario = PeriodicCorridorScenario(
+                    n_agents=n_agents,
+                    corridor_length=corridor_length,
+                    corridor_width=corridor_width,
+                    warmup_steps=500,
+                    measure_steps=1000,
                 )
                 sim = Simulation.from_scenario(scenario, config_name, seed=seed)
 
-                dt = sim.params.get("dt", 0.01)
-                total_time = scenario.warmup_time + scenario.measure_time
-
-                # Run with measurement
-                fd_points = []
-                while sim.time < total_time and sim.step_count < 100000:
+                # Warmup
+                for _ in range(scenario.warmup_steps):
                     sim.step()
 
-                    # Deactivate past exit
-                    past = np.where(
-                        sim.state.active & (sim.state.positions[:, 0] > 24.5)
-                    )[0]
-                    sim.state.deactivate(past)
+                # Measure
+                area = corridor_length * corridor_width
+                speeds = []
+                for _ in range(scenario.measure_steps):
+                    sim.step()
+                    active = sim.state.active
+                    v = np.linalg.norm(sim.state.velocities[active], axis=1)
+                    speeds.append(float(np.mean(v)))
 
-                    # Inject
-                    inj_accum = getattr(sim, '_fd_inj_accum', 0.0)
-                    inj_accum += rate * dt
-                    if inj_accum >= 1.0:
-                        n_inj = int(inj_accum)
-                        inj_accum -= n_inj
-                        sim.inject_agents(n_inj, seed=seed * 1000 + sim.step_count)
-                    sim._fd_inj_accum = inj_accum
-
-                    # Measure at x∈[20,24] (right at bottleneck queue)
-                    if sim.time >= scenario.warmup_time:
-                        active = sim.state.active_indices
-                        pos = sim.state.positions[active]
-                        vel = sim.state.velocities[active]
-                        in_area = (pos[:, 0] >= 20.0) & (pos[:, 0] <= 24.0)
-                        if np.sum(in_area) >= 2:
-                            area_size = 4.0 * 3.6  # 4m x 3.6m
-                            density = float(np.sum(in_area)) / area_size
-                            speed = float(np.mean(np.linalg.norm(vel[in_area], axis=1)))
-                            fd_points.append((density, speed))
-
-                # Record per-frame measurements, subsample for manageable size
-                step = max(1, len(fd_points) // 50)  # ~50 points per rep
-                for idx in range(0, len(fd_points), step):
-                    d, s = fd_points[idx]
-                    rows.append({
-                        "config": config_name,
-                        "injection_rate": rate,
-                        "rep": rep,
-                        "density": d,
-                        "speed": s,
-                    })
-                print(f"  FD {config_name} rate={rate} rep={rep}: "
-                      f"rho={rows[-1]['density']:.2f} v={rows[-1]['speed']:.2f}" if rows else "  (no data)")
+                density = float(np.sum(sim.state.active)) / area
+                mean_speed = float(np.mean(speeds))
+                rows.append({
+                    "config": config_name,
+                    "n_agents": n_agents,
+                    "rep": rep,
+                    "density": density,
+                    "speed": mean_speed,
+                })
+                print(f"  FD {config_name} n={n_agents} rep={rep}: "
+                      f"rho={density:.2f}, v={mean_speed:.2f}")
 
         df = pd.DataFrame(rows)
         fname = f"fd_{config_name}.csv"
