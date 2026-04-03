@@ -1,0 +1,181 @@
+\begin{thebibliography}{}
+
+\bibitem[Berseth et~al., 2015]{Berseth15}
+Berseth, G., Usman, M., Haworth, B., Kapadia, M., and Faloutsos, P. (2015).
+\newblock Environment optimization for crowd evacuation.
+\newblock {\em Computer Animation and Virtual Worlds}, 26(3--4):377--386.
+
+\bibitem[Cristiani et~al., 2023]{Cristiani23}
+Cristiani, E., Piccoli, B., and Tosin, A. (2023).
+\newblock All-densities pedestrian simulator: a case study.
+\newblock {\em Physica A: Statistical Mechanics and its Applications},
+  578:126060.
+
+\bibitem[Croatti et~al., 2026]{Croatti26}
+Croatti, A., Gabellini, M., Montagna, S., and Ricci, A. (2026).
+\newblock Crowd digital twins: motivation, architecture, and roadmap.
+\newblock {\em Future Generation Computer Systems}.
+
+\bibitem[Dang et~al., 2024]{Gaudou24}
+Dang, H.-T., Gaudou, B., and Verstaevel, N. (2024).
+\newblock A literature review of dense crowd simulation.
+\newblock {\em Simulation Modelling Practice and Theory}, 134:102955.
+
+\bibitem[Feliciani et~al., 2020]{Feliciani20}
+Feliciani, C., Shimura, K., and Nishinari, K. (2020).
+\newblock Measurement of congestion and intrinsic risk in pedestrian crowds.
+\newblock {\em Transportation Research Part C: Emerging Technologies},
+  113:167--183.
+
+\bibitem[Fiorini and Shiller, 1998]{Fiorini98}
+Fiorini, P. and Shiller, Z. (1998).
+\newblock Motion planning in dynamic environments using velocity obstacles.
+\newblock {\em International Journal of Robotics Research}, 17(7):760--772.
+
+\bibitem[{Forschungszentrum J\"{u}lich}, 2013]{FZJ13a}
+{Forschungszentrum J\"{u}lich} (2013).
+\newblock Pedestrian dynamics data archive: unidirectional pedestrian flow in a
+  corridor ({ped.2013.6}).
+\newblock FZJ Pedestrian Dynamics Data Archive.
+
+\bibitem[Fruin, 1971]{Fruin71}
+Fruin, J.~J. (1971).
+\newblock {\em Pedestrian Planning and Design}.
+\newblock Metropolitan Association of Urban Designers and Environmental
+  Planners, New York.
+
+\bibitem[Gatta et~al., 2024]{Gatta24}
+Gatta, V., Silvestri, M., and Pelizzari, C. (2024).
+\newblock Improving safety management in railway stations through a
+  simulation-based digital twin approach.
+\newblock {\em Safety Science}, 170:106360.
+
+\bibitem[Grieves and Vickers, 2017]{Grieves17}
+Grieves, M. and Vickers, J. (2017).
+\newblock Digital twin: mitigating unpredictable, undesirable emergent behavior
+  in complex systems.
+\newblock In Kahlen, F.~J., Flumerfelt, S., and Alves, A., editors, {\em
+  Transdisciplinary Perspectives on Complex Systems}, pages 85--113. Springer.
+
+\bibitem[Gupta et~al., 2018]{Gupta18}
+Gupta, A., Johnson, J., Fei-Fei, L., Savarese, S., and Alahi, A. (2018).
+\newblock Social {GAN}: socially acceptable trajectories with generative
+  adversarial networks.
+\newblock In {\em Proceedings of the IEEE Conference on Computer Vision and
+  Pattern Recognition}, pages 2255--2264. IEEE.
+
+\bibitem[Guy et~al., 2010]{Guy10}
+Guy, S.~J., Chhugani, J., Curtis, S., Dubey, P., Lin, M., and Manocha, D.
+  (2010).
+\newblock {PLEdestrians}: a least-effort approach to crowd simulation.
+\newblock In {\em Proceedings of the ACM SIGGRAPH/Eurographics Symposium on
+  Computer Animation}, pages 119--128. Eurographics Association.
+
+\bibitem[Helbing et~al., 2005]{Helbing05}
+Helbing, D., Buzna, L., Johansson, A., and Werner, T. (2005).
+\newblock Self-organized pedestrian crowd dynamics: experiments, simulations,
+  and design solutions.
+\newblock {\em Transportation Science}, 39(1):1--24.
+
+\bibitem[Helbing et~al., 2000]{Helbing00}
+Helbing, D., Farkas, I., and Vicsek, T. (2000).
+\newblock Simulating dynamical features of escape panic.
+\newblock {\em Nature}, 407(6803):487--490.
+
+\bibitem[Helbing et~al., 2007]{Helbing07}
+Helbing, D., Johansson, A., and Al-Abideen, H.~Z. (2007).
+\newblock Dynamics of crowd disasters: an empirical study.
+\newblock {\em Physical Review E}, 75(4):046109.
+
+\bibitem[Helbing and Molnar, 1995]{Helbing95}
+Helbing, D. and Molnar, P. (1995).
+\newblock Social force model for pedestrian dynamics.
+\newblock {\em Physical Review E}, 51(5):4282--4286.
+
+\bibitem[Helbing and Mukerji, 2012]{Helbing12}
+Helbing, D. and Mukerji, P. (2012).
+\newblock Crowd disasters as systemic failures: analysis of the {Love Parade}
+  disaster.
+\newblock {\em {EPJ} Data Science}, 1(1):7.
+
+\bibitem[Jiang et~al., 2014]{Jiang14}
+Jiang, L., Li, J., Shen, C., Yang, S., and Han, Z. (2014).
+\newblock Obstacle optimization for panic flow: reducing the tangential
+  momentum increases the escape speed.
+\newblock {\em {PLOS ONE}}, 9(12):e115463.
+
+\bibitem[Karamouzas et~al., 2014]{Karamouzas14}
+Karamouzas, I., Skinner, B., and Guy, S.~J. (2014).
+\newblock Universal power law governing pedestrian interactions.
+\newblock {\em Physical Review Letters}, 113(23):238701.
+
+\bibitem[Lee et~al., 2024]{Lee24}
+Lee, S., Kim, J., Park, H., and Choi, Y. (2024).
+\newblock Unraveling the causes of the {Seoul Halloween} crowd-crush disaster.
+\newblock {\em {PLOS ONE}}, 19(7):e0306764.
+
+\bibitem[Lin et~al., 2025]{Lin25}
+Lin, Y., Chen, X., Wang, L., and Zhang, J. (2025).
+\newblock Digital twin of buildings and occupants for emergency evacuation:
+  framework, technologies, applications and trends.
+\newblock {\em Building and Environment}, 248:111069.
+
+\bibitem[Moussaid et~al., 2011]{Moussaid11}
+Moussaid, M., Helbing, D., and Theraulaz, G. (2011).
+\newblock How simple rules determine pedestrian behavior and crowd disasters.
+\newblock {\em Proceedings of the National Academy of Sciences},
+  108(17):6884--6888.
+
+\bibitem[Mullick et~al., 2024]{Mullick24}
+Mullick, P., Zanin, C., Klingsch, W., and Seyfried, A. (2024).
+\newblock Eliminating bias in pedestrian density estimation: a {Voronoi} cell
+  perspective.
+\newblock {\em Physica A: Statistical Mechanics and its Applications},
+  657:130204.
+
+\bibitem[Reynolds, 1999]{Reynolds99}
+Reynolds, C.~W. (1999).
+\newblock Steering behaviors for autonomous characters.
+\newblock In {\em Proceedings of the Game Developers Conference}, pages
+  763--782. Miller Freeman.
+
+\bibitem[Seyfried et~al., 2005]{Seyfried05}
+Seyfried, A., Steffen, B., Klingsch, W., and Boltes, M. (2005).
+\newblock The fundamental diagram of pedestrian movement revisited.
+\newblock {\em Journal of Statistical Mechanics: Theory and Experiment},
+  2005(10):P10002.
+
+\bibitem[Steffen and Seyfried, 2010]{Steffen10}
+Steffen, B. and Seyfried, A. (2010).
+\newblock Methods for measuring pedestrian density, flow, speed and direction
+  with minimal scatter.
+\newblock {\em Physica A: Statistical Mechanics and its Applications},
+  389(9):1902--1910.
+
+\bibitem[Tordeux et~al., 2015]{Tordeux15}
+Tordeux, A., Zhang, J., Steffen, B., and Seyfried, A. (2015).
+\newblock Quantitative comparison of estimations for the density within
+  pedestrian streams.
+\newblock {\em Journal of Statistical Mechanics: Theory and Experiment},
+  2015(6):P06030.
+
+\bibitem[van~den Berg et~al., 2011]{VandenBerg11}
+van~den Berg, J., Guy, S.~J., Lin, M., and Manocha, D. (2011).
+\newblock Reciprocal n-body collision avoidance.
+\newblock In Pradalier, C., Siegwart, R., and Hirzinger, G., editors, {\em
+  Robotics Research: The 14th International Symposium {ISRR}}, volume~70 of
+  {\em Springer Tracts in Advanced Robotics}, pages 3--19. Springer.
+
+\bibitem[van Toll et~al., 2021]{VanToll21}
+van Toll, W., Braga, C., Solenthaler, B., and Pettre, J. (2021).
+\newblock Extreme-density crowd simulation: combining agents with smoothed
+  particle hydrodynamics.
+\newblock {\em Computers \& Graphics}, 98:306--321.
+
+\bibitem[Yanagisawa et~al., 2009]{Yanagisawa09}
+Yanagisawa, D., Tomoeda, A., Jiang, R., and Nishinari, K. (2009).
+\newblock Introduction of frictional and turning function for pedestrian
+  outflow with an obstacle.
+\newblock {\em Physical Review E}, 80(3):036110.
+
+\end{thebibliography}

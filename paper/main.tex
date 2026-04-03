@@ -17,6 +17,7 @@
 \usepackage{booktabs}
 \usepackage{algorithm2e}
 \usepackage{SCITEPRESS}
+\hypersetup{pdfauthor={},pdftitle={},pdfsubject={},pdfkeywords={}}
 
 \begin{document}
 
@@ -29,7 +30,7 @@
 
 \keywords{Crowd Simulation, Digital Twin, Social Force Model, Collision Avoidance, Crowd Safety, Agent-Based Modeling.}
 
-\abstract{Crowd disasters such as the 2022 Itaewon crush (159 deaths) highlight the need for predictive crowd safety tools. We present CrowdTwin, a hybrid agent-based digital twin framework that continuously blends Social Force Model, time-to-collision, and ORCA steering using density-dependent sigmoid weights, coupled with multi-method density estimation, a composite risk metric, and derivative-free barrier optimization. Validation against FZJ empirical data (952 pedestrians, 4776 fundamental diagram points) confirms that the model reproduces the Weidmann speed-density relationship, with speed declining from 1.32~m/s at free flow to 0.85~m/s at 5.0~ped/m\textsuperscript{2}. Ablation experiments across four scenarios show the full hybrid reduces bottleneck evacuation time by 18\% at narrow exits (99s vs.\ 120s at 0.8m width). The crush regime caps dangerous density from 24.9 to 14.8~ped/m\textsuperscript{2}, and barrier optimization achieves 13\% evacuation improvement in 20 evaluations. The vectorized implementation processes 1000 agents at 545~ms/step.}
+\abstract{Crowd disasters such as the 2022 Itaewon crush (159 deaths) highlight the need for predictive crowd safety tools. We present CrowdTwin, a hybrid agent-based digital twin framework that continuously blends Social Force Model, time-to-collision, and ORCA steering using density-dependent sigmoid weights, coupled with multi-method density estimation, a composite risk metric, and derivative-free barrier optimization. Validation against FZJ empirical data (952 pedestrians, 4776 fundamental diagram points) confirms that the model reproduces the Weidmann speed-density relationship, with speed declining from 1.32~m/s at free flow to 0.85~m/s at 5.0~ped/m\textsuperscript{2}. Ablation experiments across four scenarios show the full hybrid reduces bottleneck evacuation time by 18\% at narrow exits (99s vs.\ 120s at 0.8m width). The crush regime caps dangerous density from 24.9 to 14.8~ped/m\textsuperscript{2}, and barrier optimization achieves 13\% evacuation improvement in 20 evaluations. The vectorized implementation processes 1000 agents at 545~ms per step.}
 
 \onecolumn \maketitle \normalsize \setcounter{footnote}{0} \vfill
 
@@ -254,6 +255,8 @@ Timestep & $\Delta t$ & 0.01 s \\
 \end{tabular}
 \end{table}
 
+Figure~\ref{fig:traj} shows representative agent trajectories in the bottleneck scenario, illustrating the funnelling behaviour at the exit gap.
+
 Five scenarios are used: a 10$\times$3.6m unidirectional corridor, a 10$\times$10m bottleneck room with variable exit width, a 20$\times$3.6m bidirectional corridor, a 90\textdegree{} crossing intersection, and a 15m funnel tapering from 10m to 3m.
 Empirical validation uses 952 pedestrian trajectories from the FZJ Pedestrian Dynamics Data Archive~\cite{FZJ13a} recorded at 16~fps.
 
@@ -292,7 +295,7 @@ In bidirectional flow, C1 and C4 achieve similar mean speeds ($\sim$0.71~m/s), w
 Table~\ref{tab:bottleneck} reports evacuation times across six bottleneck exit widths.
 At the narrowest exit ($w = 0.8$m), C4 evacuates in 99~s compared to 120~s for C1, an 18\% improvement.
 At $w = 1.2$m, C4 achieves 33.2~s vs.\ C1's 36.5~s (9\% improvement).
-The benefit diminishes at wider exits: at $w = 3.6$m, both converge to $\sim$12~s.
+The benefit diminishes at wider exits: at $w = 3.6$m, both converge to $\sim$12~s (Figure~\ref{fig:evac_width}).
 This pattern suggests the hybrid steering primarily helps in congested conditions where ORCA's velocity optimization and TTC's anticipation prevent counterproductive pushing.
 
 \begin{table}[h]
@@ -318,6 +321,12 @@ This pattern suggests the hybrid steering primarily helps in congested condition
 \caption{Evacuation time vs.\ exit width for C1 (SFM only) and C4 (full hybrid).}\label{fig:evac_width}
 \end{figure}
 
+\begin{figure}[!h]
+\centering
+\includegraphics[width=\columnwidth]{../figures/trajectories.pdf}
+\caption{Agent trajectories in the bottleneck scenario (30 agents, $w = 1.8$m exit, C1). Colour indicates time progression.}\label{fig:traj}
+\end{figure}
+
 \subsection{Crush Regime Evaluation}
 
 We evaluate the crush regime in a 15m funnel scenario with 200 agents using four density thresholds: D1 (no crush), D2 ($\rho_{\text{crit}} = 5.0$), D3 ($\rho_{\text{crit}} = 5.5$), and D4 ($\rho_{\text{crit}} = 7.0$).
@@ -326,12 +335,18 @@ All use SFM+TTC as the base steering model.
 Without the crush regime (D1), peak density reaches 24.9~ped/m$^2$---far exceeding survivable levels---with 176 of 200 agents exiting within 30~s.
 Activating crush at $\rho > 5.0$ (D2) caps peak density at 14.8~ped/m$^2$, a 41\% reduction, though throughput drops to 158 exits.
 The intermediate threshold D3 ($\rho > 5.5$) produces 16.3~ped/m$^2$ peak density with 160 exits, while the permissive D4 ($\rho > 7.0$) allows 19.4~ped/m$^2$ with 164 exits.
-Figure~\ref{fig:heatmap} shows the density distribution in the funnel at peak congestion.
+Figures~\ref{fig:heatmap} and~\ref{fig:risk} show the density distribution and composite risk in the funnel at peak congestion.
 
 \begin{figure}[!h]
 \centering
 \includegraphics[width=\columnwidth]{../figures/density_heatmap.pdf}
 \caption{Density heatmap in the funnel scenario (200 agents, time-averaged over 100 steps). Black lines: funnel walls.}\label{fig:heatmap}
+\end{figure}
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=\columnwidth]{../figures/risk_heatmap.pdf}
+\caption{Composite risk map in the funnel scenario (200 agents). Risk integrates density, crowd pressure, and density gradient.}\label{fig:risk}
 \end{figure}
 
 \subsection{Barrier Optimization}
@@ -340,7 +355,7 @@ Using the bottleneck scenario with C4 steering, we optimize the placement of a s
 Each evaluation runs the full simulation averaged over 2 random seeds.
 
 The optimizer converges to a barrier at $x = 5.5$, $y = 5.0$, length 1.84m, oriented perpendicular to the flow direction ($\alpha = \pi/2$).
-This placement reduces evacuation time from a 75~s baseline to 65~s, a 13\% improvement.
+This placement reduces evacuation time from a 75~s baseline to 65~s, a 13\% improvement (Figure~\ref{fig:convergence}).
 The perpendicular orientation is consistent with the known effectiveness of column-like obstacles upstream of bottlenecks for disrupting arch formation~\cite{Yanagisawa09,Helbing05}.
 
 \begin{figure}[!h]

@@ -116,3 +116,15 @@
 - **Citations:** 30 total, all verified against references.bib
 - **Gates:** all citation keys valid ✓
 - **Issues:** compilation deferred to user (no pdflatex)
+
+## Phase 14 — Paper Audit + Submission Prep
+- **Date:** 2026-04-03
+- **Audit:** PAPER_AUDIT.md created with full checklist
+- **Double-blind:** PASS — anonymous authors, no affiliations, no self-citations, PDF metadata stripped
+- **Figures:** 8 figures (fd, ablation, evac_width, traj, heatmap, risk, convergence, scaling), all vector PDF
+- **Tables:** 2 tables (parameters, bottleneck evacuation times)
+- **References:** 30 cited, all resolved, 6 orphans acceptable
+- **Pages:** 9 (within SciTePress 8-12 range)
+- **Compilation:** tectonic compiles cleanly, equations fixed for column width
+- **Fixes applied:** abstract period, hypersetup metadata strip, added trajectory+risk figures, cross-references for all figures
+- **Milestone:** SUBMISSION READY
