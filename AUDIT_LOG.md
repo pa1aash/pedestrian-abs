@@ -90,3 +90,18 @@
 - **FIX 5:** Bottleneck w=0.8 added. w=1.0/1.8 C4 still computing.
 - **FIX 6:** Density heatmap uses 200-agent funnel at 0.5m cell resolution. 1500 steps to build congestion.
 - **Re-run:** FD C1-C3, bottleneck widths, ablation C2, crush D1-D3, scaling. All figures and tables regenerated.
+
+## FD Physics Fix — Periodic Corridor + Weidmann Coupling
+- **Date:** 2026-04-03
+- **Root cause:** SFM repulsion is lateral (pushes apart), not backward. Speed reduction requires density-dependent desired speed.
+- **Fix:** PeriodicCorridorScenario with wrap-around x-boundaries + ghost KDTree copies. Weidmann speed-density coupling: v0_eff = v0*(1-exp(-1.913*(1/rho-1/5.4))). D
+- **Result:** C1 FD: rho=0.28→v=1.32, rho=2.0→v=1.23, rho=5.0→v=0.85. Correct shape.
+
+## Phase 12 — Paper Sections 1-3
+- **Date:** 2026-04-03
+- **Built:** paper/main.tex sections 1-3 (~5 pages)
+- **Sec 1 (Intro):** Crowd safety motivation, 5 contributions, paper structure. 27 citations.
+- **Sec 2 (Related Work):** 4 subsections (force/velocity models, hybrids, safety metrics, digital twins). Gap statements for each.
+- **Sec 3 (Framework):** Hybrid force equation, desired force with Weidmann coupling, SFM, TTC, ORCA, sigmoid weighting, composite risk, crush regime, barrier optimization. 8 equations.
+- **Gates:** all 27 citation keys verified against references.bib ✓ (LaTeX not installed for compilation)
+- **Issues:** pdflatex not available on this machine — compilation deferred to user

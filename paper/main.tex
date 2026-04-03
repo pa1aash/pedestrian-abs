@@ -14,80 +14,228 @@
 % Add your own packages BEFORE SCITEPRESS:
 \usepackage{hyperref}
 \usepackage{graphicx}
-\usepackage{algorithm2e}
+\usepackage{booktabs}
 \usepackage{SCITEPRESS}
 
 \begin{document}
 
-\title{Your Paper Title Here}
+\title{A Hybrid Agent-Based Digital Twin Framework \\ for Crowd Safety Assessment}
 
-\author{\authorname{First Author\sup{1}\orcidAuthor{0000-0000-0000-0000}, Second Author\sup{1}\orcidAuthor{0000-0000-0000-0000} and Third Author\sup{2}\orcidAuthor{0000-0000-0000-0000}}
-\affiliation{\sup{1}Department, University, City, Country}
-\affiliation{\sup{2}Department, University, City, Country}
-\email{first@example.com, second@example.com}
+\author{\authorname{Anonymous Authors}
+\affiliation{}
+\email{}
 }
 
-\keywords{Keyword One, Keyword Two, Keyword Three.}
+\keywords{Crowd Simulation, Digital Twin, Social Force Model, Collision Avoidance, Crowd Safety, Agent-Based Modeling.}
 
-\abstract{Your abstract goes here. It should summarize the contents of the paper and contain between 70 and 200 words. The text must be set to 9-point font size and end with a period.}
+\abstract{TODO: Abstract will be written after experiments section.}
 
 \onecolumn \maketitle \normalsize \setcounter{footnote}{0} \vfill
 
+%% ============================================================
+%% SECTION 1: INTRODUCTION
+%% ============================================================
 \section{\uppercase{Introduction}}
 \label{sec:introduction}
 
-Your introduction here \cite{Smith98}.
+Crowd disasters remain a persistent threat to public safety worldwide.
+The 2022 Itaewon crowd crush in Seoul killed 159 people in a narrow alley during Halloween celebrations~\cite{Lee24}, while the 2010 Love Parade disaster in Duisburg resulted in 21 deaths at a tunnel bottleneck~\cite{Helbing12}.
+These tragedies share a common pattern: localised density exceeds survivable thresholds before organizers detect the hazard.
+Predictive tools that can anticipate dangerous density buildups and evaluate mitigation strategies \emph{before} an event are therefore critical for crowd safety management.
 
+Pedestrian crowd simulation has matured considerably since the seminal Social Force Model (SFM) of Helbing and Moln\'{a}r~\cite{Helbing95}.
+Force-based approaches~\cite{Helbing00}, velocity-obstacle methods~\cite{Fiorini98,VandenBerg11}, and anticipatory models based on time-to-collision (TTC)~\cite{Karamouzas14} each capture different aspects of pedestrian behaviour.
+However, no single paradigm performs well across the full density spectrum: the SFM excels at contact-rich high-density regimes but produces unrealistic paths at low density, while ORCA~\cite{VandenBerg11} yields smooth collision-free trajectories in sparse crowds but cannot model the physical compression forces that dominate crush scenarios.
+Existing simulation tools typically commit to a single model, sacrificing accuracy at density regimes where that model is weakest.
+
+The Digital Twin (DT) concept~\cite{Grieves17} offers a unifying architecture: a virtual replica of a physical venue, continuously updated with sensor data and capable of what-if analysis.
+Recent work has explored crowd digital twins for railway stations~\cite{Gatta24} and evacuation planning~\cite{Lin25}, yet no published system integrates hybrid multi-paradigm steering, multi-method density estimation, composite risk metrics, and derivative-free barrier optimization within a single DT loop.
+
+This paper presents \textsc{CrowdTwin}, a hybrid agent-based digital twin framework for crowd safety assessment.
+Our contributions are:
+\begin{enumerate}
+    \item A \textbf{density-weighted hybrid steering model} that continuously blends SFM, TTC, and ORCA forces using sigmoid activation functions of local density, yielding appropriate behaviour from free flow through crush conditions.
+    \item \textbf{Multi-method density estimation} combining grid counting, Voronoi tessellation, and kernel density estimation, feeding a composite risk metric that integrates density, crowd pressure, and density gradients.
+    \item \textbf{Derivative-free barrier optimization} using CMA-ES to place physical barriers that minimize composite risk, demonstrated on bottleneck evacuation scenarios.
+    \item A \textbf{density-dependent crush regime} with enhanced contact forces that activates automatically at critical density thresholds, modelling the loss of individual agency observed in real crowd crushes.
+    \item \textbf{Integration within a Digital Twin architecture} supporting continuous agent injection, periodic boundary calibration against empirical data, and scenario-based what-if analysis across five standard pedestrian scenarios.
+\end{enumerate}
+
+We validate the framework against the Weidmann fundamental diagram~\cite{Seyfried05} and empirical trajectory data from the FZJ Pedestrian Dynamics Data Archive~\cite{FZJ13a}, demonstrating that the hybrid model reproduces the characteristic speed-density relationship across four steering configurations.
+Ablation experiments across corridor, bottleneck, bidirectional, and crossing scenarios quantify the contribution of each steering component, while crush experiments in a funnel geometry show that the crush regime effectively caps dangerous density levels.
+
+The remainder of this paper is organized as follows.
+Section~2 reviews related work in pedestrian simulation, crowd safety metrics, and digital twins.
+Section~3 presents the framework architecture including the hybrid steering model, density estimation, and optimization components.
+Section~4 describes the experimental setup and results.
+Section~5 discusses findings and limitations.
+Section~6 concludes with future directions.
+
+
+%% ============================================================
+%% SECTION 2: RELATED WORK
+%% ============================================================
 \section{\uppercase{Related Work}}
+\label{sec:related}
 
-Your related work here \cite{Moore99}.
+\subsection{Force-Based and Velocity-Based Models}
 
-\section{\uppercase{Methodology}}
+The Social Force Model (SFM) introduced by Helbing and Moln\'{a}r~\cite{Helbing95} represents pedestrians as particles subject to desired, social repulsive, and contact forces.
+The extended model~\cite{Helbing00} added body compression and sliding friction forces that activate upon physical contact, enabling simulation of dense crowds and panic scenarios.
+Reynolds~\cite{Reynolds99} proposed steering behaviours for autonomous agents, while Fiorini and Shiller~\cite{Fiorini98} formalized velocity obstacles (VO) for collision avoidance.
+Van den Berg et al.~\cite{VandenBerg11} introduced Optimal Reciprocal Collision Avoidance (ORCA), which constructs half-plane velocity constraints and solves a linear program to find the optimal collision-free velocity.
+Karamouzas et al.~\cite{Karamouzas14} demonstrated that pedestrians respond to anticipated time-to-collision with an inverse power-law force, providing an anticipatory steering mechanism.
+Guy et al.~\cite{Guy10} developed PLEdestrians, optimizing agent parameters to match real pedestrian trajectories.
 
-Your methodology here.
+These models are typically deployed individually. Force-based approaches handle contact-rich scenarios well but produce oscillatory paths at low density; velocity-based methods yield smooth trajectories but cannot represent physical compression. No published system combines all three paradigms in a density-adaptive framework.
 
-\subsection{Subsection Example}
+\subsection{Hybrid and Multi-Regime Models}
 
-Subsection content here.
+Several authors have explored combining simulation paradigms.
+Van Toll et al.~\cite{VanToll21} proposed SPH-based crowd simulation that transitions between microscopic and macroscopic scales.
+Moussa\"{\i}d et al.~\cite{Moussaid11} developed heuristic-based models calibrated to empirical data from bottleneck experiments, though these remain single-paradigm.
+Cristiani et al.~\cite{Cristiani23} introduced a multi-scale simulator handling all density regimes through model switching.
+Gaudou et al.~\cite{Gaudou24} surveyed agent-based crowd simulation approaches, identifying the need for models that adapt their resolution to local conditions.
 
-% Example table:
-% \begin{table}[h]
-% \caption{Caption here.}\label{tab:example}
-% \centering
-% \begin{tabular}{|c|c|}
-%   \hline
-%   Column 1 & Column 2 \\
-%   \hline
-%   Text 1 & Text 2 \\
-%   \hline
-% \end{tabular}
-% \end{table}
+Existing hybrids typically combine at most two paradigms (e.g., macro-micro coupling) and use hard switching rather than continuous blending. None combine SFM contact forces, TTC anticipation, and ORCA velocity optimization in a single framework with density-dependent weighting.
 
-% Example figure:
-% \begin{figure}[!h]
-%   \centering
-%   {\epsfig{file = yourfigure.eps, width = 5.5cm}}
-%   \caption{Caption here.}
-%   \label{fig:example}
-% \end{figure}
+\subsection{Crowd Safety Metrics and Density Estimation}
 
-% Example equation:
-% \begin{equation}\label{eq1}
-%     a = b + c
-% \end{equation}
+Fruin~\cite{Fruin71} established the Level of Service framework relating pedestrian density to comfort and safety.
+Helbing et al.~\cite{Helbing07} defined crowd pressure as the product of density and velocity variance, providing a metric sensitive to the turbulent conditions preceding crowd crushes.
+Steffen and Seyfried~\cite{Steffen10} demonstrated that Voronoi tessellation provides more accurate local density estimates than grid-based counting in heterogeneous crowds.
+Tordeux et al.~\cite{Tordeux15} compared density estimation methods and found that the choice of method significantly affects measured fundamental diagrams.
+Mullick et al.~\cite{Mullick24} extended Voronoi density to handle boundary effects through mirror-point techniques.
+Feliciani et al.~\cite{Feliciani20} proposed congestion and danger metrics based on density gradients, arguing that spatial variation in density is a stronger predictor of incidents than density alone.
 
-\section{\uppercase{Results}}
+No existing framework combines multiple density estimators (grid, Voronoi, KDE) into a composite risk metric that integrates density magnitude, crowd pressure, and density gradients.
 
-Your results here.
+\subsection{Digital Twins for Crowd Management}
+
+Grieves and Vickers~\cite{Grieves17} formalized the Digital Twin concept as a virtual replica connected to its physical counterpart through data exchange.
+Croatti and Ricci~\cite{Croatti26} proposed an agent-based architecture for crowd digital twins (CDT) supporting real-time monitoring and what-if analysis.
+Gatta et al.~\cite{Gatta24} developed a railway station CDT integrating pedestrian simulation with IoT sensor data.
+Lin et al.~\cite{Lin25} surveyed digital twin applications for emergency evacuation, identifying crowd simulation fidelity as the primary bottleneck.
+
+Published CDT systems typically embed a single simulation model and do not include optimization components for infrastructure design. Our framework addresses this gap by integrating hybrid steering, composite risk assessment, and barrier optimization within the DT loop.
+
+
+%% ============================================================
+%% SECTION 3: FRAMEWORK ARCHITECTURE
+%% ============================================================
+\section{\uppercase{Framework Architecture}}
+\label{sec:framework}
+
+The CrowdTwin framework consists of four integrated components: (1)~a hybrid steering model that blends force-based and velocity-based paradigms, (2)~multi-method density estimation with composite risk assessment, (3)~a density-dependent crush regime, and (4)~derivative-free barrier optimization. We describe each in turn.
+
+\subsection{Hybrid Steering Model}
+\label{sec:hybrid}
+
+Each agent~$i$ is characterized by position~$\mathbf{x}_i$, velocity~$\mathbf{v}_i$, goal~$\mathbf{g}_i$, radius~$r_i$, desired speed~$v_i^0$, mass~$m_i$, and relaxation time~$\tau_i$.
+The total force on agent~$i$ is:
+\begin{equation}\label{eq:hybrid}
+    \mathbf{F}_i = (1 - w_c)\,\mathbf{F}_i^{\text{des}} + \mathbf{F}_i^{\text{SFM}} + \mathbf{F}_i^{\text{TTC}} + w_o\,\mathbf{F}_i^{\text{ORCA}} + w_c\,\mathbf{F}_i^{\text{crush}} + \mathbf{F}_i^{\text{wall}}
+\end{equation}
+where $w_o(\rho_i)$ and $w_c(\rho_i)$ are density-dependent weights controlling the contribution of ORCA and crush forces respectively.
+
+\textbf{Desired Force.}
+The goal-seeking force drives agents toward their destination with a density-dependent speed reduction following the Weidmann fundamental diagram~\cite{Seyfried05}:
+\begin{equation}\label{eq:desired}
+    \mathbf{F}_i^{\text{des}} = \frac{m_i}{\tau_i}\left(v_i^{\text{eff}}(\rho_i)\,\hat{\mathbf{e}}_i - \mathbf{v}_i\right), \quad
+    v_i^{\text{eff}} = v_i^0\left(1 - e^{-\gamma(1/\rho_i - 1/\rho_{\max})}\right)
+\end{equation}
+with $\gamma = 1.913$ and $\rho_{\max} = 5.4$~ped/m$^2$.
+
+\textbf{Social Force Model.}
+Agent-agent interaction follows Helbing et al.~\cite{Helbing00} with social repulsion, body compression, and sliding friction:
+\begin{equation}\label{eq:sfm}
+    \mathbf{f}_{ij} = A\,e^{(r_{ij} - d_{ij})/B}\,\hat{\mathbf{n}}_{ij} + k\,g(r_{ij} - d_{ij})\,\hat{\mathbf{n}}_{ij} + \kappa\,g(r_{ij} - d_{ij})\,(\Delta\mathbf{v}_{ji} \cdot \hat{\mathbf{t}}_{ij})\,\hat{\mathbf{t}}_{ij}
+\end{equation}
+where $r_{ij} = r_i + r_j$ is the sum of radii, $d_{ij} = \|\mathbf{x}_i - \mathbf{x}_j\|$ the distance, $g(x) = \max(0, x)$, and parameters $A = 2000$~N, $B = 0.08$~m, $k = 1.2 \times 10^5$~kg/s$^2$, $\kappa = 2.4 \times 10^5$~kg/(m$\cdot$s).
+
+\textbf{Time-to-Collision Force.}
+Following Karamouzas et al.~\cite{Karamouzas14}, agents anticipate collisions and apply repulsive forces that decay exponentially with time-to-collision~$\tau_{ij}$:
+\begin{equation}\label{eq:ttc}
+    F_{\text{TTC}} = \frac{k_{\text{ttc}}\,e^{-\tau_{ij}/\tau_0}}{\tau_{ij}^2}, \quad
+    \tau_{ij} = \frac{-b - \sqrt{b^2 - ac}}{a}
+\end{equation}
+with $k_{\text{ttc}} = 1.5$, $\tau_0 = 3.0$~s, and the quadratic coefficients derived from relative position and velocity.
+
+\textbf{ORCA.}
+At low density, ORCA~\cite{VandenBerg11} constructs half-plane velocity constraints from each neighbour and solves a 2D linear program to find the velocity closest to the preferred velocity while satisfying all constraints. The resulting velocity is converted to a force: $\mathbf{F}_i^{\text{ORCA}} = m_i(\mathbf{v}_i^{\text{ORCA}} - \mathbf{v}_i) / \tau_{\text{ORCA}}$.
+
+\textbf{Density-Dependent Weighting.}
+The ORCA and crush contributions are modulated by sigmoid functions of local density:
+\begin{equation}\label{eq:sigmoid}
+    w_o(\rho) = 1 - \sigma(\rho;\, 4.0,\, 2.0), \quad
+    w_c(\rho) = \sigma(\rho;\, 5.5,\, 3.0), \quad
+    \sigma(x; x_0, k) = \frac{1}{1 + e^{-k(x - x_0)}}
+\end{equation}
+At low density ($\rho < 2$), ORCA dominates ($w_o \approx 1$); at high density ($\rho > 6$), crush forces take over ($w_c \approx 1$).
+The SFM contributes at all densities, providing the contact mechanics that prevent agent overlap.
+
+\subsection{Density Estimation and Composite Risk}
+\label{sec:density}
+
+We estimate local density using three complementary methods.
+\textbf{Grid counting} computes $\rho_G(i) = |\{j : \|\mathbf{x}_j - \mathbf{x}_i\| < R\}| / (\pi R^2)$ with $R = 2.0$~m.
+\textbf{Voronoi tessellation}~\cite{Steffen10} assigns $\rho_V(i) = 1 / A_i^{\text{Vor}}$ where $A_i^{\text{Vor}}$ is the clipped Voronoi cell area, using mirror points for boundary handling~\cite{Mullick24}.
+\textbf{Kernel density estimation} uses a Gaussian kernel with bandwidth $h = 1.0$.
+
+The composite risk metric~\cite{Feliciani20,Helbing07} combines density, crowd pressure, and density gradient:
+\begin{equation}\label{eq:risk}
+    R_i = \frac{\hat{\rho}_i}{\rho_{\text{ref}}} \left(1 + \frac{P_i}{P_{\text{ref}}} + \frac{|\nabla\rho_i|}{\nabla\rho_{\text{ref}}}\right)
+\end{equation}
+where $\hat{\rho}_i = \max(\rho_V, \rho_{\text{KDE}})$, crowd pressure $P_i = \hat{\rho}_i \cdot \sigma_{v,i}$ with $\sigma_{v,i}$ the local speed standard deviation, and reference values $\rho_{\text{ref}} = 6$, $P_{\text{ref}} = 3$, $\nabla\rho_{\text{ref}} = 4$.
+Risk levels are classified as: normal ($R < 1$), elevated ($1 \leq R < 2$), high ($2 \leq R < 3$), and critical ($R \geq 3$).
+
+\subsection{Crush Regime}
+\label{sec:crush}
+
+When local density exceeds a critical threshold $\rho_{\text{crit}}$, individual pedestrians lose the ability to control their movement and are instead subject to the forces exerted by the surrounding crowd~\cite{Helbing07,Moussaid11}.
+We model this through enhanced contact forces with no social repulsion:
+\begin{equation}\label{eq:crush}
+    \mathbf{f}_{ij}^{\text{crush}} = k_c\,g(r_{ij} - d_{ij})\,\hat{\mathbf{n}}_{ij} + \kappa_c\,g(r_{ij} - d_{ij})\,(\Delta\mathbf{v}_{ji} \cdot \hat{\mathbf{t}}_{ij})\,\hat{\mathbf{t}}_{ij}
+\end{equation}
+with $k_c = 3.6 \times 10^5$~kg/s$^2$ and $\kappa_c = 4.8 \times 10^5$~kg/(m$\cdot$s), representing 3$\times$ and 2$\times$ the standard SFM contact parameters respectively.
+The desired force is simultaneously suppressed via the $(1 - w_c)$ factor in Eq.~\eqref{eq:hybrid}, modelling the loss of agency.
+
+\subsection{Barrier Optimization}
+\label{sec:optimization}
+
+Physical barriers (e.g., fences, bollards) can redistribute crowd flow to reduce dangerous density concentrations.
+We formulate barrier placement as derivative-free optimization:
+\begin{equation}\label{eq:opt}
+    \boldsymbol{\theta}^* = \arg\min_{\boldsymbol{\theta}} \; J(\boldsymbol{\theta}) = \mathbb{E}_s\left[T_{\text{evac}}(\boldsymbol{\theta}, s) + \lambda \cdot \max_t R_{\max}(t)\right]
+\end{equation}
+where $\boldsymbol{\theta} = (x, y, l, \alpha)$ parameterizes a rectangular barrier (position, length, angle), $T_{\text{evac}}$ is the evacuation time, and $R_{\max}$ the peak composite risk, averaged over random seeds~$s$.
+
+We solve this using Nelder-Mead or CMA-ES~\cite{Berseth15}, both of which require only function evaluations without gradient information.
+Each evaluation runs a full simulation with the barrier inserted as wall segments, making the approach applicable to any scenario geometry.
+Prior work on crowd-aware environment optimization~\cite{Berseth15,Jiang14} has demonstrated the value of simulation-in-the-loop optimization but has not incorporated composite risk metrics or crush regime modelling.
+
+
+%% ============================================================
+%% SECTION 4: EXPERIMENTS (placeholder)
+%% ============================================================
+\section{\uppercase{Experiments and Results}}
+\label{sec:experiments}
+
+TODO: Sections 4--6 will be written with real experiment numbers.
+
+\section{\uppercase{Discussion}}
+\label{sec:discussion}
+
+TODO.
 
 \section{\uppercase{Conclusions}}
 \label{sec:conclusion}
 
-Your conclusions here.
+TODO.
 
-\section*{\uppercase{Acknowledgements}}
-
-Optional acknowledgements here.
+%% ============================================================
+%% REFERENCES
+%% ============================================================
 
 \bibliographystyle{apalike}
 {\small
