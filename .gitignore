@@ -7,3 +7,8 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .DS_Store
+prompt_pedestrian_abs/
+issues/
+OPRS/
+run_all_experiments.py
+results_backup/
