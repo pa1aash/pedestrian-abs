@@ -4,12 +4,14 @@
 import argparse
 import json
 import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sim.experiments.configs import BOTTLENECK_WIDTHS, CRUSH_CONFIGS
 from sim.experiments.runner import ExperimentRunner
 from sim.scenarios.bidirectional import BidirectionalScenario
 from sim.scenarios.bottleneck import BottleneckScenario
-from sim.scenarios.corridor import CorridorScenario
 from sim.scenarios.crossing import CrossingScenario
 from sim.scenarios.funnel import FunnelScenario
 
@@ -67,17 +69,15 @@ def main():
 
 
 def _run_fd(runner, configs, args):
-    """Family A: Fundamental diagram with corridor at various densities."""
-    for n_agents in [20, 40, 60]:
-        for cfg in configs:
-            print(f"FD / {cfg} / n={n_agents} x {args.replications} reps...")
-            df = runner.run(
-                CorridorScenario, cfg,
-                n_replications=args.replications,
-                max_time=args.max_time,
-                n_agents=n_agents,
-            )
-            print(f"  -> {len(df)} rows, mean_speed={df['mean_speed'].mean():.2f}")
+    """Family A: Fundamental diagram using periodic corridor (controlled density)."""
+    for cfg in configs:
+        print(f"FD / {cfg} x {args.replications} reps (periodic corridor)...")
+        df = runner.run_fundamental_diagram(
+            cfg,
+            n_replications=args.replications,
+        )
+        print(f"  -> {len(df)} rows, density range: "
+              f"[{df['density'].min():.1f}, {df['density'].max():.1f}]")
 
 
 def _run_bottleneck(runner, configs, args):

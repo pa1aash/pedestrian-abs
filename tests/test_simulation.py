@@ -31,11 +31,18 @@ def simple_sim():
 
 
 def test_agents_move(simple_sim):
-    """After 200 steps, mean x-position should have increased (agents move toward goal)."""
-    initial_mean_x = np.mean(simple_sim.state.positions[:, 0])
+    """After 200 steps, mean x-position of active agents should have increased."""
+    initial_active = simple_sim.state.active.copy()
+    initial_mean_x = np.mean(simple_sim.state.positions[initial_active, 0])
     for _ in range(200):
         simple_sim.step()
-    final_mean_x = np.mean(simple_sim.state.positions[simple_sim.state.active, 0])
+    # Compare active agents only, using the same population basis
+    still_active = simple_sim.state.active
+    if np.any(still_active):
+        final_mean_x = np.mean(simple_sim.state.positions[still_active, 0])
+    else:
+        # All agents exited (reached goal at x=9), so they definitely moved right
+        final_mean_x = 9.0
     assert final_mean_x > initial_mean_x
 
 

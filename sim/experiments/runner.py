@@ -155,11 +155,13 @@ class ExperimentRunner:
         if agent_counts is None:
             agent_counts = [50, 100, 200, 500, 1000]
 
-        from sim.scenarios.corridor import CorridorScenario
+        from sim.scenarios.bottleneck import BottleneckScenario
 
         rows = []
         for n in agent_counts:
-            scenario = CorridorScenario(n_agents=n)
+            # Use 10x10 bottleneck (100 m^2) to keep density realistic
+            # N=1000 -> 10 ped/m^2 (high but physically possible)
+            scenario = BottleneckScenario(n_agents=n, exit_width=3.6)
             sim = Simulation.from_scenario(scenario, config_name)
 
             t0 = time.perf_counter()

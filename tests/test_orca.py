@@ -67,7 +67,10 @@ def test_head_on_deflection():
     forces = orca.compute_orca_forces(state, neighbors)
 
     # Both agents should get a lateral (y) deflection
-    assert abs(forces[0, 1]) > 0.1 or abs(forces[1, 1]) > 0.1
+    assert abs(forces[0, 1]) > 0.1, "Agent 0 should deflect laterally"
+    assert abs(forces[1, 1]) > 0.1, "Agent 1 should deflect laterally"
+    # Forces should be anti-symmetric in a symmetric setup
+    np.testing.assert_allclose(forces[0], -forces[1], atol=5.0)
 
 
 def test_single_halfplane():

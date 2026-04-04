@@ -85,3 +85,45 @@ def test_agent_at_goal():
     # e_hat = 0 (at goal), so F = m*(0 - v)/tau = -m*v/tau
     expected = -80.0 * np.array([1.0, 0.0]) / 0.5
     np.testing.assert_allclose(forces[0], expected, atol=1e-6)
+
+
+def test_weidmann_reduces_speed():
+    """Weidmann coupling reduces effective speed at higher density."""
+    positions = np.array([[0.0, 0.0]])
+    velocities = np.array([[0.0, 0.0]])
+    goals = np.array([[5.0, 0.0]])
+    desired_speeds = np.array([1.34])
+    masses = np.array([80.0])
+    taus = np.array([0.5])
+
+    f_free = compute_desired_force(positions, velocities, goals, desired_speeds, masses, taus)
+    f_dense = compute_desired_force(
+        positions, velocities, goals, desired_speeds, masses, taus,
+        local_densities=np.array([3.0]),
+    )
+
+    # Higher density -> lower effective speed -> lower force magnitude
+    assert np.linalg.norm(f_dense[0]) < np.linalg.norm(f_free[0])
+
+
+def test_weidmann_quantitative():
+    """Weidmann speed factor matches formula at rho=2.0."""
+    rho = 2.0
+    gamma, rho_max = 1.913, 5.4
+    expected_factor = 1.0 - np.exp(-gamma * (1.0 / rho - 1.0 / rho_max))
+
+    positions = np.array([[0.0, 0.0]])
+    velocities = np.array([[0.0, 0.0]])
+    goals = np.array([[5.0, 0.0]])
+    desired_speeds = np.array([1.34])
+    masses = np.array([80.0])
+    taus = np.array([0.5])
+
+    forces = compute_desired_force(
+        positions, velocities, goals, desired_speeds, masses, taus,
+        local_densities=np.array([rho]),
+    )
+
+    # F = m * (v0_eff * e - v) / tau = m * v0_eff / tau (since v=0, e=[1,0])
+    expected_fx = 80.0 * (1.34 * expected_factor) / 0.5
+    np.testing.assert_allclose(forces[0, 0], expected_fx, rtol=0.01)

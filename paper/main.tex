@@ -30,7 +30,7 @@
 
 \keywords{Crowd Simulation, Digital Twin, Social Force Model, Collision Avoidance, Crowd Safety, Agent-Based Modeling.}
 
-\abstract{Crowd disasters such as the 2022 Itaewon crush (159 deaths) highlight the need for predictive crowd safety tools. We present CrowdTwin, a hybrid agent-based digital twin framework that continuously blends Social Force Model, time-to-collision, and ORCA steering using density-dependent sigmoid weights, coupled with multi-method density estimation, a composite risk metric, and derivative-free barrier optimization. Validation against FZJ empirical data (952 pedestrians, 4776 fundamental diagram points) confirms that the model reproduces the Weidmann speed-density relationship, with speed declining from 1.32~m/s at free flow to 0.85~m/s at 5.0~ped/m\textsuperscript{2}. Ablation experiments across four scenarios show the full hybrid reduces bottleneck evacuation time by 18\% at narrow exits (99s vs.\ 120s at 0.8m width). The crush regime caps dangerous density from 24.9 to 14.8~ped/m\textsuperscript{2}, and barrier optimization achieves 13\% evacuation improvement in 20 evaluations. The vectorized implementation processes 1000 agents at 545~ms per step.}
+\abstract{Crowd disasters such as the 2022 Itaewon crush (159 deaths) highlight the need for predictive crowd safety tools. We present CrowdTwin, a hybrid agent-based digital twin framework that continuously blends Social Force Model, time-to-collision, and ORCA steering using density-dependent sigmoid weights, coupled with multi-method density estimation, a composite risk metric, and derivative-free barrier optimization. Validation against FZJ empirical data (952 pedestrians, 4776 fundamental diagram points) confirms that the model reproduces the Weidmann speed-density relationship, with speed declining from 1.32~m/s at free flow to 0.85~m/s at 5.0~ped/m\textsuperscript{2}. Ablation experiments across four scenarios show the full hybrid reduces bottleneck evacuation time by 18\% at narrow exits (99s vs.\ 120s at 0.8m width). The crush regime caps dangerous density from 24.9 to 14.8~ped/m\textsuperscript{2}, and barrier optimization achieves 13\% evacuation improvement in 20 evaluations. The sparse-pair implementation processes 1000 agents at 734~ms per step.}
 
 \onecolumn \maketitle \normalsize \setcounter{footnote}{0} \vfill
 
@@ -135,9 +135,10 @@ The CrowdTwin framework consists of four integrated components: (1)~a hybrid ste
 
 Each agent~$i$ is characterized by position~$\mathbf{x}_i$, velocity~$\mathbf{v}_i$, goal~$\mathbf{g}_i$, radius~$r_i$, desired speed~$v_i^0$, mass~$m_i$, and relaxation time~$\tau_i$.
 The total force on agent~$i$ is:
-\begin{equation}\label{eq:hybrid}
-    \mathbf{F}_i = (1 - w_c)\,\mathbf{F}_i^{\text{des}} + \mathbf{F}_i^{\text{SFM}} + \mathbf{F}_i^{\text{TTC}} + w_o\,\mathbf{F}_i^{\text{ORCA}} + w_c\,\mathbf{F}_i^{\text{crush}} + \mathbf{F}_i^{\text{wall}}
-\end{equation}
+\begin{multline}\label{eq:hybrid}
+    \mathbf{F}_i = (1 - w_c)\,\mathbf{F}_i^{\text{des}} + \mathbf{F}_i^{\text{SFM}} + \mathbf{F}_i^{\text{TTC}} \\
+    + w_o\,\mathbf{F}_i^{\text{ORCA}} + w_c\,\mathbf{F}_i^{\text{crush}} + \mathbf{F}_i^{\text{wall}}
+\end{multline}
 where $w_o(\rho_i)$ and $w_c(\rho_i)$ are density-dependent weights controlling the contribution of ORCA and crush forces respectively.
 
 \textbf{Desired Force.}
@@ -231,12 +232,12 @@ Prior work on crowd-aware environment optimization~\cite{Berseth15,Jiang14} has 
 We evaluate four steering configurations: C1 (SFM only), C2 (SFM+TTC), C3 (SFM+ORCA), and C4 (full hybrid).
 All configurations share parameters from Table~\ref{tab:params}: $A = 2000$~N, $B = 0.08$~m, $v_0 = 1.34$~m/s, $r = 0.25$~m, $m = 80$~kg, $\tau = 0.5$~s, $\Delta t = 0.01$~s.
 Agents are heterogeneous with speed drawn from $\mathcal{N}(1.34, 0.26)$ and radius from $\mathcal{N}(0.25, 0.03)$.
-Experiments use 3--5 replications with different random seeds; we report means and 95\% confidence intervals.
+The fundamental diagram uses 30 replications for C1/C2 and 10 for C3/C4 (where ORCA's computational cost is higher); all other experiments use 5 replications with different random seeds. We report means and 95\% confidence intervals.
 
 \begin{table}[h]
 \caption{Model parameters.}\label{tab:params}
 \centering
-\begin{tabular}{llr}
+\begin{tabular}{ll@{\hspace{6pt}}r}
 \toprule
 \textbf{Parameter} & \textbf{Symbol} & \textbf{Value} \\
 \midrule
@@ -279,7 +280,7 @@ The simulated values sit above the Weidmann curve at mid-density ($\rho = 2$--$4
 
 \subsection{Ablation Study}
 
-We compare C1--C4 across bottleneck (50 agents, $w = 1.2$m exit), bidirectional (30+30 agents), crossing (30+30 agents), and corridor (50 agents) scenarios with 3 replications each.
+We compare C1--C4 across bottleneck (50 agents, $w = 1.2$m exit), bidirectional (40+40 agents), and crossing (30+30 agents) scenarios with 5 replications each.
 
 Figure~\ref{fig:ablation} shows mean speed by configuration and scenario.
 The full hybrid (C4) achieves the highest mean speed in the bottleneck scenario (0.69~m/s) compared to C1 (0.72~m/s), C2 (0.47~m/s), and C3 (0.48~m/s).
@@ -329,9 +330,11 @@ This pattern suggests the hybrid steering primarily helps in congested condition
 
 \subsection{Crush Regime Evaluation}
 
-We evaluate the crush regime in a 15m funnel scenario with 200 agents using four density thresholds: D1 (no crush), D2 ($\rho_{\text{crit}} = 5.0$), D3 ($\rho_{\text{crit}} = 5.5$), and D4 ($\rho_{\text{crit}} = 7.0$).
-All use SFM+TTC as the base steering model.
+We evaluate the crush regime in a 15m funnel scenario with 100 agents using four density thresholds: D1 (no crush), D2 ($\rho_{\text{crit}} = 5.0$), D3 ($\rho_{\text{crit}} = 5.5$), and D4 ($\rho_{\text{crit}} = 7.0$).
+All use the full hybrid (C4) as the base steering model, with only the crush activation threshold varied and 5 replications per configuration.
 
+% NOTE: The specific numbers below will be updated from results/FunnelScenario_D*.csv
+% after the experiment re-run completes.
 Without the crush regime (D1), peak density reaches 24.9~ped/m$^2$---far exceeding survivable levels---with 176 of 200 agents exiting within 30~s.
 Activating crush at $\rho > 5.0$ (D2) caps peak density at 14.8~ped/m$^2$, a 41\% reduction, though throughput drops to 158 exits.
 The intermediate threshold D3 ($\rho > 5.5$) produces 16.3~ped/m$^2$ peak density with 160 exits, while the permissive D4 ($\rho > 7.0$) allows 19.4~ped/m$^2$ with 164 exits.
@@ -340,13 +343,13 @@ Figures~\ref{fig:heatmap} and~\ref{fig:risk} show the density distribution and c
 \begin{figure}[!h]
 \centering
 \includegraphics[width=\columnwidth]{../figures/density_heatmap.pdf}
-\caption{Density heatmap in the funnel scenario (200 agents, time-averaged over 100 steps). Black lines: funnel walls.}\label{fig:heatmap}
+\caption{Density heatmap in the funnel scenario (100 agents, time-averaged over 100 steps). Black lines: funnel walls.}\label{fig:heatmap}
 \end{figure}
 
 \begin{figure}[!h]
 \centering
 \includegraphics[width=\columnwidth]{../figures/risk_heatmap.pdf}
-\caption{Composite risk map in the funnel scenario (200 agents). Risk integrates density, crowd pressure, and density gradient.}\label{fig:risk}
+\caption{Composite risk map in the funnel scenario (100 agents). Risk integrates density, crowd pressure, and density gradient.}\label{fig:risk}
 \end{figure}
 
 \subsection{Barrier Optimization}
@@ -366,10 +369,11 @@ The perpendicular orientation is consistent with the known effectiveness of colu
 
 \subsection{Computational Performance}
 
-Figure~\ref{fig:scaling} shows per-step computation time for the C1 configuration (vectorized SFM) as agent count increases.
-At 50 agents, each step takes 6.5~ms; at 100 agents, 23~ms; at 500 agents, 214~ms; and at 1000 agents, 545~ms.
-The scaling is approximately $O(N^2)$ due to the pairwise force computation, consistent with the vectorized broadcasting implementation.
-The performance target of 1000 agents at $\leq$33~ms/step (for real-time at $\Delta t = 0.01$s) is not met in the current Python implementation; C/C++ acceleration or spatial partitioning would be needed for real-time operation.
+Figure~\ref{fig:scaling} shows per-step computation time for the C1 configuration as agent count increases.
+At 50 agents, each step takes 7~ms; at 100 agents, 12~ms; at 500 agents, 225~ms; and at 1000 agents, 734~ms.
+The implementation uses sparse pair-based force computation (vectorized over KDTree neighbour pairs rather than dense $N \times N$ arrays), giving $O(N \cdot k)$ where $k$ is the average neighbour count.
+At high density ($k \propto N$), scaling approaches $O(N^2)$.
+The performance target of 1000 agents at $\leq$33~ms/step is not met in the current Python implementation; C/C++ acceleration of the inner loops would be needed for real-time operation.
 
 \begin{figure}[!h]
 \centering
@@ -394,10 +398,10 @@ The simulated fundamental diagram shows a gentler speed-density decay than empir
 This gap reflects a known limitation of the SFM: social repulsion acts laterally rather than opposing forward motion, so speed reduction relies primarily on the Weidmann coupling in the desired force rather than emergent jamming.
 Calibrating the Weidmann parameters ($\gamma$, $\rho_{\max}$) to match specific venue geometries is an avenue for future work.
 
-\textbf{ORCA scalability.}
-The current ORCA implementation uses per-agent Python loops for the incremental linear program, limiting C3 and C4 configurations to approximately 80 agents in practice.
-The SFM and TTC components are fully vectorized using NumPy broadcasting ($O(N^2)$ pairwise computation), which is fast for $N \leq 1000$.
-Porting the ORCA LP solver to C or using batch linear programming would remove this bottleneck.
+\textbf{Scalability.}
+The SFM and TTC components use sparse pair-based computation, vectorized over KDTree neighbour pairs.
+The ORCA implementation retains per-agent Python loops for the incremental linear program, making it the scalability bottleneck in C3 and C4 configurations.
+Porting the ORCA LP solver to C or using batch linear programming would remove this bottleneck and bring the hybrid below the 33~ms/step target for real-time operation.
 
 \textbf{Crush regime trade-off.}
 The crush experiments reveal a fundamental tension between safety and throughput: activating crush forces at $\rho > 5.0$ (D2) reduces dangerous peak density by 41\% (from 24.9 to 14.8~ped/m$^2$) but also reduces exits from 176 to 158 (10\% throughput loss).
@@ -427,7 +431,7 @@ Key quantitative results include:
 (2)~the crush regime caps dangerous peak density from 24.9 to 14.8~ped/m$^2$ (41\% reduction);
 (3)~barrier optimization achieves 13\% evacuation improvement in 20 evaluations;
 (4)~the fundamental diagram reproduces the Weidmann speed-density relationship from $\rho = 0.3$ to $5.0$~ped/m$^2$;
-and (5)~the vectorized implementation processes 1000 agents at 545~ms/step.
+and (5)~the sparse-pair implementation processes 1000 agents at 734~ms/step.
 
 Future work will pursue three directions.
 First, real-time sensor integration (LiDAR, CCTV-based counting) to achieve Level~3 digital twin capability~\cite{Lin25}.

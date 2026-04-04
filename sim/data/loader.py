@@ -132,4 +132,5 @@ def weidmann_speed(density: np.ndarray) -> np.ndarray:
         Speed values (m/s).
     """
     rho = np.clip(np.asarray(density, float), 0.01, 5.39)
-    return 1.34 * (1.0 - np.exp(-1.913 * (1.0 / rho - 1.0 / 5.4)))
+    v = 1.34 * (1.0 - np.exp(-1.913 * (1.0 / rho - 1.0 / 5.4)))
+    return np.maximum(v, 1.34 * 0.05)  # 5% floor matches simulation desired.py

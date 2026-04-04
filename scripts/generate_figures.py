@@ -3,7 +3,10 @@
 
 import json
 import os
+import sys
 import glob
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import matplotlib
 matplotlib.use("Agg")
@@ -140,12 +143,12 @@ def fig3_trajectories(output_dir):
 
 
 def fig4_density_heatmap(output_dir):
-    """Run 200-agent funnel sim, time-average density over 50 frames."""
+    """Run 100-agent funnel sim, time-average density over 50 frames."""
     from sim.core.simulation import Simulation
     from sim.scenarios.funnel import FunnelScenario
     from scipy.ndimage import gaussian_filter
 
-    scenario = FunnelScenario(n_agents=200)
+    scenario = FunnelScenario(n_agents=100)
     sim = Simulation.from_scenario(scenario, "C1", seed=42,
                                     param_overrides={"neighbor_radius": 1.5})
 
@@ -234,15 +237,15 @@ def fig6_scaling(input_dir, output_dir):
 
 
 def fig7_risk_heatmap(output_dir):
-    """Run 200-agent funnel sim and compute composite risk."""
+    """Run 100-agent funnel sim and compute composite risk."""
     from sim.core.simulation import Simulation
     from sim.scenarios.funnel import FunnelScenario
-    from sim.density.grid import GridDensityEstimator
+    from sim.density.voronoi import VoronoiDensityEstimator
     from sim.density.kde import KDEDensityEstimator
     from sim.density.risk import CompositeRiskMetric
     from scipy.spatial import KDTree
 
-    scenario = FunnelScenario(n_agents=200)
+    scenario = FunnelScenario(n_agents=100)
     sim = Simulation.from_scenario(scenario, "C1", seed=42,
                                     param_overrides={"neighbor_radius": 1.5})
     for _ in range(1500):
@@ -252,16 +255,17 @@ def fig7_risk_heatmap(output_dir):
     pos = sim.state.positions[active]
     vel = sim.state.velocities[active]
 
-    grid = GridDensityEstimator(radius=1.5)
+    voronoi = VoronoiDensityEstimator(
+        domain=np.array([[0, 0], [16, 0], [16, 10], [0, 10]], dtype=float))
     kde = KDEDensityEstimator(bandwidth=1.0)
-    rho_g = grid.estimate(pos)
+    rho_v = voronoi.estimate(pos)
     rho_k = kde.estimate(pos)
 
     tree = KDTree(pos)
     nbs = tree.query_ball_point(pos, r=1.5)
 
     risk = CompositeRiskMetric()
-    R = risk.compute(pos, vel, rho_g, rho_k, nbs)
+    R = risk.compute(pos, vel, rho_v, rho_k, nbs)
 
     from sim.viz.heatmaps import plot_risk_heatmap
     path = plot_risk_heatmap(pos, R, xlim=(0, 16), ylim=(0, 10),
@@ -402,7 +406,7 @@ def table_crush(input_dir, table_dir):
             df = pd.read_csv(f)
             lines.append(
                 f"{d} & {thresholds[d]} & {df['max_density'].mean():.1f} & "
-                f"{df['agents_exited'].mean():.0f}/200 & {df['collision_count'].mean():.0f} \\\\"
+                f"{df['agents_exited'].mean():.0f}/100 & {df['collision_count'].mean():.0f} \\\\"
             )
     lines.append(r"\hline")
     lines.append(r"\end{tabular}")

@@ -25,10 +25,16 @@ class GridDensityEstimator(DensityEstimator):
     ) -> np.ndarray:
         """Estimate density from neighbor counts.
 
+        Note: self-exclusion assumes self IS in the neighbor list (subtracts 1).
+        If passing pre-filtered lists (self already removed), density will be
+        underestimated by 1/(pi*R^2). Use None to let the estimator build
+        its own KDTree (recommended).
+
         Args:
             positions: Agent positions, shape (N, 2).
-            neighbor_lists: Per-agent neighbor indices (from KDTree query_ball_point
-                with r=self.radius). If None, builds KDTree internally.
+            neighbor_lists: Per-agent neighbor indices including self
+                (from KDTree query_ball_point with r=self.radius).
+                If None, builds KDTree internally (recommended).
 
         Returns:
             Per-agent density, shape (N,).

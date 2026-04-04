@@ -164,7 +164,7 @@ def solve_2d_lp(
             numer = np.dot(point_j - point_k, normal_j)
 
             if abs(denom) < 1e-10:
-                if numer < 0:
+                if numer > 0:
                     infeasible = True
                     break
                 continue

@@ -93,6 +93,6 @@ def test_all_same_magnitude():
     # All should be positive and within 2 orders of magnitude of each other
     for d in [d_grid, d_vor, d_kde]:
         assert np.all(d >= 0)
-    # Mean values in the same ballpark (within factor of 10)
+    # Mean values in the same ballpark (within factor of 5)
     means = [np.mean(d_grid), np.mean(d_vor), np.mean(d_kde)]
-    assert max(means) / max(min(means), 1e-8) < 100
+    assert max(means) / max(min(means), 1e-8) < 5

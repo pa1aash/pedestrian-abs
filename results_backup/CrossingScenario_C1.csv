@@ -1,0 +1,3 @@
+scenario,config,seed,wall_time_s,n_steps,evacuation_time,mean_speed,max_density,collision_count,flow_rate,agents_exited,mean_risk,max_risk,time_above_critical
+CrossingScenario,C1,42,5.030079700009082,3000,inf,0.4871147754237502,0.6366197723675814,3,0.0,0,0.0,0.0,0
+CrossingScenario,C1,43,5.042461199991521,3000,inf,0.48091814901047336,0.6012520072360491,5,0.0,0,0.0,0.0,0

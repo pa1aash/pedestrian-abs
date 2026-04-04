@@ -65,6 +65,7 @@ class WallForces:
         forces = np.zeros((n, 2))
         radii = agent_state.radii
         vel = agent_state.velocities
+        active = agent_state.active
 
         for w_idx in range(len(walls)):
             d_iw = distances[:, w_idx]              # (N,)
@@ -78,16 +79,19 @@ class WallForces:
             # Overlap
             overlap = np.maximum(0.0, radii - d_iw)  # (N,)
 
+            # Only compute for active agents
+            amask = active.astype(float)  # (N,)
+
             # Social repulsion (always active)
             exp_term = np.exp((radii - d_iw) / self.B)  # (N,)
-            f_social = (self.A * exp_term)[:, None] * n_iw  # (N, 2)
+            f_social = (self.A * exp_term * amask)[:, None] * n_iw  # (N, 2)
 
             # Body compression (contact only)
-            f_body = (self.k * overlap)[:, None] * n_iw  # (N, 2)
+            f_body = (self.k * overlap * amask)[:, None] * n_iw  # (N, 2)
 
-            # Sliding friction: wall is stationary, use v_i
+            # Sliding friction: wall stationary, use -v_i (Helbing 2000 Eq.3)
             vt = np.sum(vel * t_iw, axis=1)  # dot(v_i, t_iw), (N,)
-            f_friction = (self.kappa * overlap * vt)[:, None] * t_iw  # (N, 2)
+            f_friction = -(self.kappa * overlap * vt * amask)[:, None] * t_iw  # (N, 2)
 
             forces += f_social + f_body + f_friction
 

@@ -1,0 +1,3 @@
+scenario,config,seed,wall_time_s,n_steps,evacuation_time,mean_speed,max_density,collision_count,flow_rate,agents_exited,mean_risk,max_risk,time_above_critical
+BidirectionalScenario,C1,42,3.732291399996029,3000,inf,0.7009941859369165,0.6719875374991137,24,0.0,0,0.0,0.0,0
+BidirectionalScenario,C1,43,3.0049912000104086,3000,inf,0.6726269483740973,0.5658842421045168,22,0.0,0,0.0,0.0,0

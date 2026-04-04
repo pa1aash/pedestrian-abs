@@ -9,6 +9,7 @@ from sim.core.integrator import EulerIntegrator
 from sim.core.world import World
 from sim.steering.base import SteeringModel
 from sim.steering.desired import compute_desired_force
+from sim.steering.walls import WallForces
 
 
 class Simulation:
@@ -58,25 +59,30 @@ class Simulation:
         if len(active) == 0:
             return {"time": self.time, "n_active": 0}
 
-        # 1. KDTree neighbor search (with periodic ghost copies if needed)
-        all_pos = self.state.positions
-        N = len(all_pos)
+        # 1. KDTree neighbor search (active agents only, self excluded)
+        active_idx = self.state.active_indices
+        active_pos = self.state.positions[active_idx]
+        N_active = len(active_idx)
+        # Map from local (active-only) index to global index
+        neighbor_lists: list[list[int]] = [[] for _ in range(self.state.n)]
+
         if self.periodic_length is not None:
             L = self.periodic_length
-            ghosts_r = all_pos.copy(); ghosts_r[:, 0] += L
-            ghosts_l = all_pos.copy(); ghosts_l[:, 0] -= L
-            extended = np.vstack([all_pos, ghosts_r, ghosts_l])
+            ghosts_r = active_pos.copy(); ghosts_r[:, 0] += L
+            ghosts_l = active_pos.copy(); ghosts_l[:, 0] -= L
+            extended = np.vstack([active_pos, ghosts_r, ghosts_l])
             tree = KDTree(extended)
-            raw_nbs = tree.query_ball_point(all_pos, r=self.params["neighbor_radius"])
-            neighbor_lists = []
-            for i, nbrs in enumerate(raw_nbs):
-                real = list({j % N for j in nbrs} - {i})
-                neighbor_lists.append(real)
+            raw_nbs = tree.query_ball_point(active_pos, r=self.params["neighbor_radius"])
+            for local_i, nbrs in enumerate(raw_nbs):
+                global_i = active_idx[local_i]
+                real = list({active_idx[j % N_active] for j in nbrs} - {global_i})
+                neighbor_lists[global_i] = real
         else:
-            tree = KDTree(all_pos)
-            neighbor_lists = tree.query_ball_point(
-                all_pos, r=self.params["neighbor_radius"]
-            )
+            tree = KDTree(active_pos)
+            raw_nbs = tree.query_ball_point(active_pos, r=self.params["neighbor_radius"])
+            for local_i, nbrs in enumerate(raw_nbs):
+                global_i = active_idx[local_i]
+                neighbor_lists[global_i] = [active_idx[j] for j in nbrs if active_idx[j] != global_i]
 
         # 2. Simple grid density: count / (pi * R^2)
         r = self.params["neighbor_radius"]
@@ -100,6 +106,8 @@ class Simulation:
                 self.state.taus,
                 local_densities=densities,
             )
+            if self.world.walls:
+                forces += WallForces().compute_wall_forces(self.state, self.world.walls)
 
         # 4. Integrate
         dt = self.params["dt"]
@@ -298,7 +306,7 @@ class Simulation:
             }
 
         agents_exited = self.state.n - self.state.n_active
-        evac_time = self.time if self.state.n_active == 0 else self.time
+        evac_time = self.time if self.state.n_active == 0 else float('inf')
 
         mean_speed = float(np.mean([m["mean_speed"] for m in self.metrics_log]))
         max_density = float(np.max([m["max_density"] for m in self.metrics_log]))

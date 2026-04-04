@@ -24,7 +24,7 @@ class TestEulerIntegrator:
         # x = 0.5*a*t^2 + extra from Euler (v_new*dt not v_old*dt)
         # Euler: x accumulates v_new*dt each step, so x > 0.5
         assert pos[0, 0] > 0.5
-        assert pos[0, 0] < 0.6
+        assert pos[0, 0] < 0.51
         np.testing.assert_allclose(pos[0, 1], 0.0, atol=1e-10)
 
     def test_no_nan(self):

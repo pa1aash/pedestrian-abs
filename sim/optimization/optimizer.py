@@ -63,8 +63,10 @@ class BarrierOptimizer:
                 sim.world.walls.append(wall)
 
             result = sim.run(max_time=self.max_time)
-            # Cost: evacuation time (penalize if not all exited)
+            # Cost: evacuation time (cap inf to max_time, penalize incomplete)
             evac = result["evacuation_time"]
+            if np.isinf(evac):
+                evac = self.max_time
             if result["agents_exited"] < self.n_agents:
                 evac += (self.n_agents - result["agents_exited"]) * 10.0
             costs.append(evac)

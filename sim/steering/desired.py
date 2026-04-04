@@ -21,13 +21,15 @@ def compute_desired_force(
     masses: np.ndarray,
     taus: np.ndarray,
     local_densities: np.ndarray | None = None,
+    weidmann_gamma: float = 1.913,
+    weidmann_rho_max: float = 5.4,
 ) -> np.ndarray:
     """Compute the desired (goal-seeking) force for all agents.
 
     F_i = m_i * (v0_eff_i * e_hat_i - v_i) / tau_i
 
-    When local_densities is provided, v0_eff follows Weidmann:
-        v0_eff = v0 * (1 - exp(-1.913 * (1/max(rho, 0.01) - 1/5.4)))
+    When local_densities is provided, v0_eff follows Weidmann (1993):
+        v0_eff = v0 * (1 - exp(-gamma * (1/max(rho, 0.01) - 1/rho_max)))
 
     Args:
         positions: Agent positions, shape (N, 2).
@@ -37,6 +39,8 @@ def compute_desired_force(
         masses: Agent masses, shape (N,).
         taus: Relaxation times, shape (N,).
         local_densities: Per-agent local density, shape (N,). Optional.
+        weidmann_gamma: Weidmann (1993) shape parameter. Default 1.913.
+        weidmann_rho_max: Weidmann (1993) jam density (ped/m^2). Default 5.4.
 
     Returns:
         Desired forces, shape (N, 2).
@@ -44,11 +48,9 @@ def compute_desired_force(
     direction = safe_normalize(goals - positions)
 
     if local_densities is not None:
-        # Weidmann speed-density coupling
+        # Weidmann (1993) speed-density coupling
         rho = np.maximum(local_densities, 0.01)
-        gamma = 1.913
-        rho_max = 5.4
-        speed_factor = 1.0 - np.exp(-gamma * (1.0 / rho - 1.0 / rho_max))
+        speed_factor = 1.0 - np.exp(-weidmann_gamma * (1.0 / rho - 1.0 / weidmann_rho_max))
         speed_factor = np.clip(speed_factor, 0.05, 1.0)
         effective_speeds = desired_speeds * speed_factor
     else:

@@ -46,7 +46,8 @@ class VoronoiDensityEstimator(DensityEstimator):
         try:
             from shapely.geometry import Polygon
         except ImportError:
-            # Shapely not available — fallback to grid
+            import warnings
+            warnings.warn("shapely not installed — Voronoi falling back to grid density")
             from sim.density.grid import GridDensityEstimator
             return GridDensityEstimator().estimate(positions)
 

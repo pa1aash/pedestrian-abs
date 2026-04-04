@@ -31,9 +31,9 @@ class FunnelScenario(Scenario):
             Wall(np.array([0.0, 0.0]), np.array([15.0, 3.5])),    # bottom (angled)
             Wall(np.array([0.0, 10.0]), np.array([15.0, 6.5])),   # top (angled)
             Wall(np.array([0.0, 0.0]), np.array([0.0, 10.0])),    # left
-            # Exit walls (short vertical segments at x=15)
-            Wall(np.array([15.0, 3.5]), np.array([15.0, 3.5])),   # degenerate (bottom endpoint)
-            Wall(np.array([15.0, 6.5]), np.array([15.0, 6.5])),   # degenerate (top endpoint)
+            # Exit frame: short vertical segments extending from funnel endpoints
+            Wall(np.array([15.0, 3.5]), np.array([15.0, 3.0])),   # bottom exit edge
+            Wall(np.array([15.0, 6.5]), np.array([15.0, 7.0])),   # top exit edge
         ]
         world = World(walls)
 

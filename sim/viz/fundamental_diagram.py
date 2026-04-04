@@ -12,7 +12,8 @@ def weidmann_speed(density: np.ndarray) -> np.ndarray:
     rho_max = 5.4
     gamma = 1.913
     safe_rho = np.maximum(density, 0.01)
-    return v0 * (1.0 - np.exp(-gamma * (1.0 / safe_rho - 1.0 / rho_max)))
+    v = v0 * (1.0 - np.exp(-gamma * (1.0 / safe_rho - 1.0 / rho_max)))
+    return np.maximum(v, v0 * 0.05)  # 5% floor matches simulation desired.py
 
 
 def plot_fundamental_diagram(

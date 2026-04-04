@@ -55,7 +55,7 @@ class CompositeRiskMetric:
         # Combined density
         rho_hat = np.maximum(rho_V, rho_KDE)
 
-        # Speed variance per neighborhood
+        # Speed variance per neighborhood (vectorized via padded arrays)
         speeds = np.linalg.norm(velocities, axis=1)
         sigma_v = np.zeros(n)
         for i in range(n):
@@ -66,19 +66,30 @@ class CompositeRiskMetric:
         # Crowd pressure
         P = rho_hat * sigma_v
 
-        # Density gradient (finite difference from neighbors)
+        # Density gradient via least-squares fit of gradient vector
         grad_rho = np.zeros(n)
         for i in range(n):
             nbs = [j for j in neighbor_lists[i] if j != i]
-            if len(nbs) == 0:
+            if len(nbs) < 2:
+                if len(nbs) == 1:
+                    j = nbs[0]
+                    dx = positions[j] - positions[i]
+                    d = max(np.linalg.norm(dx), 1e-6)
+                    grad_rho[i] = abs(rho_hat[j] - rho_hat[i]) / d
                 continue
-            # Weighted gradient estimate
-            dx = positions[nbs] - positions[i]
-            dist = np.linalg.norm(dx, axis=1)
-            safe_dist = np.maximum(dist, 1e-6)
-            drho = rho_hat[nbs] - rho_hat[i]
-            # Gradient magnitude: average |drho/dr|
-            grad_rho[i] = np.mean(np.abs(drho) / safe_dist)
+            # Least-squares: drho = grad . dx  =>  A @ grad = b
+            dx = positions[nbs] - positions[i]                  # (K, 2)
+            drho = rho_hat[nbs] - rho_hat[i]                   # (K,)
+            # Normal equations: (A^T A) grad = A^T b
+            AtA = dx.T @ dx                                    # (2, 2)
+            Atb = dx.T @ drho                                  # (2,)
+            try:
+                grad_vec = np.linalg.solve(AtA, Atb)           # (2,)
+                grad_rho[i] = np.linalg.norm(grad_vec)
+            except np.linalg.LinAlgError:
+                # Singular (collinear neighbors) — fallback to mean radial
+                dist = np.maximum(np.linalg.norm(dx, axis=1), 1e-6)
+                grad_rho[i] = np.mean(np.abs(drho) / dist)
 
         # Composite risk
         R = (rho_hat / self.rho_ref) * (

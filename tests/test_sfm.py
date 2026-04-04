@@ -120,10 +120,10 @@ def test_decay():
     assert mags[0] > mags[1] > mags[2]
 
 
-def test_friction_tangential():
-    """Friction component is tangential (zero dot product with normal)."""
+def test_friction_direction_and_magnitude():
+    """Friction pulls agent 0 toward agent 1's tangential velocity."""
     sfm = SocialForceModel()
-    # Overlapping agents with relative velocity
+    # Overlapping agents: agent 1 moves upward
     state = _make_state(
         [[0.0, 0.0], [0.3, 0.0]],
         velocities=[[0.0, 0.0], [0.0, 1.0]],
@@ -132,19 +132,16 @@ def test_friction_tangential():
 
     forces = sfm.compute_agent_forces(state, neighbors)
 
-    # Normal is along x-axis. Friction should be along y-axis only.
-    # The total force has both normal and friction components.
-    # Compute friction separately: it's the y component of force on agent 0.
-    # Normal is (-1, 0) for agent 0. Friction should be perpendicular.
-    n_ij = np.array([-1.0, 0.0])  # normal: agent0 pushed left
-    t_ij = np.array([0.0, -1.0])  # tangent
+    # n_ij[0,1] = (-1, 0), t_ij[0,1] = (0, -1)
+    # dv_ji = v1 - v0 = (0, 1), dot(dv_ji, t) = dot((0,1),(0,-1)) = -1
+    # friction on 0 = kappa * overlap * (-1) * (0, -1) = 240000*0.2*1*(0,1) = (0, 48000)
+    # Agent 1 moves up -> friction drags agent 0 upward (positive y)
+    assert forces[0, 1] > 0, "Friction should pull agent 0 in +y (toward agent 1's motion)"
 
-    # The friction force on agent 0 should be purely in the y direction
-    # (tangent direction), so its dot with normal should be ~0.
-    # Extract friction by subtracting the normal component
-    f_normal_component = np.dot(forces[0], n_ij)
-    f_friction = forces[0] - f_normal_component * n_ij
-    assert abs(np.dot(f_friction, n_ij)) < 1e-6
+    # Verify friction magnitude: kappa * overlap * |dv_dot_t| = 240000 * 0.2 * 1 = 48000
+    expected_friction_y = 48000.0
+    # y-component of force is purely friction (social/body are purely in x)
+    np.testing.assert_allclose(forces[0, 1], expected_friction_y, rtol=0.01)
 
 
 def test_no_neighbors():

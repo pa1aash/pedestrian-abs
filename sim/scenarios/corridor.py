@@ -27,10 +27,10 @@ class CorridorScenario(Scenario):
         Goal: (10.5, y_i) — each agent's own y-coordinate.
         """
         walls = [
-            Wall(np.array([0.0, 0.0]), np.array([10.0, 0.0])),
-            Wall(np.array([10.0, 0.0]), np.array([10.0, 3.6])),
-            Wall(np.array([10.0, 3.6]), np.array([0.0, 3.6])),
-            Wall(np.array([0.0, 3.6]), np.array([0.0, 0.0])),
+            Wall(np.array([0.0, 0.0]), np.array([10.0, 0.0])),   # bottom
+            # right wall removed: open exit for agents to flow through
+            Wall(np.array([10.0, 3.6]), np.array([0.0, 3.6])),   # top
+            Wall(np.array([0.0, 3.6]), np.array([0.0, 0.0])),    # left
         ]
         world = World(walls)
 

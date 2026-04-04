@@ -25,7 +25,7 @@ def check_forces(forces: np.ndarray, name: str) -> np.ndarray:
         bad = np.unique(np.where(mask)[0])
         warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
         forces = np.clip(forces, -1e6, 1e6)
-    return forces
+    return np.array(forces)
 
 
 def safe_normalize(v: np.ndarray, eps: float = 1e-8) -> np.ndarray:
@@ -42,7 +42,8 @@ def safe_normalize(v: np.ndarray, eps: float = 1e-8) -> np.ndarray:
         m = np.linalg.norm(v)
         return v / m if m > eps else np.zeros_like(v)
     mag = np.linalg.norm(v, axis=1, keepdims=True)
-    return v / np.maximum(mag, eps)
+    safe_mag = np.maximum(mag, eps)
+    return np.where(mag > eps, v / safe_mag, 0.0)
 
 
 def clamp_speed(velocities: np.ndarray, max_speeds: np.ndarray) -> np.ndarray:

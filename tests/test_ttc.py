@@ -65,10 +65,13 @@ def test_analytical_tau():
     tau = (-b - np.sqrt(disc)) / a
     assert abs(tau - 0.75) < 1e-6
 
-    # Now verify the force model produces non-zero force (collision is within horizon)
+    # Verify force magnitude: F = k_ttc * exp(-tau/tau_0) / tau^2
     forces = ttc.compute_ttc_forces(state, neighbors)
-    assert np.linalg.norm(forces[0]) > 0
-    assert np.linalg.norm(forces[1]) > 0
+    expected_mag = 1.5 * np.exp(-0.75 / 3.0) / (0.75 ** 2)
+    np.testing.assert_allclose(np.linalg.norm(forces[0]), expected_mag, rtol=0.01)
+    # Direction: agent 0 pushed left (-x)
+    assert forces[0, 0] < 0
+    np.testing.assert_allclose(forces[0, 1], 0.0, atol=1e-10)
 
 
 def test_parallel_no_collision():
@@ -169,3 +172,18 @@ def test_inverse_square():
     ratio = mag_close / mag_far
     expected_ratio = 4.0 * np.exp(0.5 / 3.0)  # ~4.72
     np.testing.assert_allclose(ratio, expected_ratio, rtol=0.05)
+
+
+def test_multi_agent_accumulation():
+    """Center agent hit from both sides: symmetric forces cancel to zero."""
+    ttc = TTCForceModel()
+    state = _make_state(
+        [[0.0, 0.0], [-2.0, 0.0], [2.0, 0.0]],
+        [[0.0, 0.0], [1.0, 0.0], [-1.0, 0.0]],
+    )
+    neighbors = [[0, 1, 2], [0, 1, 2], [0, 1, 2]]
+
+    forces = ttc.compute_ttc_forces(state, neighbors)
+
+    # Agent 0 gets equal and opposite forces from agents 1 and 2
+    np.testing.assert_allclose(forces[0], [0.0, 0.0], atol=1e-10)

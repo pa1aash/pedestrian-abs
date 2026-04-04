@@ -33,5 +33,7 @@ class KDEDensityEstimator(DensityEstimator):
             return np.ones(max(n, 0))
 
         kde = gaussian_kde(positions.T, bw_method=self.bandwidth)
-        densities = kde.evaluate(positions.T)
+        # gaussian_kde returns probability density (integral≈1); multiply by N
+        # to get pedestrian density in ped/m², consistent with grid and Voronoi.
+        densities = kde.evaluate(positions.T) * n
         return densities
