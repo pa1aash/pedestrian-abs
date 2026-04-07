@@ -125,6 +125,8 @@ class HybridSteeringModel(SteeringModel):
             agent_state.masses,
             agent_state.taus,
             local_densities=local_densities,
+            weidmann_gamma=self.params.get("weidmann_gamma", 1.913),
+            weidmann_rho_max=self.params.get("weidmann_rho_max", 5.4),
         )
         F = (1.0 - w_crush)[:, None] * F_desire
 

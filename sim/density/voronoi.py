@@ -21,7 +21,7 @@ class VoronoiDensityEstimator(DensityEstimator):
     def __init__(
         self,
         domain: np.ndarray | None = None,
-        max_density: float = 20.0,
+        max_density: float = 100.0,
     ):
         self.domain = domain
         self.max_density = max_density

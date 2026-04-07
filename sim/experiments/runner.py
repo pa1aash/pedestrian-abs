@@ -27,6 +27,7 @@ class ExperimentRunner:
         n_replications: int = 30,
         max_time: float = 120.0,
         max_steps: int = 100000,
+        density_estimator=None,
         **scenario_kwargs,
     ) -> pd.DataFrame:
         """Run scenario x config x seeds and save to CSV.
@@ -37,6 +38,7 @@ class ExperimentRunner:
             n_replications: Number of random seeds.
             max_time: Maximum simulation time per run (s).
             max_steps: Maximum steps per run.
+            density_estimator: Optional density estimator override (default grid).
             **scenario_kwargs: Passed to scenario constructor.
 
         Returns:
@@ -46,7 +48,10 @@ class ExperimentRunner:
         for rep in range(n_replications):
             seed = 42 + rep
             scenario = scenario_class(**scenario_kwargs)
-            sim = Simulation.from_scenario(scenario, config_name, seed=seed)
+            sim = Simulation.from_scenario(
+                scenario, config_name, seed=seed,
+                density_estimator=density_estimator,
+            )
 
             t0 = time.perf_counter()
             result = sim.run(max_steps=max_steps, max_time=max_time)

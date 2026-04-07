@@ -328,33 +328,66 @@ def table_parameters(table_dir):
 
 
 def table_ablation(input_dir, table_dir):
-    """Ablation results table: scenario x config."""
+    """Ablation table: scenario x config, reporting exits and collisions.
+
+    Shows 'exits/N' and mean collision count per replication to support
+    the paper's safety-throughput narrative.
+    Bottleneck row uses the w=1.2m width (50 agents) -- the canonical
+    bottleneck ablation scenario where evacuations complete normally.
+    """
     dfs = []
-    for f in glob.glob(os.path.join(input_dir, "*Scenario_C*.csv")):
-        if "Funnel" in f or "Bottleneck_w" in f:
-            continue
-        dfs.append(pd.read_csv(f))
+    # Bidirectional + Crossing from default scenario CSVs
+    for scen in ["BidirectionalScenario", "CrossingScenario"]:
+        for cfg in ["C1", "C2", "C3", "C4"]:
+            f = os.path.join(input_dir, f"{scen}_{cfg}.csv")
+            if os.path.exists(f):
+                dfs.append(pd.read_csv(f))
+    # Bottleneck from canonical w=1.2m width runs (50 agents)
+    for cfg in ["C1", "C2", "C3", "C4"]:
+        f = os.path.join(input_dir, f"Bottleneck_w1.2_{cfg}.csv")
+        if os.path.exists(f):
+            dfs.append(pd.read_csv(f))
     if not dfs:
         return
     combined = pd.concat(dfs, ignore_index=True)
     combined = combined[combined["config"].str.startswith("C")]
 
+    # Agent counts per scenario (from current re-run scripts)
+    totals = {
+        "BottleneckScenario": 50,  # w=1.2m canonical ablation
+        "BidirectionalScenario": 200,
+        "CrossingScenario": 200,
+    }
+
     scenarios = sorted(combined["scenario"].unique())
     configs = ["C1", "C2", "C3", "C4"]
 
     lines = [
-        r"\begin{tabular}{l" + "r" * len(configs) + "}",
+        r"\begin{tabular}{l" + "c" * len(configs) + "}",
         r"\hline",
         r"\textbf{Scenario} & " + " & ".join([f"\\textbf{{{c}}}" for c in configs]) + r" \\",
         r"\hline",
+        r"\multicolumn{5}{l}{\textit{Exits (mean)}} \\",
     ]
+    for scen in scenarios:
+        total = totals.get(scen, "")
+        cells = [scen.replace("Scenario", "")]
+        for cfg in configs:
+            subset = combined[(combined["scenario"] == scen) & (combined["config"] == cfg)]
+            if len(subset) > 0:
+                exits = subset["agents_exited"].mean()
+                cells.append(f"{exits:.0f}/{total}" if total else f"{exits:.0f}")
+            else:
+                cells.append("--")
+        lines.append(" & ".join(cells) + r" \\")
+    lines.append(r"\hline")
+    lines.append(r"\multicolumn{5}{l}{\textit{Collisions (mean)}} \\")
     for scen in scenarios:
         cells = [scen.replace("Scenario", "")]
         for cfg in configs:
             subset = combined[(combined["scenario"] == scen) & (combined["config"] == cfg)]
             if len(subset) > 0:
-                m, lo, hi = Stats.confidence_interval(subset["mean_speed"].values)
-                cells.append(f"{m:.2f}")
+                cells.append(f"{subset['collision_count'].mean():.0f}")
             else:
                 cells.append("--")
         lines.append(" & ".join(cells) + r" \\")
@@ -392,22 +425,43 @@ def table_scaling(input_dir, table_dir):
 
 
 def table_crush(input_dir, table_dir):
-    """Crush threshold comparison table (D1-D4)."""
+    """Crush threshold comparison table (D1-D4).
+
+    Reads FunnelScenario_D*.csv (narrow-funnel) and/or CrushRoomScenario_D*.csv.
+    Denominator is inferred from (exits + n_still_in_scene) is not stored, so
+    we show raw exit counts against expected agent counts (250 funnel, 300 room).
+    """
+    thresholds = {"D1": "none", "D2": "5.0", "D3": "5.5", "D4": "7.0"}
+
+    def emit_block(prefix: str, total_agents: int, label: str):
+        rows = []
+        for d in ["D1", "D2", "D3", "D4"]:
+            f = os.path.join(input_dir, f"{prefix}_{d}.csv")
+            if os.path.exists(f):
+                df = pd.read_csv(f)
+                rows.append(
+                    f"{d} & {thresholds[d]} & {df['max_density'].mean():.2f} & "
+                    f"{df['agents_exited'].mean():.0f}/{total_agents} & "
+                    f"{df['collision_count'].mean():.0f} \\\\"
+                )
+        if rows:
+            return [rf"\multicolumn{{5}}{{l}}{{\textit{{{label}}}}} \\"] + rows
+        return []
+
     lines = [
         r"\begin{tabular}{lrrrr}",
         r"\hline",
         r"\textbf{Config} & $\rho_\text{crit}$ & \textbf{Max Density} & \textbf{Exits} & \textbf{Collisions} \\",
         r"\hline",
     ]
-    thresholds = {"D1": "none", "D2": "5.0", "D3": "5.5", "D4": "7.0"}
-    for d in ["D1", "D2", "D3", "D4"]:
-        f = os.path.join(input_dir, f"Crush_{d}.csv")
-        if os.path.exists(f):
-            df = pd.read_csv(f)
-            lines.append(
-                f"{d} & {thresholds[d]} & {df['max_density'].mean():.1f} & "
-                f"{df['agents_exited'].mean():.0f}/100 & {df['collision_count'].mean():.0f} \\\\"
-            )
+    funnel_block = emit_block("FunnelScenario", 250, "Narrow funnel (250 agents)")
+    room_block = emit_block("CrushRoomScenario", 300, "Crush room (300 agents)")
+    if funnel_block:
+        lines.extend(funnel_block)
+    if room_block:
+        if funnel_block:
+            lines.append(r"\hline")
+        lines.extend(room_block)
     lines.append(r"\hline")
     lines.append(r"\end{tabular}")
 

@@ -8,18 +8,21 @@ from sim.scenarios.base import Scenario
 
 
 class FunnelScenario(Scenario):
-    """Funnel with angled walls tapering from 10m to 3m.
+    """Funnel with angled walls tapering from 10m to a configurable exit width.
 
-    Top wall: (0,10) -> (15, 6.5).
-    Bottom wall: (0,0) -> (15, 3.5).
-    Left wall: (0,0) -> (0, 10).
+    Top wall:    (0, 10) -> (15, 5 + exit_width/2).
+    Bottom wall: (0, 0)  -> (15, 5 - exit_width/2).
+    Left wall:   (0, 0)  -> (0, 10).
 
     Args:
         n_agents: Number of agents.
+        exit_width: Exit gap at x=15 (m). Default 3.0. For crush scenarios
+            use 0.8-1.0m to force sustained bottleneck density.
     """
 
-    def __init__(self, n_agents: int = 400):
+    def __init__(self, n_agents: int = 400, exit_width: float = 3.0):
         self.n_agents = n_agents
+        self.exit_width = exit_width
 
     def build(self, seed: int = 42) -> tuple[World, AgentState]:
         """Build funnel world and agents.
@@ -27,13 +30,16 @@ class FunnelScenario(Scenario):
         Spawn: x in [0.5, 5], y in [1, 9].
         Goal: (16, 5).
         """
+        half = self.exit_width / 2.0
+        y_bottom = 5.0 - half  # bottom wall endpoint at exit
+        y_top = 5.0 + half     # top wall endpoint at exit
         walls = [
-            Wall(np.array([0.0, 0.0]), np.array([15.0, 3.5])),    # bottom (angled)
-            Wall(np.array([0.0, 10.0]), np.array([15.0, 6.5])),   # top (angled)
-            Wall(np.array([0.0, 0.0]), np.array([0.0, 10.0])),    # left
+            Wall(np.array([0.0, 0.0]), np.array([15.0, y_bottom])),   # bottom (angled)
+            Wall(np.array([0.0, 10.0]), np.array([15.0, y_top])),     # top (angled)
+            Wall(np.array([0.0, 0.0]), np.array([0.0, 10.0])),        # left
             # Exit frame: short vertical segments extending from funnel endpoints
-            Wall(np.array([15.0, 3.5]), np.array([15.0, 3.0])),   # bottom exit edge
-            Wall(np.array([15.0, 6.5]), np.array([15.0, 7.0])),   # top exit edge
+            Wall(np.array([15.0, y_bottom]), np.array([15.0, max(0.0, y_bottom - 0.5)])),
+            Wall(np.array([15.0, y_top]), np.array([15.0, min(10.0, y_top + 0.5)])),
         ]
         world = World(walls)
 

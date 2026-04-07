@@ -1,6 +1,6 @@
 # Paper Audit — SIMULTECH 2026 Submission
 
-**Date:** 2026-04-04
+**Date:** 2026-04-06 (updated)
 **Paper:** "A Hybrid Agent-Based Digital Twin Framework for Crowd Safety Assessment"
 **Target:** SIMULTECH 2026, SciTePress, 12 pages, double-blind
 
@@ -68,10 +68,53 @@
 
 - [x] PDF compiles cleanly (0 errors, 0 overfull hbox)
 - [x] All cross-references resolved
-- [ ] Full experiment re-run needed (ISSUE-056: some CSV data from pre-fix code)
-- [ ] Page count 9 — consider expanding to 10
+- [x] ISSUE-056: experiment re-runs executed (phases 15-18, 2026-04-04 through 2026-04-06)
+- [ ] Paper numbers need regeneration from new re-run CSVs (Sections 4-6)
+- [ ] Figures need regeneration from new CSVs
+- [ ] Crush re-runs (rerun_8/9) and n=20 bottleneck (rerun_10) pending overnight execution
+- [ ] Page count 9 — likely expands to 10-11 with calibration subsection + new numbers
 
-**Status: CONDITIONAL PASS — needs full experiment re-run for final numbers**
+**Status: PRE-SUBMISSION — awaiting final overnight re-runs and paper updates**
+
+---
+
+## Re-run status (2026-04-06)
+
+**Completed re-runs:**
+- Bottleneck widths 1.0-3.6m (50 agents, n=5): CIs overlap, need n=20 extension
+- Bottleneck w=0.8m at 100 agents (120s, 300s, 600s timeouts): C1 0/5, C4 3/5 evacuate
+- Bidirectional 100+100 agents (60s): throughput-safety trade-off confirmed
+- Crossing 100+100 agents (60s): 3x throughput for TTC configs (C4 vs C1)
+- Funnel D1-D4 (250 agents, 60s): CRUSH REGIME BROKEN (max density 6.05, no differentiation)
+- FZJ FD calibration: baseline RMSE 0.2296 -> 0.0908 (60.5% reduction, DT Level 2 achieved)
+
+**Pending overnight re-runs:**
+- rerun_8_funnel_narrow.py: 250 agents, 0.8m exit, Voronoi density (fixes crush activation)
+- rerun_9_crush_room.py: NEW CrushRoom scenario, 300 agents, 0.6m exit, Voronoi
+- rerun_10_bottleneck_n20.py: extends bottleneck widths to n=20 (seeds 47-61, C1+C4)
+
+**After overnight runs, need:**
+- Re-run Optimizer (100 agents) + Scaling C1 with clean CPU for accurate timing
+- Regenerate all 8 figures from new CSVs
+- Update Section 3 (add 3.5 calibration), 4.1-4.6 (all new numbers), 5, 6, abstract
+
+---
+
+## New claims (post-re-run)
+
+**Strong (publishable):**
+- **DT Level 2 calibration**: 60.5% RMSE reduction (0.23 -> 0.09 m/s) against FZJ empirical FD
+- **Crossing throughput**: C1 = 6/200 exits, C4 = 17.6/200 exits (3x improvement in 60s)
+- **Collision reduction**: 37% across all bottleneck widths (C2/C4 vs C1)
+- **Deadlock resolution (w=0.8m, 600s)**: C1 0/5 vs C4 3/5 evacuate successfully (n=5, extending to n=20)
+
+**Defensible with honest framing:**
+- Bidirectional: throughput-safety trade-off (-19% collisions, -12% exits for C4 vs C1)
+- Wide bottleneck exits (1.8m+): no hybrid benefit (expected physics)
+
+**Pending crush re-run for:**
+- Crush regime activation and D1/D2/D3/D4 differentiation
+- Max density capping claim
 
 ---
 
@@ -80,10 +123,10 @@
 | Category | Status |
 |----------|--------|
 | Double-blind | PASS |
-| Formatting | PASS (9 pages) |
-| Content | PASS |
+| Formatting | PASS (9 pages, likely 10-11 post-update) |
+| Content | NEEDS UPDATE (Sections 3.5, 4.1-4.6, 5, 6, abstract) |
 | References | PASS (30 cited) |
-| Figures | PASS |
-| Submission | CONDITIONAL |
+| Figures | NEEDS REGENERATION |
+| Submission | PRE-SUBMISSION — pending final overnight runs |
 
-**The paper is structurally submission-ready.** The blocking item is ISSUE-056: experiment numbers in Sections 4-6 should be regenerated with the corrected codebase (56 fixes applied across 14 phases). Qualitative conclusions confirmed valid.
+**The paper architecture is sound.** Awaiting: (1) overnight crush/n=20 runs completion, (2) scaling+optimizer clean re-run, (3) figure regeneration, (4) Section 3-6 numerical updates, (5) recompilation.

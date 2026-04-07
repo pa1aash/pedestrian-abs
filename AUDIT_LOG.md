@@ -128,3 +128,77 @@
 - **Compilation:** tectonic compiles cleanly, equations fixed for column width
 - **Fixes applied:** abstract period, hypersetup metadata strip, added trajectory+risk figures, cross-references for all figures
 - **Milestone:** SUBMISSION READY
+
+## Phase 15 — Pre-submission Experiment Re-run
+- **Date:** 2026-04-04 through 2026-04-05
+- **Motivation:** ISSUE-056 required full experiment re-run with corrected codebase (55 fixes applied in phases 1-14). Old-paper numbers were from pre-fix code.
+- **Re-run scripts:** rerun_1 through rerun_7 (7 scripts, parallel execution in 5 terminals)
+  - rerun_1: Bottleneck w=0.8 at 100 agents (120s timeout, 4 configs)
+  - rerun_2: Bidirectional 100+100 agents (60s, 4 configs)
+  - rerun_3: Crossing 100+100 agents (60s, 4 configs)
+  - rerun_4: Funnel D1-D4 at 250 agents (60s)
+  - rerun_5: Optimizer (100 agents) + Scaling C1
+  - rerun_6: Bottleneck w=0.8 long-timeout (300s)
+  - rerun_7: Bottleneck w=0.8 long-timeout (600s)
+- **Old results backed up:** results_backup/ (now .gitignored)
+- **Key findings from re-run:**
+  - FD validation solid: C1-C4 all track Weidmann curve, low std (0.02-0.03)
+  - Bottleneck evac: CIs overlap at n=5 at all widths (9% nominal diff at narrow exits)
+  - Bottleneck collision count: 37% reduction (C2/C4 vs C1) consistent across all widths
+  - Crossing: 3x throughput for TTC-enabled configs (C1: 6/200, C4: 17.6/200 exits in 60s)
+  - Bidirectional: throughput-safety trade-off (C4 has 19% fewer collisions, 12% fewer exits)
+  - w=0.8m 600s: C1 0/5 evacuate, C4 3/5 evacuate (deadlock-resolution story)
+  - **Crush regime BROKEN**: funnel max density only 6.05 ped/m^2 across all D-configs, time_above_critical=0.04s, D1/D2/D3 essentially identical
+- **Issues:** grid density estimator (pi*R^2 disk, R=2m) washes out local hotspots at funnel neck
+
+## Phase 16 — DT Level 2: FZJ Calibration
+- **Date:** 2026-04-05
+- **Built:**
+  - sim/scenarios/fzj_bottleneck.py (74 lines): FZJCorridorScenario — periodic corridor matching FZJ unidirectional experiment geometry (18m x 5m, wrap-around)
+  - scripts/calibrate_dt.py (211 lines): Nelder-Mead calibration of (weidmann_gamma, weidmann_rho_max, A, B) against empirical FZJ FD (results/empirical_fd.csv, 4776 data points)
+  - sim/steering/hybrid.py: threaded weidmann_gamma and weidmann_rho_max from params dict through compute_desired_force
+  - tests/test_scenarios.py: added FZJCorridor to parametrized test suite + test_weidmann_param_override
+- **Tests:** 4 new, 101 total, all passing
+- **Calibration results (C1, n_reps=2, 31 evaluations, ~5.4 hrs runtime):**
+  - Baseline RMSE: 0.2296 m/s (default params, paper's "calibration gap")
+  - Calibrated RMSE: 0.0908 m/s
+  - **RMSE reduction: 60.5%**
+  - Calibrated params: gamma=0.888 (was 1.913), rho_max=5.36 (was 5.4), A=1920 (was 2000), B=0.112 (was 0.08)
+- **Output:** results/calibration.json (17KB, full history + baseline comparison)
+- **DT Level 2 achieved:** FZJ corridor is the physical counterpart, calibrated model is the virtual replica, 60% RMSE reduction quantifies physical-virtual alignment
+
+## Phase 17 — Crush Regime Fix (Geometry + Density Estimator)
+- **Date:** 2026-04-06
+- **Root cause:** (1) funnel 3m exit too wide for sustained crush density; (2) grid density estimator averages over pi*R^2=12.6 m^2, masking local peaks at narrow necks
+- **Built:**
+  - sim/scenarios/funnel.py: added exit_width parameter (default 3.0, runs use 0.8)
+  - sim/scenarios/crush_room.py (80 lines): NEW CrushRoomScenario — 5x5m room, single 0.6m exit on right wall, classical crush geometry
+  - sim/core/simulation.py: added density_estimator parameter to __init__ and from_scenario, threaded through step() to replace hardcoded grid counting
+  - sim/experiments/runner.py: added density_estimator kwarg to ExperimentRunner.run()
+  - tests/test_scenarios.py: test_funnel_exit_width_parameter, test_crush_room_geometry, CrushRoom in parametrized suite
+  - tests/test_density.py: test_voronoi_peaks_higher_than_grid_on_cluster (Voronoi catches local hotspots grid washes out)
+  - tests/test_simulation.py: test_simulation_accepts_voronoi_density_estimator
+  - rerun_8_funnel_narrow.py: 250 agents, 0.8m exit, VoronoiDensityEstimator, D1-D4, 5 reps each
+  - rerun_9_crush_room.py: 300 agents, 0.6m exit, VoronoiDensityEstimator, D1-D4, 5 reps each
+- **Tests:** 6 new, 107 total, all passing (~237s full suite)
+- **Smoke test (100 agents, 300 steps, D3, seed=42):**
+  - Narrow funnel + grid density: max_density=2.41 ped/m^2 (WRONG — too smooth)
+  - Narrow funnel + Voronoi: max_density=14.01 ped/m^2 (6x peak detection vs grid)
+  - Crush room + Voronoi: max_density=20.00 ped/m^2 (saturated at max_density cap)
+- **Expected outcome:** crush regime activates sustainedly; D1 >> D2/D3 in max density and collisions
+- **Status:** code + tests complete; re-runs pending overnight execution
+
+## Phase 18 — Bottleneck n=20 Statistical Strengthening
+- **Date:** 2026-04-06
+- **Motivation:** n=5 replications produce overlapping 95% CIs between C1 and C4 at every bottleneck width. "9% evacuation improvement" not statistically significant as-is.
+- **Built:**
+  - rerun_10_bottleneck_n20.py: extends all 6 bottleneck widths (0.8, 1.0, 1.2, 1.8, 2.4, 3.6m) from n=5 to n=20 by adding seeds 47-61
+  - Append-in-place strategy: reads existing CSVs, adds new rows, saves back (crash-safe, idempotent)
+  - Targets C1 + C4 only (head-to-head ablation claim)
+  - Uses os.nice(10) on POSIX to yield CPU to concurrent crush runs
+- **Expected statistical impact:**
+  - t-critical drops from 2.776 (n=5) to 2.093 (n=20)
+  - SE reduces by 2x from sqrt(20/5) additional samples
+  - Total CI width ~0.4x current
+  - Predicted: widths 1.0, 1.2m will reject H0 (p < 0.05); widths 1.8-3.6m may remain null (honest)
+- **Status:** code complete; awaiting overnight run alongside rerun_8/rerun_9

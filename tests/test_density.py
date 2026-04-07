@@ -8,6 +8,33 @@ from sim.density.voronoi import VoronoiDensityEstimator
 from sim.density.kde import KDEDensityEstimator
 
 
+def test_voronoi_peaks_higher_than_grid_on_cluster():
+    """Voronoi density reveals local peaks that grid density washes out.
+
+    20 agents clustered within 1m radius should give:
+    - Grid density (R=2m disk): count / (pi*4) <= 20/12.57 ~ 1.6 ped/m^2
+    - Voronoi density: tight cells in cluster, peak well above 5 ped/m^2.
+    """
+    rng = np.random.Generator(np.random.PCG64(7))
+    # 20 agents clustered tightly in 1m radius
+    angles = rng.uniform(0, 2 * np.pi, 20)
+    radii = rng.uniform(0.0, 1.0, 20)
+    positions = np.column_stack([
+        radii * np.cos(angles),
+        radii * np.sin(angles),
+    ])
+
+    grid = GridDensityEstimator(radius=2.0)
+    voronoi = VoronoiDensityEstimator()
+
+    grid_densities = grid.estimate(positions)
+    vor_densities = voronoi.estimate(positions)
+
+    assert grid_densities.max() < 3.0  # grid smooths density
+    assert vor_densities.max() > 5.0   # Voronoi reveals local peaks
+    assert vor_densities.max() > grid_densities.max()
+
+
 def test_grid_uniform():
     """25 agents on a 5x5 grid (spacing 1m), R=2 -> each has ~12 neighbors."""
     xs, ys = np.meshgrid(np.arange(5), np.arange(5))

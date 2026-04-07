@@ -126,3 +126,31 @@ def test_speed_clamping():
     speeds = np.linalg.norm(state.velocities[state.active], axis=1)
     max_allowed = 2.0 * state.desired_speeds[state.active]
     assert np.all(speeds <= max_allowed + 1e-8)
+
+
+def test_simulation_accepts_voronoi_density_estimator():
+    """Simulation with VoronoiDensityEstimator runs without crashing and
+    produces different densities than the default grid estimator."""
+    from sim.density.voronoi import VoronoiDensityEstimator
+    from sim.scenarios.crush_room import CrushRoomScenario
+
+    # Crush room with 40 agents packed -> strong local density peaks
+    scenario_default = CrushRoomScenario(n_agents=40, exit_width=0.6)
+    scenario_vor = CrushRoomScenario(n_agents=40, exit_width=0.6)
+
+    sim_default = Simulation.from_scenario(scenario_default, "C1", seed=42)
+    sim_vor = Simulation.from_scenario(
+        scenario_vor, "C1", seed=42,
+        density_estimator=VoronoiDensityEstimator(),
+    )
+
+    # Run a few steps
+    for _ in range(30):
+        sim_default.step()
+        sim_vor.step()
+
+    # Extract recorded max densities from metrics_log
+    grid_max = max(m["max_density"] for m in sim_default.metrics_log)
+    vor_max = max(m["max_density"] for m in sim_vor.metrics_log)
+    assert vor_max > grid_max, \
+        f"Voronoi max density ({vor_max:.2f}) should exceed grid max ({grid_max:.2f})"

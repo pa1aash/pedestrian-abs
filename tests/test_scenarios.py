@@ -11,6 +11,8 @@ from sim.scenarios.bottleneck import BottleneckScenario
 from sim.scenarios.bidirectional import BidirectionalScenario
 from sim.scenarios.crossing import CrossingScenario
 from sim.scenarios.funnel import FunnelScenario
+from sim.scenarios.fzj_bottleneck import FZJCorridorScenario
+from sim.scenarios.crush_room import CrushRoomScenario
 from sim.steering.hybrid import HybridSteeringModel
 
 
@@ -20,6 +22,8 @@ _SCENARIOS = [
     ("Bidirectional", BidirectionalScenario(n_per_direction=10)),
     ("Crossing", CrossingScenario(n_per_stream=10)),
     ("Funnel", FunnelScenario(n_agents=15)),
+    ("FZJCorridor", FZJCorridorScenario(n_agents=10)),
+    ("CrushRoom", CrushRoomScenario(n_agents=20, exit_width=0.6)),
 ]
 
 _DEFAULT_PARAMS = {
@@ -115,3 +119,71 @@ def test_corridor_spawn_bounds():
     assert np.all(state.positions[:, 0] <= 2.0)
     assert np.all(state.positions[:, 1] >= 0.3)
     assert np.all(state.positions[:, 1] <= 3.3)
+
+
+def test_funnel_exit_width_parameter():
+    """FunnelScenario exit_width parameter produces correctly sized gap."""
+    for w in [0.6, 0.8, 1.0, 3.0]:
+        scenario = FunnelScenario(n_agents=10, exit_width=w)
+        world, _ = scenario.build()
+        # Find the two angled walls ending at x=15
+        bottom = next(wl for wl in world.walls
+                      if np.allclose(wl.start, [0, 0]) and wl.end[0] == 15.0)
+        top = next(wl for wl in world.walls
+                   if np.allclose(wl.start, [0, 10]) and wl.end[0] == 15.0)
+        gap = top.end[1] - bottom.end[1]
+        np.testing.assert_allclose(gap, w, atol=0.01)
+
+
+def test_crush_room_geometry():
+    """CrushRoomScenario has correct exit gap on right wall."""
+    scenario = CrushRoomScenario(n_agents=50, width=5.0, height=5.0, exit_width=0.6)
+    world, state = scenario.build(seed=42)
+
+    assert state.n == 50
+    # Right wall should have two segments with gap of 0.6m
+    right_walls = [w for w in world.walls
+                   if w.start[0] == 5.0 and w.end[0] == 5.0]
+    assert len(right_walls) == 2
+    lower_top = max(w.end[1] for w in right_walls if w.start[1] < 2.5)
+    upper_bottom = min(w.start[1] for w in right_walls if w.start[1] > 2.5)
+    gap = upper_bottom - lower_top
+    np.testing.assert_allclose(gap, 0.6, atol=0.01)
+    # Agents are inside the room
+    assert np.all(state.positions[:, 0] > 0) and np.all(state.positions[:, 0] < 5.0)
+    assert np.all(state.positions[:, 1] > 0) and np.all(state.positions[:, 1] < 5.0)
+
+
+def test_fzj_corridor_geometry():
+    """FZJ corridor has correct dimensions and periodic length."""
+    scenario = FZJCorridorScenario(n_agents=20, corridor_width=5.0)
+    world, state = scenario.build(seed=42)
+
+    assert state.n == 20
+    assert scenario.periodic_length == 18.0
+    assert scenario.width == 5.0
+    # Only top/bottom walls (periodic in x)
+    assert len(world.walls) == 2
+
+
+def test_weidmann_param_override():
+    """Weidmann params flow through from_scenario param_overrides to desired force."""
+    # Use enough agents for density to be non-trivial (~1 ped/m^2)
+    scenario = FZJCorridorScenario(n_agents=90, warmup_steps=10, measure_steps=10)
+    sim_default = Simulation.from_scenario(scenario, "C1", seed=42)
+    scenario2 = FZJCorridorScenario(n_agents=90, warmup_steps=10, measure_steps=10)
+    sim_custom = Simulation.from_scenario(
+        scenario2, "C1", seed=42,
+        param_overrides={"weidmann_gamma": 5.0, "weidmann_rho_max": 3.5},
+    )
+
+    # Run both for a few steps
+    for _ in range(20):
+        sim_default.step()
+        sim_custom.step()
+
+    # Different Weidmann params should produce different velocities
+    v_default = np.linalg.norm(sim_default.state.velocities, axis=1).mean()
+    v_custom = np.linalg.norm(sim_custom.state.velocities, axis=1).mean()
+    assert v_default != pytest.approx(v_custom, abs=0.01), \
+        "Weidmann param override had no effect on velocities"

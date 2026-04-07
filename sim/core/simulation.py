@@ -24,6 +24,9 @@ class Simulation:
         steering_model: Steering model for force computation (None = desired only).
         integrator: Numerical integrator (default: EulerIntegrator).
         params: Dict of simulation parameters.
+        density_estimator: Optional density estimator. When None (default),
+            uses grid-counting density (neighbor count / pi*R^2). Pass a
+            VoronoiDensityEstimator or KDEDensityEstimator to override.
     """
 
     def __init__(
@@ -33,6 +36,7 @@ class Simulation:
         steering_model: SteeringModel | None,
         integrator: EulerIntegrator | None = None,
         params: dict | None = None,
+        density_estimator=None,
     ):
         self.world = world
         self.state = agent_state
@@ -44,6 +48,7 @@ class Simulation:
             "max_time": 300.0,
             "goal_reached_dist": 0.5,
         }
+        self.density_estimator = density_estimator
         self.time = 0.0
         self.step_count = 0
         self.metrics_log: list[dict] = []
@@ -84,12 +89,19 @@ class Simulation:
                 global_i = active_idx[local_i]
                 neighbor_lists[global_i] = [active_idx[j] for j in nbrs if active_idx[j] != global_i]
 
-        # 2. Simple grid density: count / (pi * R^2)
-        r = self.params["neighbor_radius"]
-        area = np.pi * r * r
-        densities = np.array(
-            [len(n) / area for n in neighbor_lists], dtype=float
-        )
+        # 2. Density estimation: custom estimator or default grid count
+        if self.density_estimator is not None:
+            # Custom estimator (Voronoi/KDE): compute on active agents only,
+            # then scatter back to full-size array (inactive agents get 0).
+            active_densities = self.density_estimator.estimate(active_pos)
+            densities = np.zeros(self.state.n, dtype=float)
+            densities[active_idx] = active_densities
+        else:
+            r = self.params["neighbor_radius"]
+            area = np.pi * r * r
+            densities = np.array(
+                [len(n) / area for n in neighbor_lists], dtype=float
+            )
 
         # 3. Compute forces
         if self.steering is not None:
@@ -256,6 +268,7 @@ class Simulation:
         config_name: str = "C1",
         seed: int = 42,
         param_overrides: dict | None = None,
+        density_estimator=None,
     ) -> "Simulation":
         """Build a Simulation from a scenario object and config name.
 
@@ -264,6 +277,9 @@ class Simulation:
             config_name: One of C1-C4.
             seed: Random seed.
             param_overrides: Optional dict to override params.yaml values.
+            density_estimator: Optional density estimator override. When None,
+                uses grid-counting density (default). Pass a VoronoiDensityEstimator
+                to improve local-hotspot detection (e.g. for crush scenarios).
 
         Returns:
             Configured Simulation instance.
@@ -286,7 +302,8 @@ class Simulation:
             flat.update(param_overrides)
         config = get_config(config_name)
         steering = HybridSteeringModel(config, flat)
-        sim = cls(world, agent_state, steering, EulerIntegrator(), flat)
+        sim = cls(world, agent_state, steering, EulerIntegrator(), flat,
+                  density_estimator=density_estimator)
         sim._scenario = scenario
         sim.periodic_length = getattr(scenario, 'periodic_length', None)
         return sim
