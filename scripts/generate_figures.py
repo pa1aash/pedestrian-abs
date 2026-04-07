@@ -143,17 +143,17 @@ def fig3_trajectories(output_dir):
 
 
 def fig4_density_heatmap(output_dir):
-    """Run 100-agent funnel sim, time-average density over 50 frames."""
+    """Run narrow-exit funnel sim (0.8m exit, 250 agents), time-average density."""
     from sim.core.simulation import Simulation
     from sim.scenarios.funnel import FunnelScenario
     from scipy.ndimage import gaussian_filter
 
-    scenario = FunnelScenario(n_agents=100)
-    sim = Simulation.from_scenario(scenario, "C1", seed=42,
+    scenario = FunnelScenario(n_agents=250, exit_width=0.8)
+    sim = Simulation.from_scenario(scenario, "D1", seed=42,
                                     param_overrides={"neighbor_radius": 1.5})
 
-    # Run until congestion builds
-    for _ in range(1200):
+    # Run until congestion builds at narrow throat
+    for _ in range(1500):
         sim.step()
 
     # Time-average density over 100 frames
@@ -182,10 +182,10 @@ def fig4_density_heatmap(output_dir):
         extent=[xlim[0], xlim[1], ylim[0], ylim[1]],
         aspect="auto",
     )
-    # Draw funnel walls
-    ax.plot([0, 15], [0, 3.5], "k-", lw=1.5)
-    ax.plot([0, 15], [10, 6.5], "k-", lw=1.5)
-    ax.plot([0, 0], [0, 10], "k-", lw=1.5)
+    # Draw narrow funnel walls (0.8m exit: y=4.6 to y=5.4 at x=15)
+    ax.plot([0, 15], [0, 4.6], "k-", lw=1.5)   # bottom
+    ax.plot([0, 15], [10, 5.4], "k-", lw=1.5)   # top
+    ax.plot([0, 0], [0, 10], "k-", lw=1.5)       # left
     ax.set_xlabel("x (m)")
     ax.set_ylabel("y (m)")
     fig.colorbar(im, ax=ax, label="Density (ped/m²)")
@@ -237,7 +237,7 @@ def fig6_scaling(input_dir, output_dir):
 
 
 def fig7_risk_heatmap(output_dir):
-    """Run 100-agent funnel sim and compute composite risk."""
+    """Run narrow-exit funnel sim (0.8m exit, 250 agents) and compute composite risk."""
     from sim.core.simulation import Simulation
     from sim.scenarios.funnel import FunnelScenario
     from sim.density.voronoi import VoronoiDensityEstimator
@@ -245,8 +245,8 @@ def fig7_risk_heatmap(output_dir):
     from sim.density.risk import CompositeRiskMetric
     from scipy.spatial import KDTree
 
-    scenario = FunnelScenario(n_agents=100)
-    sim = Simulation.from_scenario(scenario, "C1", seed=42,
+    scenario = FunnelScenario(n_agents=250, exit_width=0.8)
+    sim = Simulation.from_scenario(scenario, "D1", seed=42,
                                     param_overrides={"neighbor_radius": 1.5})
     for _ in range(1500):
         sim.step()
