@@ -14,9 +14,26 @@ run_all_experiments.py
 results_backup/
 rerun_*.py
 .claude/
+
+# LaTeX build artifacts
 paper/main.aux
 paper/main.log
 paper/main.out
 paper/main.blg
+paper/main.bbl
 paper/main.pdf
 paper/CrowdTwin_SIMULTECH2026_submission.pdf
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.toc
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# Local development artifacts
+*.tmp
+*.bak
