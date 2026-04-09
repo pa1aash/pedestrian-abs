@@ -56,8 +56,10 @@ def plot_ablation_bars(
             capsize=3,
         )
 
+    # Strip "Scenario" suffix for cleaner labels
+    pretty_labels = [s.replace("Scenario", "") for s in scenarios]
     ax.set_xticks(x)
-    ax.set_xticklabels(scenarios, rotation=15, ha="right")
+    ax.set_xticklabels(pretty_labels, rotation=0, ha="center")
     ax.set_ylabel(metric.replace("_", " ").title())
     ax.legend()
     fig.tight_layout()

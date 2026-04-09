@@ -7,4 +7,4 @@ hybrid: {rho_orca_fade: 4.0, k_orca_fade: 2.0, rho_crit: 5.5, k_crit: 3.0}
 crush: {k_crush: 360000.0, kappa_crush: 480000.0}
 density: {grid_radius: 2.0, kde_bandwidth: 1.0}
 risk: {rho_ref: 6.0, P_ref: 3.0, grad_rho_ref: 4.0}
-optimization: {method: cma-es, population_size: 15, initial_sigma: 1.0, max_evaluations: 200}
+optimization: {method: nelder-mead, max_evaluations: 200}

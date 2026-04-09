@@ -57,13 +57,6 @@ Grieves, M. and Vickers, J. (2017).
 \newblock In Kahlen, F.~J., Flumerfelt, S., and Alves, A., editors, {\em
   Transdisciplinary Perspectives on Complex Systems}, pages 85--113. Springer.
 
-\bibitem[Gupta et~al., 2018]{Gupta18}
-Gupta, A., Johnson, J., Fei-Fei, L., Savarese, S., and Alahi, A. (2018).
-\newblock Social {GAN}: socially acceptable trajectories with generative
-  adversarial networks.
-\newblock In {\em Proceedings of the IEEE Conference on Computer Vision and
-  Pattern Recognition}, pages 2255--2264. IEEE.
-
 \bibitem[Guy et~al., 2010]{Guy10}
 Guy, S.~J., Chhugani, J., Curtis, S., Dubey, P., Lin, M., and Manocha, D.
   (2010).
@@ -139,12 +132,6 @@ Reynolds, C.~W. (1999).
 \newblock In {\em Proceedings of the Game Developers Conference}, pages
   763--782. Miller Freeman.
 
-\bibitem[Seyfried et~al., 2005]{Seyfried05}
-Seyfried, A., Steffen, B., Klingsch, W., and Boltes, M. (2005).
-\newblock The fundamental diagram of pedestrian movement revisited.
-\newblock {\em Journal of Statistical Mechanics: Theory and Experiment},
-  2005(10):P10002.
-
 \bibitem[Steffen and Seyfried, 2010]{Steffen10}
 Steffen, B. and Seyfried, A. (2010).
 \newblock Methods for measuring pedestrian density, flow, speed and direction
@@ -171,6 +158,12 @@ van Toll, W., Braga, C., Solenthaler, B., and Pettre, J. (2021).
 \newblock Extreme-density crowd simulation: combining agents with smoothed
   particle hydrodynamics.
 \newblock {\em Computers \& Graphics}, 98:306--321.
+
+\bibitem[Weidmann, 1993]{Weidmann93}
+Weidmann, U. (1993).
+\newblock {\em Transporttechnik der {Fu\ss}g\"anger: transporttechnische
+  Eigenschaften des {Fu\ss}g\"angerverkehrs ({Literaturauswertung})}.
+\newblock PhD thesis, ETH Z\"urich.
 
 \bibitem[Yanagisawa et~al., 2009]{Yanagisawa09}
 Yanagisawa, D., Tomoeda, A., Jiang, R., and Nishinari, K. (2009).
