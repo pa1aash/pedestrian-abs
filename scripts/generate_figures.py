@@ -296,14 +296,16 @@ def fig5_evac_vs_width(input_dir, output_dir):
 
 
 def fig6_scaling(input_dir, output_dir):
-    """Log-log scaling plot."""
-    f = os.path.join(input_dir, "scaling_C1.csv")
-    if not os.path.exists(f):
-        print("Fig 6: skipped (no scaling data)")
+    """Log-log scaling plot: C1 and C4."""
+    f_c1 = os.path.join(input_dir, "scaling_C1.csv")
+    if not os.path.exists(f_c1):
+        print("Fig 6: skipped (no scaling_C1.csv)")
         return
     from sim.viz.scaling import plot_scaling
-    df = pd.read_csv(f)
-    path = plot_scaling(df, output_dir=output_dir)
+    df_c1 = pd.read_csv(f_c1)
+    f_c4 = os.path.join(input_dir, "scaling_C4.csv")
+    df_c4 = pd.read_csv(f_c4) if os.path.exists(f_c4) else None
+    path = plot_scaling(df_c1, df_c4=df_c4, output_dir=output_dir)
     print(f"Fig 6: {path}")
 
 

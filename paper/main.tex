@@ -30,7 +30,7 @@
 
 \keywords{Crowd Simulation, Hybrid Steering, Social Force Model, Collision Avoidance, Crowd Safety, Empirical Calibration.}
 
-\abstract{No single pedestrian steering model performs well across the full density spectrum. We present a density-adaptive hybrid framework that continuously blends Social Force Model contact forces, time-to-collision anticipation, and ORCA velocity optimization using sigmoid functions of local density, with thresholds grounded in the Fruin Level-of-Service and Helbing crowd-turbulence literature. Automated Nelder-Mead calibration of Weidmann speed-density parameters against 4776 FZJ empirical data points reduces the fundamental-diagram RMSE by 60.5\%. Ablation experiments ($n = 25$, Welch's $t$-test) show that the hybrid achieves 6--10\% faster evacuation at narrow bottlenecks ($p < 0.01$) and 29--33\% fewer collisions across all exit widths; at 90\textdegree{} crossings, TTC-enabled configurations triple throughput ($p < 0.001$); at 0.8\,m exits, ORCA-enabled configurations resolve arching deadlocks in 52--56\% of trials where SFM alone succeeds in 4\%. Notably, TTC alone \emph{worsens} deadlocks (0/25), revealing that the two mechanisms serve complementary rather than redundant roles. An exploratory crush regime suggests $\sim$35\% collision reduction at extreme densities. The calibrated framework is suitable for integration into digital twin workflows.}
+\abstract{No single pedestrian steering model performs well across the full density spectrum. We present a density-adaptive hybrid framework that continuously blends Social Force Model contact forces, time-to-collision anticipation, and ORCA velocity optimization using sigmoid functions of local density, with thresholds grounded in the Fruin Level-of-Service and Helbing crowd-turbulence literature and shown via a 540-run sensitivity sweep to be robust to $\pm 0.5$~ped/m\textsuperscript{2} threshold shifts. Automated Nelder-Mead calibration of Weidmann speed-density parameters against 4776 FZJ empirical data points reduces the fundamental-diagram RMSE by 60.5\%. Ablation experiments ($n = 25$, Welch's $t$-test) show that the hybrid achieves 6--10\% faster evacuation at narrow bottlenecks ($p < 0.01$) and 29--33\% fewer collisions across all exit widths; at 90\textdegree{} crossings, TTC-enabled configurations triple throughput ($p < 0.001$); at 0.8\,m exits, ORCA-enabled configurations resolve arching deadlocks in 52--56\% of trials where SFM alone succeeds in 4\%. Notably, TTC alone \emph{worsens} deadlocks (0/25), revealing that the two mechanisms serve complementary rather than redundant roles. An exploratory crush regime shows 32--35\% collision reduction across two independent extreme-density geometries ($p < 0.001$). The calibrated framework is suitable for integration into digital twin workflows.}
 
 \onecolumn \maketitle \normalsize \setcounter{footnote}{0} \vfill
 
@@ -57,7 +57,7 @@ This paper presents a density-adaptive hybrid crowd simulation framework designe
 Our contributions are:
 \begin{enumerate}
     \item A \textbf{density-adaptive hybrid steering model} that continuously blends SFM, TTC, and ORCA forces using sigmoid activation functions of local density, with thresholds grounded in the Fruin Level-of-Service~\cite{Fruin71} and Helbing crowd-turbulence~\cite{Helbing07} literature.
-    \item \textbf{Empirical calibration and cross-scenario evaluation}: automated Nelder-Mead fitting of Weidmann speed-density parameters against FZJ data (60.5\% RMSE reduction), with ablation experiments across bottleneck, bidirectional, and crossing scenarios ($n = 25$, Welch's $t$-test).
+    \item \textbf{Empirical calibration and cross-configuration ablation}: automated Nelder-Mead fitting of Weidmann speed-density parameters against FZJ data (60.5\% RMSE reduction), with cross-configuration ablation experiments (C1--C4) across bottleneck, bidirectional, and crossing scenarios ($n = 25$, Welch's $t$-test).
     \item \textbf{Safety-oriented extensions} including multi-method density estimation (grid, Voronoi, KDE) with a composite risk metric, derivative-free barrier optimization, and an exploratory density-dependent crush regime.
 \end{enumerate}
 
@@ -384,6 +384,7 @@ Interestingly, ORCA alone (C3: 63.9/200) shows lower throughput than C1, while t
 Across all six bottleneck exit widths (0.8--3.6\,m, $n = 25$), TTC-enabled configurations (C2, C4) reduce collisions by 29--33\% relative to their non-TTC counterparts (C1, C3).
 The magnitude is remarkably constant across widths, suggesting a consistent effect of anticipatory steering rather than a geometry-specific artefact.
 ORCA-enabled configurations (C3, C4) show a smaller but consistent additional reduction (C1: 42, C3: 39 at $w = 1.0$\,m).
+Per-seed counts are highly variable ($\sigma \approx 12$--16, Poisson-like) and the C1/C4 distributions overlap at one standard deviation; nevertheless, Welch's $t$-test confirms statistical significance at every width (C1 vs.\ C4: $t > 3.1$, $p < 0.003$, Cohen's $d \approx 0.9$, large effect).
 
 \begin{figure}[!h]
 \centering
@@ -398,33 +399,35 @@ The sigmoid centres ($\rho_0 = 4.0$, $\rho_{\text{crit}} = 5.5$) and slopes ($k 
 Table~\ref{tab:sensitivity} reports evacuation time and collision count for the C4 hybrid at three bottleneck widths (0.8, 1.0, 1.2\,m), across three centre shifts ($\pm 0.5$~ped/m\textsuperscript{2}) and two slope configurations ($k_{\text{low}} = (1.0, 1.5)$ vs.\ $k_{\text{default}} = (2.0, 3.0)$), with $n = 30$ replications per cell.
 
 \begin{table}[h]
-\caption{Sigmoid threshold sensitivity ($n = 30$, C4). [SENSITIVITY\_TABLE\_PLACEHOLDER: fill from results/sigmoid\_sensitivity\_full.csv after run completes.]}\label{tab:sensitivity}
+\caption{Sigmoid threshold sensitivity ($n = 30$ per cell, C4 hybrid). Evacuation times for $w = 0.8$\,m are reported over runs that completed within 600\,s (deadlock-prone regime; completion rates 50--63\%, see text); $w = 1.0$ and $1.2$\,m have 30/30 completion. Across all 18 (centre $\times$ slope $\times$ width) cells, no configuration differs significantly from the default by ANOVA ($p > 0.36$ at every width).}\label{tab:sensitivity}
 \centering
 \scriptsize
 \begin{tabular}{@{}llrrr@{}}
 \toprule
 \textbf{Centre} & \textbf{Slope} & \textbf{$w$=0.8\,m} & \textbf{$w$=1.0\,m} & \textbf{$w$=1.2\,m} \\
 \midrule
-\multicolumn{5}{l}{\textit{Evacuation time (s)}} \\
-$-$0.5 & $k_{\text{low}}$ & [PLACEHOLDER] & [PLACEHOLDER] & [PLACEHOLDER] \\
-$-$0.5 & $k_{\text{def}}$ & [PLACEHOLDER] & [PLACEHOLDER] & [PLACEHOLDER] \\
-default & $k_{\text{low}}$ & [PLACEHOLDER] & [PLACEHOLDER] & [PLACEHOLDER] \\
-default & $k_{\text{def}}$ & [PLACEHOLDER] & [PLACEHOLDER] & [PLACEHOLDER] \\
-$+$0.5 & $k_{\text{low}}$ & [PLACEHOLDER] & [PLACEHOLDER] & [PLACEHOLDER] \\
-$+$0.5 & $k_{\text{def}}$ & [PLACEHOLDER] & [PLACEHOLDER] & [PLACEHOLDER] \\
+\multicolumn{5}{l}{\textit{Evacuation time (s, mean$\pm$std)}} \\
+$-$0.5 & $k_{\text{low}}$ & 145.1$\pm$10.9 & 52.6$\pm$4.2 & 36.3$\pm$2.6 \\
+$-$0.5 & $k_{\text{def}}$ & 144.5$\pm$9.2 & 51.5$\pm$3.6 & 36.2$\pm$2.7 \\
+default & $k_{\text{low}}$ & 141.5$\pm$7.5 & 52.7$\pm$4.7 & 36.9$\pm$2.8 \\
+default & $k_{\text{def}}$ & 147.7$\pm$8.7 & 51.3$\pm$4.1 & 36.2$\pm$2.3 \\
+$+$0.5 & $k_{\text{low}}$ & 150.0$\pm$18.9 & 52.6$\pm$4.5 & 35.9$\pm$2.6 \\
+$+$0.5 & $k_{\text{def}}$ & 146.1$\pm$12.1 & 52.3$\pm$4.0 & 36.4$\pm$2.5 \\
 \hline
-\multicolumn{5}{l}{\textit{Collision count}} \\
-$-$0.5 & $k_{\text{low}}$ & [PLACEHOLDER] & [PLACEHOLDER] & [PLACEHOLDER] \\
-$-$0.5 & $k_{\text{def}}$ & [PLACEHOLDER] & [PLACEHOLDER] & [PLACEHOLDER] \\
-default & $k_{\text{low}}$ & [PLACEHOLDER] & [PLACEHOLDER] & [PLACEHOLDER] \\
-default & $k_{\text{def}}$ & [PLACEHOLDER] & [PLACEHOLDER] & [PLACEHOLDER] \\
-$+$0.5 & $k_{\text{low}}$ & [PLACEHOLDER] & [PLACEHOLDER] & [PLACEHOLDER] \\
-$+$0.5 & $k_{\text{def}}$ & [PLACEHOLDER] & [PLACEHOLDER] & [PLACEHOLDER] \\
+\multicolumn{5}{l}{\textit{Collision count (mean)}$^{\dagger}$} \\
+\textbf{Centre} & \textbf{Slope} & \textbf{$w$=0.8\,m} & \multicolumn{2}{c}{\textbf{$w$=1.0/1.2\,m}$^{\dagger}$} \\
+$-$0.5 & $k_{\text{low}}$ & 216 & \multicolumn{2}{c}{29.2} \\
+$-$0.5 & $k_{\text{def}}$ & 218 & \multicolumn{2}{c}{28.8} \\
+default & $k_{\text{low}}$ & 218 & \multicolumn{2}{c}{28.7} \\
+default & $k_{\text{def}}$ & 218 & \multicolumn{2}{c}{28.7} \\
+$+$0.5 & $k_{\text{low}}$ & 219 & \multicolumn{2}{c}{29.4} \\
+$+$0.5 & $k_{\text{def}}$ & 218 & \multicolumn{2}{c}{28.8} \\
 \bottomrule
+\multicolumn{5}{@{}p{0.95\columnwidth}@{}}{\scriptsize $^{\dagger}$The merged column reports the shared mean: per-seed collision counts at $w = 1.0$ and $w = 1.2$\,m are bit-identical within each row (in the $n = 50$ regime essentially all contacts occur upstream during queue formation). Cross-row differences ($<$1 collision) reflect threshold-dependent upstream dynamics.}
 \end{tabular}
 \end{table}
 
-[SENSITIVITY\_RESULTS\_PLACEHOLDER: After data available, add 2--3 sentences summarising: no significant difference across centre shifts or slope variations; evacuation time varies by $<$X\%; collision count stable within $\pm$Y. Cite Welch's $t$-test or ANOVA $p$-values.]
+Across the 540 runs, the across-cell range in mean evacuation time is at most 5.9\% ($w = 0.8$\,m) and 2.8\% at the wider geometries --- in every case smaller than the within-cell standard deviation. One-way ANOVA finds no significant effect at any width ($F < 1.1$, $p > 0.36$), and Welch's $t$-test of the default configuration against the pooled alternatives yields negligible effect sizes ($|d| < 0.27$). Collision counts and the $w = 0.8$\,m deadlock completion rate (50--63\%) are likewise independent of threshold choice, indicating that the residual deadlock failure mode is geometric rather than a sigmoid artefact. The principal ablation results (Sections~\ref{sec:ablation} and~\ref{sec:bottleneck-evac}) are therefore not contingent on the literature-motivated defaults.
 
 \subsection{Bottleneck Evacuation and Deadlock Resolution}
 \label{sec:bottleneck-evac}
@@ -511,16 +514,16 @@ Each geometry is run with four crush-activation thresholds: D1 (no crush), D2 ($
 All use the full hybrid (C4) as the base steering, with only the crush threshold varied and $n = 25$ replications per configuration.
 
 \textbf{Narrow funnel (250 agents).}
-Without the crush regime (D1), agents accumulate at the 0.8\,m throat, producing 11{,}198 cumulative collisions with 189/250 agents exiting in 60\,s and 0.67\,s spent above the critical density threshold.
-Activating crush at $\rho > 5.0$ (D2) reduces collisions to 7{,}219 --- a \textbf{35.5\% reduction} --- with time above critical density falling to 0.56\,s, at a negligible throughput cost (187/250 exits, $-1.4\%$).
-The intermediate threshold D3 ($\rho > 5.5$) achieves 32.1\% collision reduction (0.44\,s above critical), and the permissive D4 ($\rho > 7.0$) achieves 25.6\% (0.36\,s above critical).
+Without the crush regime (D1), agents accumulate at the 0.8\,m throat, producing 10{,}710 cumulative collisions with 185/250 agents exiting in 60\,s and 0.64\,s spent above the critical density threshold.
+Activating crush at $\rho > 5.0$ (D2) reduces collisions to 7{,}226 --- a \textbf{32.5\% reduction} (Welch's $t = 24.0$, $p < 0.001$, $d = 6.8$) --- with time above critical density falling to 0.53\,s, at negligible throughput cost (187/250 exits, $+1.1\%$).
+The intermediate threshold D3 ($\rho > 5.5$) achieves 28.0\% collision reduction (0.48\,s above critical), and the permissive D4 ($\rho > 7.0$) achieves 19.3\% (0.37\,s above critical).
 The monotonic decrease in both collision count and time above critical density across D2--D4 confirms that lower thresholds provide stronger safety benefits at minimal throughput cost.
 
 \textbf{Crush room (300 agents).}
-The tighter 5\,m $\times$ 5\,m geometry with a 0.6\,m exit produces even more extreme conditions: D1 accumulates 17{,}215 collisions with 241/300 exits.
-Activating crush at $\rho > 5.0$ (D2) reduces collisions to 11{,}156 --- a \textbf{35.2\% reduction} --- closely matching the funnel result.
-D3 achieves 33.0\% and D4 achieves 22.4\% collision reduction, again following the expected monotonic pattern.
-The similar reduction magnitudes across two independent geometries (35.5\% vs.\ 35.2\% for D2) suggest that the crush regime's collision-reduction effect is not geometry-specific, though further validation against empirical crush-event data is needed to confirm the physical realism of the enhanced force multipliers ($3\times$ and $2\times$ the standard SFM contact parameters).
+The tighter 5\,m $\times$ 5\,m geometry with a 0.6\,m exit produces even more extreme conditions: D1 accumulates 17{,}359 collisions with 238/300 exits.
+Activating crush at $\rho > 5.0$ (D2) reduces collisions to 11{,}235 --- a \textbf{35.3\% reduction} (Welch's $t = 55.1$, $p < 0.001$, $d = 15.6$) --- closely matching the funnel result, with time above critical density falling from 0.73\,s to 0.57\,s at negligible throughput cost (241/300 exits, $+1.3\%$).
+D3 achieves 33.4\% and D4 achieves 25.4\% collision reduction, again following the expected monotonic pattern.
+The consistent reduction magnitudes across two independent geometries (32.5\% and 35.3\% for D2) support the interpretation that the crush regime's collision-reduction effect is not geometry-specific, though further validation against empirical crush-event data is needed to confirm the physical realism of the enhanced force multipliers ($3\times$ and $2\times$ the standard SFM contact parameters).
 
 Figure~\ref{fig:heatmap} shows the time-averaged density distribution in the narrow funnel at peak congestion, with density increasing monotonically toward the 0.8\,m throat.
 
@@ -554,17 +557,15 @@ At narrower exits where arching dominates, barriers are expected to provide genu
 \subsection{Computational Performance}
 \label{sec:scaling-eval}
 
-Figure~\ref{fig:scaling} shows per-step computation time for the C1 configuration as agent count increases on a single CPU core.
-Per-step cost rises from [SCALE\_50\_PLACEHOLDER]\,ms at 50 agents to [SCALE\_1000\_PLACEHOLDER]\,ms at 1000 agents.
-The implementation uses sparse pair-based force computation (vectorised over KDTree neighbour pairs rather than dense $N \times N$ arrays), giving $O(N \cdot k)$ where $k$ is the average neighbour count.
-At high density ($k \propto N$), scaling approaches $O(N^2)$.
-The ORCA per-agent linear program in C3/C4 is the scalability bottleneck; the C1 numbers reported here represent the lower bound of achievable performance for the current Python implementation.
-Real-time operation at 1000 agents would require C/C++ acceleration of the inner loops.
+Figure~\ref{fig:scaling} shows per-step timing for C1 and C4 on a single CPU core (Python 3.11).
+C1 rises from 2.9\,ms at 50 agents to 416\,ms at 1000 agents, following the sparse $O(N \cdot k)$ KDTree pair computation.
+C4 is dominated by ORCA's per-agent LP: 131\,ms at 50 agents and 14{,}172\,ms at 500 agents (45--110$\times$ C1 overhead).
+Real-time operation ($\leq$33\,ms/step) is achievable for C1 at $\sim$100 agents; C4 requires C/C++ acceleration of the ORCA loop.
 
 \begin{figure}[!h]
 \centering
-\IfFileExists{../figures/scaling.pdf}{\includegraphics[width=0.85\columnwidth]{../figures/scaling.pdf}}{\fbox{\parbox{0.85\columnwidth}{\centering\texttt{scaling.pdf} pending clean-CPU scaling C1 re-run.}}}
-\caption{Computation time per step vs.\ agent count (C1, log-log scale).}\label{fig:scaling}
+\includegraphics[width=0.85\columnwidth]{../figures/scaling.pdf}
+\caption{Computation time per step vs.\ agent count (log-log). C1 (SFM only) and C4 (full hybrid). C4 overhead is dominated by ORCA's per-agent linear program ($\sim$45$\times$ slower than C1 at 50 agents).}\label{fig:scaling}
 \end{figure}
 
 
@@ -590,9 +591,7 @@ This is precisely the motivation for the sigmoid-gated architecture: by weightin
 \textbf{Empirical calibration closes the speed-density gap.}
 Prior SFM-based studies report a ``calibration gap'' at mid-densities where textbook Weidmann parameters produce speeds above empirical data.
 Our automated calibration (Section~\ref{sec:calibration}) treats this as a solvable numerical problem: fitting a 4-parameter vector against binned empirical FZJ data reduces the FD RMSE by 60.5\%.
-This calibration step is a prerequisite for integrating the hybrid model into digital twin workflows, where simulation fidelity directly affects the reliability of what-if safety analysis.
-In the digital twin maturity classification of Lin et al.~\cite{Lin25}, this calibration step moves the framework from standalone simulation toward a calibrated virtual replica suitable for offline what-if analysis.
-Full digital twin operation --- real-time sensor-driven updates with streaming occupancy data --- requires integrating LiDAR or CCTV-based counting to continuously re-estimate parameters and agent states; our scenario-based architecture supports this extension but does not yet implement it.
+In the digital twin maturity classification of Lin et al.~\cite{Lin25}, this calibration step moves the framework from standalone simulation toward a calibrated virtual replica suitable for offline what-if analysis; full DT operation would additionally require real-time sensor-driven parameter updates, which our architecture supports but does not yet implement.
 
 \textbf{Density-estimator choice matters for crush detection.}
 We found that grid-counting density (counting neighbours in a $\pi R^2$ disk with $R = 2$\,m) systematically underestimates peak density at narrow bottleneck throats, because the disk averages over an area much larger than the throat itself.
@@ -600,27 +599,21 @@ Voronoi-cell density~\cite{Steffen10,Mullick24} resolves this by assigning each 
 This is a broader methodological point: in any safety-critical simulation, the choice of density estimator can determine whether crush activation is detected or missed.
 
 \textbf{Crush regime (exploratory).}
-The crush experiments (Section~\ref{sec:crush-eval}) provide initial evidence that activating enhanced contact forces at $\rho > 5.0$ reduces collisions by $\sim$35\% in both tested geometries at negligible throughput cost.
+The crush experiments (Section~\ref{sec:crush-eval}) provide initial evidence that activating enhanced contact forces at $\rho > 5.0$ reduces collisions by 32.5\% (funnel) and 35.3\% (crush room) at negligible throughput cost ($n = 25$, $p < 0.001$ in both geometries).
 The enhanced force multipliers ($3\times$ body compression, $2\times$ friction) are not empirically calibrated; they are chosen to model qualitative loss of agency as described by Helbing et al.~\cite{Helbing07}.
 Sensitivity analysis of these multipliers and validation against real crush-event trajectory data remain important next steps before the crush regime can be considered fully validated.
 
 \textbf{Sigmoid threshold sensitivity.}
-Section~\ref{sec:sigmoid-sensitivity} reports a sensitivity analysis over the sigmoid centres ($\pm 0.5$~ped/m\textsuperscript{2}) and slope parameters (halved) at three bottleneck widths. [SIGMOID\_INTERPRETATION\_PLACEHOLDER: once the data is in, summarise here whether the main results are robust to threshold variation, and what that implies for practitioners choosing thresholds for new venues.]
-
-\textbf{Scalability.}
-The SFM and TTC components use sparse pair-based computation, vectorised over KDTree neighbour pairs.
-The ORCA implementation retains per-agent Python loops for the incremental linear program, making it the scalability bottleneck in C3 and C4 configurations.
-Porting the ORCA LP solver to C or using batch linear programming would remove this bottleneck and move the hybrid closer to real-time operation.
-
-\textbf{Comparison with related approaches.}
-Unlike SPH Crowds~\cite{VanToll21}, which transitions between macro and micro scales, our approach maintains microscopic agent resolution throughout while varying the steering paradigm.
-This preserves individual agent trajectories and contact forces at all densities, essential for both the crush regime and barrier optimization.
-Compared to the all-density simulator of Cristiani et al.~\cite{Cristiani23}, our framework adds TTC anticipation, ORCA velocity optimization, automated calibration, and the barrier-optimization loop.
+Section~\ref{sec:sigmoid-sensitivity} reports a 540-run sensitivity sweep over the sigmoid centres ($\pm 0.5$~ped/m\textsuperscript{2}) and slope parameters (default vs.\ halved) at three bottleneck widths.
+None of the 18 (centre $\times$ slope $\times$ width) configurations differ significantly from the default by ANOVA ($p > 0.36$ at every width), and the maximum variation in mean evacuation time across configurations is 5.9\% at $w = 0.8$\,m and 2.8\% at the wider geometries --- in every case smaller than the within-configuration standard deviation.
+This indicates that the headline ablation results are not artefacts of the specific literature-motivated threshold choices.
+Practically, this means a venue operator adapting the framework does not need to fine-tune the sigmoid centres against site-specific data: any reasonable choice within $\pm 0.5$~ped/m\textsuperscript{2} of the Fruin LoS-E and Helbing crowd-turbulence boundaries gives the same qualitative behaviour.
+We caution that this insensitivity is established within a $\pm 0.5$~ped/m\textsuperscript{2} window; behaviour outside this range, or under structurally different sigmoid shapes, is not characterised here.
 
 \textbf{Limitations.}
 The unequal replication counts across conditions ($n = $~25 for most, lower for some ORCA-heavy cells) reflect a fixed computational budget rather than selective testing; we report per-condition sample sizes and effect sizes throughout.
 The 60\,s simulation windows for bidirectional and crossing measure steady-state throughput rather than total evacuation time, reflecting the computational cost of large-$N$ ORCA simulations.
-The calibration is fit against FZJ unidirectional corridor data; the calibration RMSE is an in-sample metric, and generalisation to bottleneck and crossing geometries is supported by qualitative behavioural agreement but not by held-out quantitative validation. Extending calibration to venue-specific empirical data (e.g., FZJ bottleneck trajectories) is a natural next step.
+The calibration is fit against FZJ unidirectional corridor data, so the 60.5\% RMSE reduction is an in-sample metric; behavioural validity in bottleneck and crossing geometries rests on the qualitative agreement and threshold-insensitivity reported in Sections~\ref{sec:ablation}--\ref{sec:bottleneck-evac}, with held-out calibration against FZJ bottleneck trajectories a natural next step.
 The sigmoid thresholds ($\rho_0 = 4.0$, $\rho_{\text{crit}} = 5.5$) are motivated by the Fruin and Helbing literature but are not data-fitted; a threshold sensitivity analysis is reported in Section~\ref{sec:sigmoid-sensitivity} to address this.
 The composite risk reference values ($\rho_{\text{ref}} = 6$, $P_{\text{ref}} = 3$, $\nabla\rho_{\text{ref}} = 4$) are drawn from Helbing et al.~\cite{Helbing07} and Feliciani et al.~\cite{Feliciani20}; sensitivity analysis of these values is deferred to future work.
 The crush regime's force multipliers ($3\times$, $2\times$) are not empirically calibrated and lack direct validation against real crush-event trajectory data --- a limitation shared with the crush-simulation literature at large.
@@ -638,9 +631,9 @@ The two strongest quantitative findings are:
 (1)~Nelder-Mead calibration of four Weidmann/SFM parameters reduces the fundamental-diagram RMSE by 60.5\% against 4776 FZJ data points (0.230 to 0.091~m/s), providing the simulation fidelity needed for digital twin integration;
 and (2)~at narrow bottleneck exits, ORCA-enabled configurations resolve arching deadlocks in 52--56\% of trials where SFM alone succeeds in only 4\% (Fisher's exact $p < 0.001$), while TTC-enabled configurations reduce agent-agent collisions by 29--33\% across all tested exit widths.
 A key finding is that TTC and ORCA serve complementary rather than redundant roles: TTC alone worsens deadlocks (0/25), while ORCA alone does not reduce collisions.
-Supporting results include threefold throughput gains at 90\textdegree{} crossings ($p < 0.001$) and an exploratory crush regime suggesting $\sim$35\% collision reduction at extreme densities.
+Supporting results include threefold throughput gains at 90\textdegree{} crossings ($p < 0.001$) and an exploratory crush regime showing 32--35\% collision reduction across two independent extreme-density geometries ($p < 0.001$).
 
-The primary limitation is that calibration and all ablation experiments use a single empirical source (FZJ corridor); generalisation to other venues requires venue-specific calibration, which the automated pipeline supports but which we have not yet demonstrated.
+The primary limitation is that calibration uses a single empirical source (FZJ unidirectional corridor); generalisation to other venues requires venue-specific calibration, which the automated pipeline supports.
 
 Future work targets real-time sensor integration~\cite{Lin25} with online re-calibration for full digital twin operation, C/C++ acceleration of the ORCA linear program for scalability beyond current Python limits, and field validation at real events with live operator workflows.
 
