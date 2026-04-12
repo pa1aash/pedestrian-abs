@@ -1,4 +1,4 @@
-# CLAUDE.md — CrowdTwin: Hybrid Crowd Simulation Digital Twin
+# CLAUDE.md — CrowdSim Ablation Study
 
 > **READ THIS ENTIRE FILE BEFORE WRITING ANY CODE.**
 > Single source of truth for architecture, equations, algorithms, parameters, and conventions.
@@ -7,87 +7,116 @@
 
 ## 0. PROJECT IDENTITY
 
-**What:** Hybrid SFM/TTC/ORCA pedestrian crowd simulation engine in a Digital Twin architecture.
-**Why:** No published system combines these three steering paradigms. No crowd safety DT includes hybrid steering + multi-method density estimation + composite risk + crush regime + barrier optimization. This is the first.
+**What:** Diagnostic ablation study of SFM, TTC, and ORCA pedestrian steering paradigms, with a density-adaptive convex blend as a mitigation. Built as a NumPy-vectorized Python simulation.
+
+**Thesis:** Every steering paradigm fails in some regime. We characterise *where* and *why* each fails, and show that density-adaptive blending mitigates each failure mode without requiring scenario classification at runtime.
+
+**Why this framing:** A previous version of this project framed the work as a "Hybrid Crowd Simulation Digital Twin" with five contributions (hybrid steering, calibration, density estimation, crush regime, barrier optimization). External review identified that (a) the DT framing was aspirational and unimplemented, (b) the FD calibration was decoupled from steering choice and therefore did not validate the hybrid, (c) the crush regime's collision-reduction result was a mechanical artefact of spring stiffening, (d) the barrier optimization was a negative result from a bad initial guess, and (e) the most novel content — TTC alone *worsening* deadlocks (0/25 vs 1/25 for plain SFM), ORCA alone *reducing* counterflow throughput — was buried. The pivot is to make those negative findings the headline.
+
+**Hard constraint — reuse existing data.** Existing simulation results are reused. No re-running of experiments at higher n or for cosmetic consistency. New simulations are permitted only when generating data that doesn't exist yet (currently: C1+ε control, force-magnitude diagnostic, external simulator comparison, and possibly collision-location logging if not already saved).
+
+**Cut from scope:** Digital Twin framing, crush regime as a contribution (Section 3.3 and 4.6 of the old paper), barrier optimization (Section 3.4 and 4.7), composite risk metric (Eq. 6), KDE and grid density as contributions (Voronoi-only is retained for the final paper).
+
 **Target:** SIMULTECH 2026 regular paper, 12 pages SciTePress, deadline April 16 2026. Double-blind.
-**Stack:** Python 3.11+, NumPy-vectorized, all models from scratch. No third-party sim libraries.
-**Performance:** 1000 agents at ≥30 steps/sec (dt=0.01s → ≤33ms/step).
+
+**Stack:** Python 3.11+, NumPy-vectorized, all models from scratch. No third-party simulation libraries except for the external comparison baseline (JuPedSim → Vadere → RVO2, in that fallback order).
+
+**Performance:** 1000 agents at ≥30 steps/sec (dt=0.01s → ≤33ms/step) for the SFM-only path. ORCA path is acknowledged as ~45× slower; this is reported as a limitation, not optimised.
 
 ---
 
 ## 1. REPO LAYOUT
 
-Existing: `paper/` (LaTeX), `data/` (FZJ + ETH-UCY). New code goes in `sim/`.
+Existing: `paper/` (LaTeX), `data/` (FZJ + ETH-UCY), `sim/` (existing simulation code), `results/` (existing experiment outputs).
 
 ```
 pedestrian-abs/
-├── CLAUDE.md                   # THIS FILE
-├── STATUS.json                 # State tracker (Phase 1 creates, every phase updates)
-├── AUDIT_LOG.md                # Build log (Phase 1 creates, every phase appends)
-├── pyproject.toml              # Phase 1 creates
-├── .gitignore                  # Phase 1 updates
-├── config/params.yaml          # Phase 1 creates
+├── CLAUDE.md                          # THIS FILE
+├── STATUS.json                        # State tracker
+├── AUDIT_LOG.md                       # Build log
+├── inventory.md                       # NEW: existing-data inventory (Step 1)
+├── pyproject.toml
+├── .gitignore
+├── config/
+│   └── params.yaml
 ├── scripts/
-│   ├── audit.sh                # Phase 1 creates
-│   ├── run_experiments.py      # Phase 8 creates
-│   └── generate_figures.py     # Phase 8 creates
-├── sim/
+│   ├── audit.sh
+│   ├── run_experiments.py             # EXISTING — do not modify default behaviour
+│   └── generate_figures.py            # EXISTING — extended in Step 5
+├── sim/                               # EXISTING simulation code, mostly preserved
 │   ├── __init__.py
 │   ├── core/
 │   │   ├── __init__.py
-│   │   ├── helpers.py          # check_forces, safe_normalize, clamp_speed
-│   │   ├── agent.py            # AgentState dataclass
-│   │   ├── world.py            # Wall, Obstacle, World, geometry utils
-│   │   ├── simulation.py       # Simulation loop + metrics
-│   │   └── integrator.py       # Euler / RK4
+│   │   ├── helpers.py                 # check_forces, safe_normalize, clamp_speed
+│   │   ├── agent.py                   # AgentState dataclass
+│   │   ├── world.py                   # Wall, Obstacle, World, geometry utils
+│   │   ├── simulation.py              # main loop + metrics; collision-location logging flag
+│   │   └── integrator.py              # Euler / RK4
 │   ├── steering/
 │   │   ├── __init__.py
-│   │   ├── base.py             # Abstract SteeringModel
-│   │   ├── desired.py          # Goal-seeking force
-│   │   ├── sfm.py              # Social Force Model
-│   │   ├── ttc.py              # Time-to-Collision
-│   │   ├── orca.py             # ORCA velocity optimization
-│   │   ├── walls.py            # Wall forces
-│   │   ├── crush.py            # Crush regime
-│   │   └── hybrid.py           # Density-weighted hybrid
+│   │   ├── base.py                    # Abstract SteeringModel
+│   │   ├── desired.py                 # Goal-seeking force
+│   │   ├── sfm.py                     # Social Force Model
+│   │   ├── ttc.py                     # Time-to-Collision
+│   │   ├── orca.py                    # ORCA velocity optimization
+│   │   ├── walls.py                   # Wall forces
+│   │   ├── crush.py                   # ARCHIVED — kept for reproducibility, not in paper
+│   │   └── hybrid.py                  # Density-weighted blend; document the actual eq honestly
 │   ├── density/
 │   │   ├── __init__.py
 │   │   ├── base.py
-│   │   ├── grid.py
-│   │   ├── voronoi.py
-│   │   ├── kde.py
-│   │   └── risk.py
-│   ├── optimization/
+│   │   ├── grid.py                    # internal use only, not a paper contribution
+│   │   ├── voronoi.py                 # the only density estimator the paper retains
+│   │   ├── kde.py                     # internal use only, not a paper contribution
+│   │   └── risk.py                    # ARCHIVED — composite risk dropped
+│   ├── optimization/                  # ARCHIVED — barrier optimisation dropped
 │   │   ├── __init__.py
 │   │   ├── barrier.py
 │   │   └── optimizer.py
 │   ├── scenarios/
 │   │   ├── __init__.py
 │   │   ├── base.py
-│   │   ├── corridor.py         # 10x3.6m
-│   │   ├── bottleneck.py       # 10x10m room + exit
-│   │   ├── bidirectional.py    # 20x3.6m
-│   │   ├── crossing.py         # 90deg intersection
-│   │   └── funnel.py           # 10m→3m taper
+│   │   ├── corridor.py                # 10x3.6m periodic for FD
+│   │   ├── bottleneck.py              # 10x10m room + variable exit
+│   │   ├── bidirectional.py           # 20x3.6m
+│   │   ├── crossing.py                # 90deg intersection
+│   │   └── funnel.py                  # ARCHIVED — crush scenario, not in paper
 │   ├── experiments/
 │   │   ├── __init__.py
-│   │   ├── configs.py          # C1-C4, D1-D4, etc.
-│   │   ├── runner.py           # Batch execution → CSV
-│   │   └── analysis.py         # Statistics
+│   │   ├── configs.py                 # C1-C4 active; D1-D4 archived not deleted
+│   │   ├── runner.py                  # batch execution, do not modify defaults
+│   │   └── analysis.py                # legacy summary stats; superseded by analysis/
 │   ├── viz/
 │   │   ├── __init__.py
 │   │   ├── style.py
 │   │   ├── fundamental_diagram.py
 │   │   ├── ablation_bars.py
 │   │   ├── trajectories.py
-│   │   ├── heatmaps.py
+│   │   ├── heatmaps.py                # archived, no longer used in paper
 │   │   ├── scaling.py
-│   │   └── convergence.py
+│   │   └── convergence.py             # archived, barrier optimiser figure dropped
 │   └── data/
 │       ├── __init__.py
-│       ├── loader.py           # FZJ + ETH-UCY loading
+│       ├── loader.py                  # FZJ + ETH-UCY loading
 │       └── fundamental_diagram.py
-├── tests/
+├── analysis/                          # NEW: post-hoc analysis on existing data; no new sims
+│   ├── __init__.py
+│   ├── inventory.py                   # Step 1: catalogue results/ contents
+│   ├── zonal_decomposition.py         # Step 3.1: collision zone tagging
+│   ├── ttc_distributions.py           # Step 3.2: empirical vs simulated TTC W1 distance
+│   ├── statistical_reanalysis.py      # Step 3.3: NB GLM, Cox PH, LMM, Holm–Šidák
+│   ├── oracle_baseline.py             # Step 3.4: per-scenario best single-paradigm baseline
+│   └── arch_lifetime.py               # Step 3.5: arch lifetime distribution from C1 0.8m runs
+├── new_experiments/                   # NEW: only the genuinely missing simulations
+│   ├── __init__.py
+│   ├── c1_epsilon_control.py          # Step 4.1: SFM with σ=0.05 m/s velocity perturbation
+│   ├── force_magnitude_logging.py     # Step 4.2: per-agent force breakdowns at 10-step interval
+│   └── external_simulator/
+│       ├── __init__.py
+│       ├── jupedsim_runner.py         # Step 4.3 primary
+│       ├── vadere_runner.py           # fallback
+│       └── rvo2_runner.py             # fallback
+├── tests/                             # EXISTING — keep all passing
 │   ├── conftest.py
 │   ├── test_agent.py
 │   ├── test_world.py
@@ -97,89 +126,211 @@ pedestrian-abs/
 │   ├── test_walls.py
 │   ├── test_ttc.py
 │   ├── test_orca.py
-│   ├── test_crush.py
+│   ├── test_crush.py                  # tests still run, even though crush is out of paper
 │   ├── test_hybrid.py
 │   ├── test_density.py
-│   ├── test_risk.py
+│   ├── test_risk.py                   # tests still run
 │   ├── test_scenarios.py
 │   ├── test_simulation.py
-│   └── test_smoke.py
-├── results/                    # gitignored
-├── figures/                    # gitignored
-├── paper/                      # EXISTING
-│   ├── main.tex
-│   ├── references.bib          # 36 refs
-│   ├── SCITEPRESS.sty
-│   └── orcid.eps
-└── data/                       # EXISTING
+│   ├── test_smoke.py
+│   ├── test_zonal_decomposition.py    # NEW (Step 3.1)
+│   ├── test_ttc_distributions.py      # NEW (Step 3.2)
+│   ├── test_statistical_reanalysis.py # NEW (Step 3.3)
+│   └── test_c1_epsilon.py             # NEW (Step 4.1)
+├── results/                           # EXISTING — READ-ONLY, do not delete or regenerate
+│   ├── bottleneck/{C1,C2,C3,C4}/w{0.8,1.0,1.2,1.8,2.4,3.6}/seed{0..24}/
+│   ├── bidirectional/{C1,C2,C3,C4}/seed{0..24}/
+│   ├── crossing/{C1,C2,C3,C4}/seed{0..24}/
+│   ├── corridor_fd/{C1,C2,C3,C4}/...
+│   ├── deadlock_0.8m/{C1,C2,C3,C4}/seed{0..24}/
+│   ├── sigmoid_sweep/                 # archived, reframed in paper not rerun
+│   ├── crush/                         # archived, NOT in final paper
+│   └── barrier/                       # archived, NOT in final paper
+├── results_new/                       # NEW: outputs of new_experiments/ only
+│   ├── c1_epsilon/
+│   ├── force_logging/
+│   └── external_simulator/
+├── results_analysis/                  # NEW: outputs of analysis/ scripts
+│   ├── zonal_collisions.csv
+│   ├── ttc_wasserstein.json
+│   ├── statistical_reanalysis.csv
+│   ├── oracle_baseline.md
+│   └── arch_lifetimes.csv
+├── figures/                           # gitignored, regenerated from existing + new data
+└── paper/                             # EXISTING — heavy edits in Step 2
+    ├── main.tex
+    ├── main.tex.bak                   # NEW: pre-surgery backup
+    ├── references.bib
+    ├── SCITEPRESS.sty
+    └── orcid.eps
+└── data/                              # EXISTING
     ├── eth-ucy/{raw,eth,hotel,univ,zara1,zara2}/
     └── fzj/{unidirectional,bidirectional,bottleneck}/
 ```
+
+**Directory rules (non-negotiable):**
+- `results/` is **read-only**. Never overwrite or delete an existing seed directory.
+- `results_new/` and `results_analysis/` are the only writable output directories from the revision work.
+- Existing `sim/` code is read for reference and may be extended with **opt-in logging flags** (force logging, collision-location tagging, ε-perturbation) — the default code path must remain bit-identical so existing reproducibility holds.
+- `sim/optimization/`, `sim/steering/crush.py`, `sim/scenarios/funnel.py`, `sim/density/risk.py`, and `sim/density/kde.py` are archived: they remain in the repo, their tests still pass, but they are not referenced from the paper.
 
 ---
 
 ## 2. STATE TRACKING
 
 ### STATUS.json schema
+
 ```json
 {
   "current_phase": 0,
+  "thesis": "ablation_first",
   "phases_completed": [],
   "modules": {},
   "tests": {"passing": 0, "total": 0},
   "functions": {},
   "known_issues": [],
   "last_audit": null,
-  "experiments": {},
+  "existing_experiments": {},
+  "new_experiments": {},
+  "post_hoc_analyses": {},
   "figures": {},
   "paper": {
     "abstract": "skeleton", "sec1": "skeleton", "sec2": "skeleton",
     "sec3": "skeleton", "sec4": "skeleton", "sec5": "skeleton", "sec6": "skeleton"
+  },
+  "gates": {
+    "inventory_approved": false,
+    "manuscript_surgery_approved": false,
+    "zonal_decomposition_case": null,
+    "c1_epsilon_interpretation": null,
+    "external_simulator_chosen": null,
+    "final_review_approved": false
   }
 }
 ```
 
-modules entry example:
+`existing_experiments` entry example:
+
 ```json
-"sim/steering/sfm.py": {"lines": 145, "tests": 7, "status": "complete"}
+"results/bottleneck/C4/w0.8": {
+  "scenario": "bottleneck",
+  "config": "C4",
+  "width_m": 0.8,
+  "n_seeds": 25,
+  "has_trajectories": true,
+  "has_collision_locations": false,
+  "has_force_breakdown": false,
+  "frozen": true
+}
 ```
 
-functions entry example:
+`post_hoc_analyses` entry example:
+
 ```json
-"SocialForceModel.compute_agent_forces": {
-  "module": "sim.steering.sfm",
-  "sig": "(agent_state: AgentState, neighbor_lists: list[list[int]]) -> ndarray(N,2)"
+"zonal_decomposition": {
+  "script": "analysis/zonal_decomposition.py",
+  "input": "results/bottleneck/",
+  "output": "results_analysis/zonal_collisions.csv",
+  "status": "complete",
+  "case": "B"
 }
 ```
 
 ### AUDIT_LOG.md format
+
 ```markdown
 ## Phase N — Name
 - **Date:** YYYY-MM-DD HH:MM
 - **Built:** file1.py (X lines), file2.py (Y lines)
 - **Tests:** N new, M total, M passing
 - **Gates:** gate1 ✓, gate2 ✓
+- **New compute:** description and wall-clock time, or "none (post-hoc)"
 - **Issues:** none | description
 ```
 
 ### scripts/audit.sh
+
 ```bash
 #!/bin/bash
-echo "=== FILES ===" && find sim/ -name "*.py" 2>/dev/null | sort
+echo "=== FILES ===" && find sim/ analysis/ new_experiments/ -name "*.py" 2>/dev/null | sort
 echo "=== TESTS ===" && python -m pytest tests/ -v --tb=short 2>&1 | tail -30
-echo "=== IMPORT ===" && python -c "import sim; print('OK')" 2>&1
-echo "=== LINES ===" && find sim/ -name "*.py" -exec wc -l {} + 2>/dev/null | sort -n | tail -15
-echo "=== TODOS ===" && grep -rn "TODO\|FIXME\|HACK" sim/ 2>/dev/null || echo "Clean"
+echo "=== IMPORT ===" && python -c "import sim, analysis; print('OK')" 2>&1
+echo "=== LINES ===" && find sim/ analysis/ new_experiments/ -name "*.py" -exec wc -l {} + 2>/dev/null | sort -n | tail -20
+echo "=== TODOS ===" && grep -rn "TODO\|FIXME\|HACK" sim/ analysis/ new_experiments/ 2>/dev/null || echo "Clean"
+echo "=== EXISTING RESULTS UNTOUCHED ===" && find results/ -name "*.parquet" -newer STATUS.json 2>/dev/null | head -5
 echo "=== STATUS ===" && python -c "
 import json; s=json.load(open('STATUS.json'))
-print(f'Phase: {s[\"current_phase\"]}, Tests: {s[\"tests\"][\"passing\"]}/{s[\"tests\"][\"total\"]}')
-print(f'Issues: {len(s[\"known_issues\"])}')
+print(f'Phase: {s[\"current_phase\"]}, Thesis: {s[\"thesis\"]}, Tests: {s[\"tests\"][\"passing\"]}/{s[\"tests\"][\"total\"]}')
+print(f'Issues: {len(s[\"known_issues\"])}, Gates: {sum(1 for v in s[\"gates\"].values() if v)}/{len(s[\"gates\"])}')
 " 2>&1
 ```
 
+The "EXISTING RESULTS UNTOUCHED" check is critical: any file in `results/` modified after `STATUS.json` is a violation of the read-only rule and must be investigated immediately.
+
 ---
 
-## 3. HELPERS (sim/core/helpers.py)
+## 3. EXECUTION PHASES (revision plan)
+
+The original phase numbering for first-build (Phases 1–8) is archived. The revision uses a new phase numbering tied directly to the SIMULTECH revision plan.
+
+| Phase | Name | New compute? | Gate |
+|-------|------|--------------|------|
+| R0 | Inventory existing data | None | inventory_approved |
+| R1 | Manuscript surgery | None | manuscript_surgery_approved |
+| R2 | Post-hoc analyses + consolidated logging re-run | 100 sims (~half day) for trajectories+collisions | zonal_decomposition_case |
+| R3 | New experiments | C1+ε, force logging, external sim | c1_epsilon_interpretation, external_simulator_chosen |
+| R4 | Manuscript rewrite | None | — |
+| R5 | Reproducibility release | None | final_review_approved |
+
+Phases must run in order. Each phase pauses at its gate; the user must approve before proceeding.
+
+### R0 — Inventory (no compute)
+1. Walk `results/` and produce `inventory.md` listing every (scenario, config, width, n_seeds) tuple, plus what artefacts each contains (trajectories, collisions with locations, force breakdowns).
+2. Update `STATUS.json["existing_experiments"]`.
+3. **Gate:** present `inventory.md` to user and wait for approval.
+
+### R1 — Manuscript surgery (no compute)
+1. `cp paper/main.tex paper/main.tex.bak`
+2. Delete: all DT framing, Section 3.3, Section 4.6, Section 3.4, Section 4.7, Eq. (6) and surrounding paragraph, the 60.5% sentence in the abstract.
+3. Update title to *"When Steering Paradigms Fail: A Diagnostic Ablation of Force-Based, Anticipatory, and Velocity-Obstacle Pedestrian Models with Density-Adaptive Mitigation."*
+4. Replace abstract with the placeholder version (Section 6 of this file).
+5. Compile, report new page count.
+6. **Gate:** user approves new structure and page count.
+
+### R2 — Post-hoc analyses (one consolidated re-run + analysis on existing data)
+
+**R2.0 Consolidated trajectory + collision logging re-run (REQUIRED).** The R0 inventory confirmed that `sim/core/simulation.py` reduces its in-memory `metrics_log` to eleven scalars before writing to CSV. Trajectories, per-collision records, and per-agent force breakdowns are not persisted. This means R2.1 (zonal decomposition), R2.2 (TTC distributions), and R2.5 (arch lifetime) are all blocked on missing data, not on missing analysis. A single targeted re-run unblocks all three.
+
+1. Add two opt-in logging flags to `sim/core/simulation.py`: `log_positions: bool = False` and `log_collisions: bool = False`. Both default off. Gated behind `if self.log_positions:` / `if self.log_collisions:` blocks at the end of every step. Default code path must remain bit-identical so existing reproducibility holds (CLAUDE.md §11.13).
+2. When `log_positions=True`, append `(t, agent_id, x, y, vx, vy, active)` to a per-run buffer; flush as parquet to `results_new/trajectories/<scenario>_<config>_w<width>_seed<n>.parquet` at simulation end.
+3. When `log_collisions=True`, append `(t, agent_i, agent_j, x_i, y_i, x_j, y_j)` to a per-run buffer for every overlap event detected during the contact-force pass; flush as parquet to `results_new/collisions/<scenario>_<config>_w<width>_seed<n>.parquet`.
+4. Add a unit test in `tests/test_simulation.py` confirming that with both flags off, the simulation produces the same final state as before (use a stored reference seed).
+5. Run cells: `C1, C4` × `w∈{0.8, 1.0}` × `seeds 42–66` = **100 simulations**. Estimated ~half day compute.
+6. The new data covers R2.1, R2.2, and R2.5 in one pass. Existing CSVs in `results/` are not touched.
+7. **Gate:** confirm with the user before launching the 100-run pass. This is the only piece of new compute in R2 and it is the only acceptable concession to the read-only rule because the existing experiments literally do not contain the required artefacts.
+
+1. **R2.1 Zonal decomposition** (`analysis/zonal_decomposition.py`). Reads `results_new/collisions/` from R2.0; tags zones (upstream / throat / downstream); writes `results_analysis/zonal_collisions.csv` and a stacked-bar figure. **Gate:** report which case (A/B/C) applies before any prose is written.
+2. **R2.2 TTC distributions** (`analysis/ttc_distributions.py`). Computes pairwise τ for FZJ bottleneck empirical and the C1–C4 simulated trajectories generated by R2.0 at w=1.0 m. Reports W₁ distance per config. Writes `results_analysis/ttc_wasserstein.json`. The FZJ bottleneck experiments are not run at exactly w=1.0 m, so the comparison is a qualitative match of distribution shape rather than a tight quantitative validation — flag this honestly in Section 4.3 of the paper.
+3. **R2.3 Statistical reanalysis** (`analysis/statistical_reanalysis.py`). statsmodels NB GLM for collision counts, lifelines Cox PH for deadlock, LMM for speed/throughput, Holm–Šidák correction. Writes `results_analysis/statistical_reanalysis.csv` and a LaTeX table.
+4. **R2.4 Oracle baseline** (`analysis/oracle_baseline.py`). Pure analysis on existing data; identifies per-scenario best single-paradigm; writes `results_analysis/oracle_baseline.md`.
+5. **R2.5 Arch lifetime** (`analysis/arch_lifetime.py`). Reads `results_new/trajectories/` from R2.0 for C1 at w=0.8 m. Defines an arch as ≥3 agents within 0.5 m of exit centerline, no exit crossing for ≥2 s. Writes `results_analysis/arch_lifetimes.csv`.
+
+6. **R2.6 Held-out OOD validation** (`analysis/ood_validation.py`). The R0 inventory identified `results/bottleneck_validation.csv`: a held-out FZJ bottleneck flow-rate comparison showing −27% to −43% sim-vs-empirical mismatch across exit widths. This file already exists from prior work and is the strongest available out-of-distribution validation result. The original paper did not lean on it. The revised paper will. Load it, compute the per-width relative error, generate a small comparison table for Section 4.3, and write `results_analysis/ood_validation.csv`. Frame the result honestly: *"On the held-out FZJ bottleneck dataset, the calibrated model underpredicts flow rates by 27–43% across exit widths. We report this gap as a measure of out-of-distribution generalisation; the calibration was performed on the FZJ unidirectional corridor and tested without modification on the bottleneck geometry."* This converts the original paper's biggest weakness (in-sample calibration only) into a strength (rigorous OOD evaluation, even when unflattering). No new compute.
+
+### R3 — New experiments (minimal compute)
+1. **R3.1 C1+ε control** (`new_experiments/c1_epsilon_control.py`). C1 at w=0.8 m, 100 agents, n=25, paired seeds with existing C1 0.8 m. Add Gaussian velocity perturbation σ=0.05 m/s every step. ~2 hr compute. Writes `results_new/c1_epsilon/`. **Gate:** report which interpretation (directional / symmetry-breaker / ORCA-worse) applies.
+2. **R3.2 Force-magnitude logging** (`new_experiments/force_magnitude_logging.py`). C4 at w=1.0 m, n=5, with per-agent force component logging at every 10th timestep. ~30 min compute. Writes `results_new/force_logging/`. Generates `figures/force_magnitude_vs_density.pdf`. Do **not** move the sigmoid centre even if the empirical crossover differs — document the offset in Section 3.1 instead.
+3. **R3.3 External simulator** (`new_experiments/external_simulator/jupedsim_runner.py` first, fall back to vadere then rvo2). w=1.0 m, 50 agents, n=25. Writes `results_new/external_simulator/`. **Gate:** report which tool was used; if all three fail, document the gap in Limitations.
+
+### R4 — Manuscript rewrite (no compute)
+Section-by-section rewrite per Section 7 of this file. Six figures, five tables, 12 pages.
+
+### R5 — Reproducibility release (no compute)
+GitHub repo, Zenodo DOI, reproduction README, supplementary appendix with hardware/timing/seeds.
+
+---
+
+## 4. HELPERS (sim/core/helpers.py — UNCHANGED)
 
 ```python
 import numpy as np, warnings
@@ -197,7 +348,6 @@ def check_forces(forces: np.ndarray, name: str) -> np.ndarray:
     return forces
 
 def safe_normalize(v: np.ndarray, eps: float = 1e-8) -> np.ndarray:
-    """Normalize vector(s). Returns zero for sub-epsilon magnitudes."""
     if v.ndim == 1:
         m = np.linalg.norm(v)
         return v / m if m > eps else np.zeros_like(v)
@@ -205,7 +355,6 @@ def safe_normalize(v: np.ndarray, eps: float = 1e-8) -> np.ndarray:
     return v / np.maximum(mag, eps)
 
 def clamp_speed(velocities: np.ndarray, max_speeds: np.ndarray) -> np.ndarray:
-    """Per-agent speed clamping. max_speeds shape (N,)."""
     speeds = np.linalg.norm(velocities, axis=1)
     scale = np.where(speeds > max_speeds, max_speeds / np.maximum(speeds, 1e-8), 1.0)
     return velocities * scale[:, None]
@@ -213,398 +362,123 @@ def clamp_speed(velocities: np.ndarray, max_speeds: np.ndarray) -> np.ndarray:
 
 ---
 
-## 4. AGENT STATE (sim/core/agent.py)
+## 5. FORCE MODEL (sim/steering/hybrid.py)
 
-```python
-@dataclass
-class AgentState:
-    positions: np.ndarray       # (N,2)
-    velocities: np.ndarray      # (N,2)
-    goals: np.ndarray           # (N,2)
-    radii: np.ndarray           # (N,)
-    desired_speeds: np.ndarray  # (N,)
-    masses: np.ndarray          # (N,)
-    taus: np.ndarray            # (N,) relaxation time
-    active: np.ndarray          # (N,) bool
-
-    @property
-    def n(self) -> int: return len(self.positions)
-    @property
-    def n_active(self) -> int: return int(np.sum(self.active))
-    @property
-    def active_indices(self) -> np.ndarray: return np.where(self.active)[0]
-    def deactivate(self, indices): self.active[indices] = False
-
-    @classmethod
-    def create(cls, n, spawn_area, goals, seed=42, heterogeneous=True,
-               speed_mean=1.34, speed_std=0.26, radius_mean=0.25,
-               radius_std=0.03, mass=80.0, tau=0.5):
-        rng = np.random.Generator(np.random.PCG64(seed))
-        x0,x1,y0,y1 = spawn_area
-        pos = np.column_stack([rng.uniform(x0,x1,n), rng.uniform(y0,y1,n)])
-        if goals.ndim == 1: goals = np.tile(goals, (n,1))
-        if heterogeneous:
-            spd = np.maximum(rng.normal(speed_mean, speed_std, n), 0.5)
-            rad = np.maximum(rng.normal(radius_mean, radius_std, n), 0.15)
-            tau_arr = rng.uniform(0.4, 0.6, n)
-        else:
-            spd = np.full(n, speed_mean); rad = np.full(n, radius_mean)
-            tau_arr = np.full(n, tau)
-        return cls(pos, np.zeros((n,2)), goals, rad, spd,
-                   np.full(n,mass), tau_arr, np.ones(n,dtype=bool))
-```
-
----
-
-## 5. WORLD + GEOMETRY (sim/core/world.py)
-
-```python
-@dataclass
-class Wall:
-    start: np.ndarray  # (2,)
-    end: np.ndarray    # (2,)
-
-@dataclass
-class Obstacle:
-    vertices: np.ndarray  # (M,2)
-
-class World:
-    def __init__(self, walls, obstacles=None):
-        self.walls = walls
-        self.obstacles = obstacles or []
-```
-
-### point_to_segment_distance
-```
-Input: point(2,), seg_start(2,), seg_end(2,)
-Output: (distance, closest_point(2,), normal(2,))
-
-AB = end - start; AP = point - start
-if |AB|² < 1e-12: degenerate segment → distance to start
-t = clamp(dot(AP,AB)/dot(AB,AB), 0, 1)
-closest = start + t·AB
-diff = point - closest; dist = |diff|
-if dist < 1e-8: normal = perpendicular to AB (normalized)
-else: normal = diff/dist
-```
-
-### agents_to_walls — vectorized over agents, loop over walls
-```
-Input: positions(N,2), walls list
-Output: distances(N,W), normals(N,W,2)
-```
-
----
-
-## 6. DESIRED FORCE (sim/steering/desired.py)
-
-```
-F = m · (v0·ê - v) / τ,  ê = normalize(goal - pos)
-```
-Fully vectorized. Worked example: agent at origin, goal (5,0), v=0, m=80, τ=0.5 → F=(214.4, 0)N.
-
----
-
-## 7. SFM AGENT-AGENT (sim/steering/sfm.py)
-
-```
-f_ij = A·exp((r_ij-d_ij)/B)·n_ij              [social repulsion, always]
-     + k·g(r_ij-d_ij)·n_ij                    [body compression, contact only]
-     + κ·g(r_ij-d_ij)·dot(Δv_ji,t_ij)·t_ij   [friction, contact only]
-
-r_ij = r_i+r_j,  d_ij = |x_i-x_j|,  n_ij = (x_i-x_j)/d_ij  (j→i)
-t_ij = (-n_ij[1], n_ij[0]),  g(x) = max(0,x),  Δv_ji = v_j-v_i
-A=2000N, B=0.08m, k=120000 kg/s², κ=240000 kg/(m·s)
-
-Edge cases:
-- d_ij < 1e-6 → set 1e-6, arbitrary normal
-- j==i → skip
-- Force symmetry: f_ij = -f_ji by construction
-```
-
-Worked example: agents at (0,0) and (0.4,0), r=0.25 each → overlap=0.1, social≈-6980N, body=-12000N → total≈-19000N pushing agent 0 left.
-
----
-
-## 8. WALL FORCES (sim/steering/walls.py)
-
-Same SFM structure. Agent-to-segment distance replaces d_ij. Friction uses v_i not Δv (wall stationary).
-
----
-
-## 9. TTC FORCE (sim/steering/ttc.py)
-
-### τ computation
-```
-dx = x_j - x_i,  dv = v_i - v_j,  r = r_i + r_j
-a = dot(dv,dv),  b = -dot(dx,dv),  c = dot(dx,dx) - r²
-disc = b² - a·c
-
-τ = (-b - √disc) / a      ← THIS EXACT FORMULA
-
-Cases: a<1e-8→∞, disc<0→∞, τ≤0→∞, τ>τ_max→skip
-```
-
-### ANALYTICAL TEST — MUST PASS
-```
-A at (-1,0) vel (1,0) r=0.25, B at (1,0) vel (-1,0) r=0.25
-dx=(2,0), dv=(2,0), r=0.5
-a=4, b=-4, c=3.75, disc=1.0
-τ = (-(-4) - 1)/4 = (4-1)/4 = 0.75s ✓
-Physical: 2m gap, 2m/s closing, collide when gap=0.5m → (2-0.5)/2 = 0.75s ✓
-```
-
-### Force
-```
-F_mag = k_ttc·exp(-τ/τ_0)/τ²    k_ttc=1.5, τ_0=3.0, τ_max=8.0
-n_avoid = safe_normalize((x_i+v_i·τ) - (x_j+v_j·τ))
-F_TTC_i = Σ F_mag · n_avoid     (over valid pairs)
-```
-
----
-
-## 10. ORCA (sim/steering/orca.py)
-
-Outputs velocity → convert to force: F = m·(v_orca - v)/τ_orca, τ_orca=0.5s
-
-### 10.1 Half-plane: COLLISION case (dist < r_sum)
-```python
-direction = x_rel/dist if dist > 1e-6 else [1,0]
-u = -(r_sum - dist)/dt · direction    # push apart
-normal = safe_normalize(-direction)
-point = vel_i + 0.5·u
-```
-
-### 10.2 Half-plane: NON-COLLISION case
-```python
-x_rel = pos_j - pos_i; v_rel = vel_i - vel_j
-w = v_rel - x_rel/τ_h    # vector from truncation circle center to v_rel
-r_trunc = r_sum/τ_h
-
-# Cap vs leg: dot(w,x_rel)<0 AND dot(w,x_rel)²>r_sum²·dot(w,w) → cap
-# Cap projection:
-  u = (r_trunc/|w| - 1)·w
-
-# Leg projection:
-  leg = sqrt(dist² - r_sum²)
-  cross = x_rel[0]·v_rel[1] - x_rel[1]·v_rel[0]  # determines left/right
-  if cross > 0: direction = [x_rel[0]·leg - x_rel[1]·r_sum, x_rel[0]·r_sum + x_rel[1]·leg] / dist²
-  else:         direction = [x_rel[0]·leg + x_rel[1]·r_sum, -x_rel[0]·r_sum + x_rel[1]·leg] / dist²
-  u = dot(v_rel,direction)·direction - v_rel
-
-normal = u/|u|; point = vel_i + 0.5·u
-```
-
-### 10.3 Incremental 2D LP
-```
-Start: result = clamp(v_pref, max_speed)
-For each constraint (point_k, normal_k):
-  if dot(result-point_k, normal_k) ≥ 0: skip (satisfied)
-  else: project result onto constraint line
-    line_dir = (-normal_k[1], normal_k[0])
-    t_left, t_right = -1e9, 1e9
-    for each previous constraint j:
-      denom = dot(line_dir, normal_j)
-      numer = dot(point_j - point_k, normal_j)
-      if |denom|<1e-10: if numer<0 → infeasible; else continue
-      t = numer/denom
-      if denom>0: t_left = max(t_left, t)
-      else: t_right = min(t_right, t)
-    clamp to speed circle (quadratic in t)
-    t_opt = clamp(dot(v_pref - point_k, line_dir), t_left, t_right)
-    result = point_k + t_opt·line_dir
-```
-
-### 10.4 scipy fallback
-```python
-from scipy.optimize import minimize
-def solve_lp_scipy(halfplanes, v_pref, max_speed):
-    constraints = [{'type':'ineq','fun':lambda v,p=pt,n=nm: np.dot(v-p,n)} for pt,nm in halfplanes]
-    constraints.append({'type':'ineq','fun':lambda v: max_speed**2 - np.dot(v,v)})
-    res = minimize(lambda v: np.sum((v-v_pref)**2), v_pref, method='SLSQP', constraints=constraints)
-    return res.x if res.success else v_pref
-```
-
-### 10.5 Per-agent loop
-```python
-for i in active_agents:
-    halfplanes = [construct_halfplane(i,j) for j in neighbors[i] if j!=i and valid]
-    v_pref = desired_speed_i · normalize(goal_i - pos_i)
-    v_orca = solve_2d_lp(halfplanes, v_pref, 2·desired_speed_i)
-    forces[i] = mass_i · (v_orca - vel_i) / τ_orca
-```
-
----
-
-## 11. CRUSH REGIME (sim/steering/crush.py)
-
-Same as SFM contact forces with enhanced coefficients, NO social repulsion:
-```
-k_crush=360000 (3× normal), κ_crush=480000 (2× normal)
-f_crush_ij = k_crush·g(r_ij-d_ij)·n_ij + κ_crush·g(r_ij-d_ij)·dot(Δv,t)·t
-```
-
----
-
-## 12. HYBRID (sim/steering/hybrid.py)
+The original document presented Eq. (1) as the sum:
 
 ```
 F = (1-w_crush)·F_desire + F_SFM + F_TTC + w_ORCA·F_ORCA + w_crush·F_crush + F_wall
-
-σ(x;x0,k) = 1/(1+exp(-k·(x-x0)))
-w_ORCA(ρ) = 1 - σ(ρ; 4.0, 2.0)     ρ=1→0.998, ρ=4→0.5, ρ=7→0.002
-w_crush(ρ) = σ(ρ; 5.5, 3.0)         ρ=3→0.001, ρ=5.5→0.5, ρ=8→0.999
 ```
 
-Configs:
-```python
-CONFIGS = {
-    "C1": {"sfm":True, "ttc":False, "orca":False, "crush":False},
-    "C2": {"sfm":True, "ttc":True,  "orca":False, "crush":False},
-    "C3": {"sfm":True, "ttc":False, "orca":True,  "crush":False},
-    "C4": {"sfm":True, "ttc":True,  "orca":True,  "crush":True},
-}
-CRUSH_CONFIGS = {"D1":None, "D2":5.0, "D3":5.5, "D4":7.0}
-```
-
----
-
-## 13. DENSITY (sim/density/)
-
-Grid: `ρ = count(neighbors in R)/(πR²)`, R=2.0m
-Voronoi: `ρ = 1/cell_area`, clip to domain with shapely. Add mirror points for boundary.
-KDE: `scipy.stats.gaussian_kde(positions.T, bw=1.0).evaluate(positions.T)`
-
----
-
-## 14. RISK (sim/density/risk.py)
+For the revised paper, present this as a **convex combination of accelerations** in Section 3.1 of the manuscript:
 
 ```
-R = (ρ̂/ρ_ref)·[1 + P/P_ref + |∇ρ|/∇ρ_ref]
-ρ̂ = max(ρ_V, ρ_KDE), P = ρ̂·σ_v, σ_v = std(|v_j| for neighbors)
-ρ_ref=6, P_ref=3, ∇ρ_ref=4
-R<1:normal, 1-2:elevated, 2-3:high, ≥3:critical
+a_i = (1 − w_o(ρ_i)) · (a_des + a_SFM + a_TTC) + w_o(ρ_i) · a_ORCA + a_wall
 ```
 
----
+with w_o(ρ) = 1 − σ(ρ; 4.0, 2.0) and σ(x;x0,k) = 1/(1+exp(−k(x−x0))). Crush term is gone (archived).
 
-## 15. INTEGRATION (sim/core/integrator.py)
+**Critical:** before writing this paragraph in the paper, **read `sim/steering/hybrid.py` and confirm the actual implementation is consistent with the convex combination**. If the implementation differs (e.g., it's still the additive sum), document what the code actually does — honesty over elegance. The paper must describe the code, not the other way around.
 
-Euler: `v += (F/m)·dt, x += v·dt`
-RK4: standard 4th-order on (dx/dt=v, dv/dt=F/m) with 4 force evaluations
-Post: clamp_speed(vel, 2·desired_speed)
+The hysteresis claim made earlier in the plan is not implemented — do **not** claim it is. Instead, add one sentence in Limitations: *"The current sigmoid transitions are not hysteretic; we observed no oscillation artefacts in the present experiments but recommend hysteresis for deployments at densities sustained near ρ₀."*
 
----
-
-## 16. SIMULATION LOOP (sim/core/simulation.py)
-
-Each step:
-1. KDTree from active positions
-2. query_ball_point(r=neighbor_radius) → neighbor lists
-3. Compute density (grid by default)
-4. HybridSteeringModel.compute_forces(state, neighbors, walls, densities)
-5. Integrate → new pos, vel
-6. clamp_speed
-7. Deactivate agents within goal_reached_dist of goal
-8. Record metrics
+Existing per-component force code (`desired.py`, `sfm.py`, `ttc.py`, `orca.py`, `walls.py`) is unchanged. Equations from the original document remain authoritative for those modules; refer to git history for the originals if needed.
 
 ---
 
-## 17. PARAMETERS (config/params.yaml)
+## 6. ABSTRACT (placeholder, fill after R3)
 
-```yaml
-simulation: {dt: 0.01, integrator: euler, neighbor_radius: 3.0, max_time: 300.0, goal_reached_dist: 0.5}
-agent: {mass: 80.0, desired_speed: 1.34, desired_speed_std: 0.26, radius: 0.25, radius_std: 0.03, tau: 0.5}
-sfm: {A: 2000.0, B: 0.08, k: 120000.0, kappa: 240000.0}
-ttc: {k_ttc: 1.5, tau_0: 3.0, tau_max: 8.0}
-orca: {time_horizon: 5.0, tau_orca: 0.5}
-hybrid: {rho_orca_fade: 4.0, k_orca_fade: 2.0, rho_crit: 5.5, k_crit: 3.0}
-crush: {k_crush: 360000.0, kappa_crush: 480000.0}
-density: {grid_radius: 2.0, kde_bandwidth: 1.0}
-risk: {rho_ref: 6.0, P_ref: 3.0, grad_rho_ref: 4.0}
-optimization: {method: cma-es, population_size: 15, initial_sigma: 1.0, max_evaluations: 200}
-```
+> No single pedestrian steering paradigm performs well across all crowd scenarios. We present a zone-decomposed ablation of Social Force, time-to-collision, and Optimal Reciprocal Collision Avoidance steering across bottleneck, bidirectional, and crossing geometries (n = 25 per cell, negative-binomial GLM and Cox survival analysis with Holm–Šidák correction), and identify two failure modes that single-paradigm models cannot avoid: time-to-collision anticipation locks symmetric arches at narrow exits (0/25 evacuations versus 1/25 for plain SFM), while ORCA-style yielding produces gridlock in counterflow. A symmetry-breaking control experiment isolates the mechanism by which ORCA resolves arching deadlocks. We propose a density-adaptive convex combination of the three paradigms that mitigates each failure mode and validate it against 4776 FZJ pedestrian trajectory data points using both speed–density and time-to-collision distribution metrics. At 90° crossings the blended model triples throughput over plain SFM (p < 0.001); at narrow bottlenecks it resolves arching deadlocks in [Z]% of trials versus 4% for SFM alone. Comparison against [JuPedSim/Vadere/RVO2] confirms the framework produces equivalent aggregate behaviour while exposing per-paradigm contributions monolithic simulators do not. Code, data, and reproduction scripts are released.
 
 ---
 
-## 18. SCENARIOS
-
-| Name | Dims | Agents | Walls | Spawn | Goal |
-|------|------|--------|-------|-------|------|
-| Corridor | 10×3.6 | variable | 4 rect | x∈[0.5,2] y∈[0.3,3.3] | (10.5, y_i) |
-| Bottleneck | 10×10 room | 100 | 3+2(gap) | x∈[1,8] y∈[1,9] | (11, 5) |
-| Bidirectional | 20×3.6 | 150+150 | 4 rect | left/right ends | opposite end |
-| Crossing | 10×10+corridors | 100+100 | T-intersection | bottom/left corridors | opposite |
-| Funnel | 15m taper 10→3 | 300-500 | 2 angled+left | x∈[0.5,5] y∈[1,9] | (16, 5) |
-
-Bottleneck exit widths: 0.8, 1.0, 1.2, 1.8, 2.4, 3.6 m (gap centered at y=5).
-Funnel walls: top (0,10)→(15,6.5), bottom (0,0)→(15,3.5), left (0,0)→(0,10).
-
----
-
-## 19. EXPERIMENTS
-
-| Family | Scenario | Configs | Reps | Key Metric |
-|--------|----------|---------|------|------------|
-| A | Corridor FD | C1-C4 | 30 | Speed-density RMSE |
-| B | Bottleneck 6 widths | C1-C4 | 30 | Evacuation time |
-| C | Bidirectional+Crossing | C1-C4 | 30 | Lane formation |
-| D | Funnel crush | D1-D4 | 30 | Max density, TACD |
-| E | Barrier optimization | C4 | 5 | Evac improvement |
-| F | Scaling | C4 | 3 | ms/step |
-
-Metrics per run: evacuation_time, mean_speed, max_density, collision_count, flow_rate, agents_exited, mean_risk, max_risk, time_above_critical.
-
----
-
-## 20. FIGURES (8 total)
-
-1. Fundamental diagram: 2×2 subplot C1-C4, scatter + empirical + Weidmann
-2. Ablation bars: groups=scenarios, bars=C1-C4, error bars=95%CI
-3. Trajectories: top-down paths in bottleneck, color=time
-4. Density heatmap: funnel at peak, YlOrRd
-5. Evacuation vs width: lines=C1-C4, error bars
-6. Scaling: log-log agents vs ms/step
-7. Risk map: funnel composite risk heatmap
-8. Optimizer convergence: evaluations vs objective
-
----
-
-## 21. PAPER (12 pages SciTePress)
+## 7. PAPER STRUCTURE (12 pages SciTePress)
 
 | Section | Pages | Key content |
 |---------|-------|-------------|
-| Abstract | 0.3 | Problem, approach, key result, implication |
-| 1 Intro | 1.5 | Disasters, gap, 5 contributions |
-| 2 Related | 1.5 | Models, hybrids, metrics, DTs |
-| 3 Framework | 2.5 | Hybrid steering, density, crush, optimization |
-| 4 Experiments | 3.5 | FD, ablation, crush, optimization, scaling |
-| 5 Discussion | 1.0 | Why hybrid works, limitations |
-| 6 Conclusions | 0.5 | Summary, future |
-| References | 1.2 | 25-35 entries |
+| Abstract | 0.3 | Diagnostic framing, two failure modes, mitigation, external comparison |
+| 1 Introduction | 1.25 | Disasters, diagnostic question, three claims, five contributions |
+| 2 Related Work | 1.25 | Organised by failure modes, not model families |
+| 3 Methodology | 2.5 | Convex acceleration formulation, Voronoi density, scenarios, collision zone tagging |
+| 4 Experiments | 4.5 | Setup, force diagnostic, calibration (FD + TTC), zone-decomposed ablation, deadlock + C1+ε, external sim |
+| 5 Discussion | 1.5 | Lead with negative findings, mechanism explanations, oracle gap, limitations |
+| 6 Conclusion | 0.5 | Findings, artefacts, future work (DT mentioned only here) |
+| References | 0.7 | ~25–30 entries |
 
 ---
 
-## 22. CODING RULES
+## 8. FIGURES (six total)
 
-1. Type hints + Google docstrings on every function
-2. NumPy vectorization — no Python loops over agents (except ORCA LP, walls)
-3. np.random.Generator(PCG64(seed)) — NEVER np.random.seed()
-4. check_forces() as last line of every force function
-5. safe_normalize() for every normalization
-6. max(d, 1e-6) for every distance denominator
-7. Skip j==i in every neighbor loop
-8. Tests for every module, pytest must pass after every phase
-9. Commit after every phase with message
-10. CSV output: scenario, config, seed, metric columns
-11. PDF figures: 10pt+ fonts, serif, colorblind-safe
+1. Fundamental diagram, 2×2 C1–C4 (existing, recaption to acknowledge steering insensitivity)
+2. **NEW** Force magnitude vs density (R3.2 output)
+3. Calibration: FD train/test/sim + TTC distribution panel (combines existing FD with R2.2 output)
+4. **NEW** Zonal collision stacked bars at w=1.0 m (R2.1 output)
+5. Deadlock trajectory pair, C1 vs C4 (existing Figure 4, kept)
+6. Computation time scaling (existing, kept)
+
+Dropped: density heatmap (crush cut), barrier optimiser convergence (cut), mean speed bar chart (folded into the ablation summary table).
 
 ---
 
-## 23. DATA FORMATS
+## 9. TABLES (six total)
 
-FZJ: `data/fzj/{unidirectional,bidirectional,bottleneck}/*.txt`
-  Space-separated: frame_id ped_id x y. 25fps. Comment lines start with #.
-ETH-UCY: `data/eth-ucy/{eth,hotel,univ,zara1,zara2}/{train,val,test}/*.txt`
-  Space/tab-separated: frame_id ped_id x y. 2.5fps.
+1. Model parameters (existing)
+2. Scenario summary (existing, trim crush/funnel rows)
+3. **NEW** Zone-decomposed collision counts per (config, width)
+4. **NEW** Deadlock completion rates including C1+ε row, plus Cox HR table
+5. **NEW** External simulator comparison (one row each: C1, C4, JuPedSim/Vadere/RVO2)
+6. **NEW** Held-out OOD validation: per-width FZJ bottleneck flow rate vs simulated, with relative error (from R2.6)
+
+Plus: a statistical results summary table (NB GLM IRRs, Cox HRs) appended to Section 4.
+
+---
+
+## 10. PARAMETERS (config/params.yaml — UNCHANGED)
+
+Crush, optimization, and risk sections retained in YAML for reproducibility of archived experiments. The paper draws parameters only from the simulation, agent, sfm, ttc, orca, hybrid, and density.voronoi sections.
+
+---
+
+## 11. CODING RULES
+
+1. Type hints + Google docstrings on every function.
+2. NumPy vectorization — no Python loops over agents (except ORCA LP, walls).
+3. `np.random.Generator(PCG64(seed))` — never `np.random.seed()`.
+4. `check_forces()` as last line of every force function.
+5. `safe_normalize()` for every normalization.
+6. `max(d, 1e-6)` for every distance denominator.
+7. Skip `j==i` in every neighbor loop.
+8. Tests for every new module under `analysis/` and `new_experiments/`; pytest must pass after every phase.
+9. Commit after every phase with message `phase Rn: <name>`.
+10. CSV output: scenario, config, seed, metric columns.
+11. PDF figures: 10 pt+ fonts, serif, colorblind-safe.
+12. **New rule:** any script that touches `results/` must open files read-only (`mode="rb"` or pyarrow read-only). Writing to `results/` is forbidden; write to `results_new/` or `results_analysis/` instead.
+13. **New rule:** any new logging in `sim/core/simulation.py` is gated behind a default-off flag. Existing experiment reproducibility depends on the default code path being bit-identical.
+14. **New rule:** every analysis script must import the canonical file allowlist from `analysis/inventory.py` and skip stub / superseded files. Do not glob `results/*.csv` directly. The allowlist (defined in `analysis/inventory.py`) excludes:
+    - `BottleneckScenario_C*.csv` — n=5 stubs, superseded by `Bottleneck_w1.0_C*.csv`
+    - `Bottleneck_w0.8_C*.csv` without the `_600s_` suffix — n=5 stubs, superseded by `Bottleneck_w0.8_600s_C*.csv`
+    - `Bottleneck_w0.8_long_C*.csv` — exploratory partial coverage
+    - `sigmoid_sensitivity.csv` (the 22-row stub) — superseded by `sigmoid_sensitivity_full.csv`
+    - `optimizer_history.json` — older version, superseded by `optimizer_C{1,4}_history.json`
+    
+    These files remain in `results/` per the read-only rule but must never be loaded by analysis code. A pulled stub file will silently corrupt downstream statistics.
+
+---
+
+## 12. DATA FORMATS (UNCHANGED)
+
+FZJ: `data/fzj/{unidirectional,bidirectional,bottleneck}/*.txt`. Space-separated `frame_id ped_id x y`. 25 fps. Comment lines start with `#`.
+ETH-UCY: `data/eth-ucy/{eth,hotel,univ,zara1,zara2}/{train,val,test}/*.txt`. Space/tab-separated. 2.5 fps.
 Loading: `pd.read_csv(path, sep=r'\s+', header=None, names=['frame_id','ped_id','x','y'], comment='#')`
+
+---
+
+## 13. WHAT NOT TO DO
+
+- Do not re-run any experiment in `results/` to "improve" sample size or "regenerate cleanly". Existing data is frozen.
+- Do not delete archived modules (`crush.py`, `risk.py`, `barrier.py`, `funnel.py`). Their tests still run.
+- Do not claim hysteresis, real-time DT integration, sensor coupling, or any feature not actually implemented.
+- Do not move the sigmoid centre ρ₀ even if the force-magnitude diagnostic suggests a different crossover — moving it would invalidate every existing experiment.
+- Do not revive the crush regime, barrier optimisation, or composite risk metric in the paper text.
+- Do not narrate the visualizer/skill/tool internals to the user.
+- Do not proceed past a gate without explicit user approval.

@@ -37,6 +37,8 @@ class Simulation:
         integrator: EulerIntegrator | None = None,
         params: dict | None = None,
         density_estimator=None,
+        log_positions: bool = False,
+        log_collisions: bool = False,
     ):
         self.world = world
         self.state = agent_state
@@ -53,6 +55,13 @@ class Simulation:
         self.step_count = 0
         self.metrics_log: list[dict] = []
         self.periodic_length: float | None = None  # set for periodic corridors
+
+        # Opt-in logging (default off — preserves bit-identical default path)
+        self.log_positions = log_positions
+        self.log_collisions = log_collisions
+        self._position_log: list[tuple[float, np.ndarray, np.ndarray, np.ndarray]] = []
+        self._collision_log: list[tuple[float, int, int, float, float, float, float]] = []
+
 
     def step(self) -> dict:
         """Execute one simulation timestep.
@@ -161,6 +170,15 @@ class Simulation:
         active_now = self.state.active_indices
         n_exited_this_step = len(reached)
 
+        # 8a. Position logging (opt-in, default off)
+        if self.log_positions and len(active_now) > 0:
+            self._position_log.append((
+                self.time,
+                active_now.copy(),
+                self.state.positions[active_now].copy(),
+                self.state.velocities[active_now].copy(),
+            ))
+
         if len(active_now) > 0:
             mean_speed = float(
                 np.mean(np.linalg.norm(self.state.velocities[active_now], axis=1))
@@ -178,6 +196,15 @@ class Simulation:
                     d = np.linalg.norm(self.state.positions[i] - self.state.positions[j])
                     if d < self.state.radii[i] + self.state.radii[j]:
                         collision_count += 1
+                        # 8b. Collision logging (opt-in, default off)
+                        if self.log_collisions:
+                            self._collision_log.append((
+                                self.time, i, j,
+                                float(self.state.positions[i, 0]),
+                                float(self.state.positions[i, 1]),
+                                float(self.state.positions[j, 0]),
+                                float(self.state.positions[j, 1]),
+                            ))
 
         metrics = {
             "time": self.time,
@@ -307,6 +334,33 @@ class Simulation:
         sim._scenario = scenario
         sim.periodic_length = getattr(scenario, 'periodic_length', None)
         return sim
+
+    def write_logs(self, trajectory_path: str | None = None,
+                   collision_path: str | None = None) -> None:
+        """Write accumulated position and collision logs to parquet files.
+
+        Args:
+            trajectory_path: Output path for trajectory parquet.
+            collision_path: Output path for collision parquet.
+        """
+        import os
+        import pandas as pd
+
+        if trajectory_path and self._position_log:
+            os.makedirs(os.path.dirname(trajectory_path), exist_ok=True)
+            rows = []
+            for t, agent_ids, pos, vel in self._position_log:
+                for k, aid in enumerate(agent_ids):
+                    rows.append((t, int(aid), pos[k, 0], pos[k, 1],
+                                 vel[k, 0], vel[k, 1]))
+            df = pd.DataFrame(rows, columns=["t", "agent_id", "x", "y", "vx", "vy"])
+            df.to_parquet(trajectory_path, index=False, engine="pyarrow")
+
+        if collision_path and self._collision_log:
+            os.makedirs(os.path.dirname(collision_path), exist_ok=True)
+            df = pd.DataFrame(self._collision_log,
+                              columns=["t", "i", "j", "x_i", "y_i", "x_j", "y_j"])
+            df.to_parquet(collision_path, index=False, engine="pyarrow")
 
     def _compile_results(self) -> dict:
         """Compile summary statistics from the simulation run.
