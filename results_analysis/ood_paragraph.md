@@ -1,0 +1,5 @@
+# R2.6 OOD Validation Paragraph
+
+Drop-in for Section 4:
+
+To assess out-of-distribution generalisation, we compare the calibrated model's bottleneck flow rates against FZJ empirical bottleneck measurements at five exit widths (Table~\ref{tab:ood}). The model was calibrated exclusively on unidirectional corridor data (Section~\ref{sec:calibration}); the bottleneck geometry was not used during fitting. Simulated flow rates systematically underestimate empirical values, with relative errors ranging from -43\% to -26\%. This negative bias is consistent with the known limitation that SFM-based models over-predict body-contact forces at narrow exits, reducing effective throughput. The gap motivates the diagnostic ablation approach of this paper: rather than claiming the calibrated model generalises across geometries, we characterise where each steering paradigm fails and use the ablation to identify which paradigm component is responsible for the throughput deficit. The OOD gap also establishes a concrete benchmark for future held-out calibration against FZJ bottleneck trajectories.
