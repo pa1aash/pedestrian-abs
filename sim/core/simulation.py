@@ -39,6 +39,8 @@ class Simulation:
         density_estimator=None,
         log_positions: bool = False,
         log_collisions: bool = False,
+        velocity_noise_std: float = 0.0,
+        seed: int = 42,
     ):
         self.world = world
         self.state = agent_state
@@ -61,6 +63,10 @@ class Simulation:
         self.log_collisions = log_collisions
         self._position_log: list[tuple[float, np.ndarray, np.ndarray, np.ndarray]] = []
         self._collision_log: list[tuple[float, int, int, float, float, float, float]] = []
+
+        # R3.1: velocity noise for symmetry-breaking control (default 0 = off)
+        self.velocity_noise_std = velocity_noise_std
+        self._rng = np.random.Generator(np.random.PCG64(seed))
 
 
     def step(self) -> dict:
@@ -143,6 +149,13 @@ class Simulation:
         # 5. Clamp speed to 2x desired
         max_speeds = 2.0 * self.state.desired_speeds
         new_vel = clamp_speed(new_vel, max_speeds)
+
+        # 5b. Velocity noise injection (R3.1, default 0 = off, no-op)
+        if self.velocity_noise_std > 0:
+            noise = self._rng.normal(0, self.velocity_noise_std, new_vel.shape)
+            active_mask = self.state.active
+            new_vel[active_mask] += noise[active_mask]
+            new_vel = clamp_speed(new_vel, max_speeds)  # re-clamp after noise
 
         # 6. Update state
         self.state.positions = new_pos
@@ -330,7 +343,7 @@ class Simulation:
         config = get_config(config_name)
         steering = HybridSteeringModel(config, flat)
         sim = cls(world, agent_state, steering, EulerIntegrator(), flat,
-                  density_estimator=density_estimator)
+                  density_estimator=density_estimator, seed=seed)
         sim._scenario = scenario
         sim.periodic_length = getattr(scenario, 'periodic_length', None)
         return sim
