@@ -1,0 +1,2 @@
+model,seed,evacuation_time,agents_exited,wall_time_s
+SocialForce,50,inf,35,0.617584000000079
