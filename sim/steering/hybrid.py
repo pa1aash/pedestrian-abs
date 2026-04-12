@@ -154,6 +154,82 @@ class HybridSteeringModel(SteeringModel):
 
         return check_forces(F, "hybrid")
 
+    def compute_forces_decomposed(
+        self,
+        agent_state: AgentState,
+        neighbor_lists: list[list[int]],
+        walls: list[Wall],
+        local_densities: np.ndarray,
+    ) -> tuple[np.ndarray, dict[str, np.ndarray]]:
+        """Compute forces and return per-component magnitudes.
+
+        Returns:
+            (total_forces, component_magnitudes) where component_magnitudes
+            is a dict mapping component name to per-agent magnitude arrays.
+        """
+        n = agent_state.n
+        mags: dict[str, np.ndarray] = {}
+
+        # Desired force
+        F_desire = compute_desired_force(
+            agent_state.positions, agent_state.velocities,
+            agent_state.goals, agent_state.desired_speeds,
+            agent_state.masses, agent_state.taus,
+            local_densities=local_densities,
+            weidmann_gamma=self.params.get("weidmann_gamma", 1.913),
+            weidmann_rho_max=self.params.get("weidmann_rho_max", 5.4),
+        )
+        mags["des"] = np.linalg.norm(F_desire, axis=1)
+
+        # SFM
+        F_sfm = self.sfm.compute_agent_forces(agent_state, neighbor_lists)
+        mags["sfm"] = np.linalg.norm(F_sfm, axis=1)
+
+        # TTC
+        if self.ttc is not None:
+            F_ttc = self.ttc.compute_ttc_forces(agent_state, neighbor_lists)
+            mags["ttc"] = np.linalg.norm(F_ttc, axis=1)
+        else:
+            F_ttc = np.zeros((n, 2))
+            mags["ttc"] = np.zeros(n)
+
+        # ORCA
+        if self.orca is not None:
+            w_orca = 1.0 - self._sigmoid(
+                local_densities,
+                self.params.get("rho_orca_fade", 4.0),
+                self.params.get("k_orca_fade", 2.0),
+            )
+            F_orca = self.orca.compute_orca_forces(agent_state, neighbor_lists)
+            mags["orca"] = np.linalg.norm(F_orca, axis=1)
+        else:
+            w_orca = np.zeros(n)
+            F_orca = np.zeros((n, 2))
+            mags["orca"] = np.zeros(n)
+
+        # Wall
+        F_wall = self.wall_forces.compute_wall_forces(agent_state, walls)
+        mags["wall"] = np.linalg.norm(F_wall, axis=1)
+
+        # Crush (skip if not present — already cut from paper)
+        w_crush = np.zeros(n)
+        if self.crush is not None:
+            w_crush = self._sigmoid(
+                local_densities,
+                self.params.get("rho_crit", 5.5),
+                self.params.get("k_crit", 3.0),
+            )
+
+        # Total (same formula as compute_forces)
+        F = (1.0 - w_crush)[:, None] * F_desire + F_sfm + F_ttc
+        F += w_orca[:, None] * F_orca
+        if self.crush is not None:
+            F += w_crush[:, None] * self.crush.compute_crush_forces(
+                agent_state, neighbor_lists)
+        F += F_wall
+
+        return check_forces(F, "hybrid"), mags
+
     @staticmethod
     def _sigmoid(x: np.ndarray, x0: float, k: float) -> np.ndarray:
         """Logistic sigmoid: 1 / (1 + exp(-k*(x - x0)))."""

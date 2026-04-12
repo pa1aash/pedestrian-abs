@@ -40,6 +40,7 @@ class Simulation:
         log_positions: bool = False,
         log_collisions: bool = False,
         velocity_noise_std: float = 0.0,
+        log_forces: bool = False,
         seed: int = 42,
     ):
         self.world = world
@@ -68,6 +69,9 @@ class Simulation:
         self.velocity_noise_std = velocity_noise_std
         self._rng = np.random.Generator(np.random.PCG64(seed))
 
+        # R3.2: per-component force logging (default off)
+        self.log_forces = log_forces
+        self._force_log: list[dict] = []
 
     def step(self) -> dict:
         """Execute one simulation timestep.
@@ -123,6 +127,23 @@ class Simulation:
             forces = self.steering.compute_forces(
                 self.state, neighbor_lists, self.world.walls, densities
             )
+            # 3b. Force logging (R3.2, default off, every 10th step)
+            if (self.log_forces
+                    and self.step_count % 10 == 0
+                    and hasattr(self.steering, 'compute_forces_decomposed')):
+                _, mags = self.steering.compute_forces_decomposed(
+                    self.state, neighbor_lists, self.world.walls, densities
+                )
+                for ai in active_idx:
+                    self._force_log.append({
+                        "t": self.time + self.params.get("dt", 0.01),
+                        "agent_id": int(ai),
+                        "density": float(densities[ai]),
+                        "mag_des": float(mags["des"][ai]),
+                        "mag_sfm": float(mags["sfm"][ai]),
+                        "mag_ttc": float(mags["ttc"][ai]),
+                        "mag_orca": float(mags["orca"][ai]),
+                    })
         else:
             forces = compute_desired_force(
                 self.state.positions,
@@ -349,12 +370,14 @@ class Simulation:
         return sim
 
     def write_logs(self, trajectory_path: str | None = None,
-                   collision_path: str | None = None) -> None:
-        """Write accumulated position and collision logs to parquet files.
+                   collision_path: str | None = None,
+                   force_path: str | None = None) -> None:
+        """Write accumulated logs to parquet files.
 
         Args:
             trajectory_path: Output path for trajectory parquet.
             collision_path: Output path for collision parquet.
+            force_path: Output path for force-component parquet.
         """
         import os
         import pandas as pd
@@ -374,6 +397,11 @@ class Simulation:
             df = pd.DataFrame(self._collision_log,
                               columns=["t", "i", "j", "x_i", "y_i", "x_j", "y_j"])
             df.to_parquet(collision_path, index=False, engine="pyarrow")
+
+        if force_path and self._force_log:
+            os.makedirs(os.path.dirname(force_path), exist_ok=True)
+            df = pd.DataFrame(self._force_log)
+            df.to_parquet(force_path, index=False, engine="pyarrow")
 
     def _compile_results(self) -> dict:
         """Compile summary statistics from the simulation run.
