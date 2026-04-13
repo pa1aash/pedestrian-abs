@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/mnt/c/Users/arjun/Downloads/Arjun School Files/Projects/Research Papers/pedestrian-abs scitepress/pedestrian-abs scitepress/new_experiments/r2_logging_run.py", line 26, in <module>
+    from sim.core.simulation import Simulation
+  File "/mnt/c/Users/arjun/Downloads/Arjun School Files/Projects/Research Papers/pedestrian-abs scitepress/pedestrian-abs scitepress/sim/core/simulation.py", line 3, in <module>
+    import numpy as np
+ModuleNotFoundError: No module named 'numpy'

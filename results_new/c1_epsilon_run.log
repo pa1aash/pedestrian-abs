@@ -1,0 +1,67 @@
+R3.1 C1+epsilon control: 25 seeds, sigma=0.05 m/s
+  [1/25] seed=42 evac=304.4s coll=370 wall=193s
+  [2/25] seed=43 evac=inf coll=290 wall=258s
+  [3/25] seed=44 evac=inf coll=348 wall=216s
+  [4/25] seed=45 evac=inf coll=315 wall=210s
+C:\Users\arjun\Downloads\Arjun School Files\Projects\Research Papers\pedestrian-abs scitepress\pedestrian-abs scitepress\sim\core\helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [11, 84]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+C:\Users\arjun\Downloads\Arjun School Files\Projects\Research Papers\pedestrian-abs scitepress\pedestrian-abs scitepress\sim\core\helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [11, 84]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+C:\Users\arjun\Downloads\Arjun School Files\Projects\Research Papers\pedestrian-abs scitepress\pedestrian-abs scitepress\sim\core\helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [11, 40]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+  [5/25] seed=46 evac=inf coll=364 wall=211s
+  [6/25] seed=47 evac=376.4s coll=293 wall=178s
+  [7/25] seed=48 evac=inf coll=359 wall=227s
+  [8/25] seed=49 evac=190.6s coll=335 wall=159s
+C:\Users\arjun\Downloads\Arjun School Files\Projects\Research Papers\pedestrian-abs scitepress\pedestrian-abs scitepress\sim\core\helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [66, 70]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+C:\Users\arjun\Downloads\Arjun School Files\Projects\Research Papers\pedestrian-abs scitepress\pedestrian-abs scitepress\sim\core\helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [66]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+  [9/25] seed=50 evac=inf coll=375 wall=234s
+C:\Users\arjun\Downloads\Arjun School Files\Projects\Research Papers\pedestrian-abs scitepress\pedestrian-abs scitepress\sim\core\helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [17, 49]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+  [10/25] seed=51 evac=inf coll=395 wall=246s
+C:\Users\arjun\Downloads\Arjun School Files\Projects\Research Papers\pedestrian-abs scitepress\pedestrian-abs scitepress\sim\core\helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [66]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+  [11/25] seed=52 evac=inf coll=280 wall=279s
+  [12/25] seed=53 evac=inf coll=295 wall=267s
+  [13/25] seed=54 evac=inf coll=268 wall=265s
+  [14/25] seed=55 evac=inf coll=304 wall=245s
+C:\Users\arjun\Downloads\Arjun School Files\Projects\Research Papers\pedestrian-abs scitepress\pedestrian-abs scitepress\sim\core\helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [6, 86]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+C:\Users\arjun\Downloads\Arjun School Files\Projects\Research Papers\pedestrian-abs scitepress\pedestrian-abs scitepress\sim\core\helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [6]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+  [15/25] seed=56 evac=inf coll=433 wall=246s
+  [16/25] seed=57 evac=inf coll=388 wall=260s
+C:\Users\arjun\Downloads\Arjun School Files\Projects\Research Papers\pedestrian-abs scitepress\pedestrian-abs scitepress\sim\core\helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [74]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+C:\Users\arjun\Downloads\Arjun School Files\Projects\Research Papers\pedestrian-abs scitepress\pedestrian-abs scitepress\sim\core\helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [74]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+C:\Users\arjun\Downloads\Arjun School Files\Projects\Research Papers\pedestrian-abs scitepress\pedestrian-abs scitepress\sim\core\helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [4, 80]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+C:\Users\arjun\Downloads\Arjun School Files\Projects\Research Papers\pedestrian-abs scitepress\pedestrian-abs scitepress\sim\core\helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [80]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+  [17/25] seed=58 evac=144.9s coll=391 wall=175s
+  [18/25] seed=59 evac=136.7s coll=267 wall=153s
+C:\Users\arjun\Downloads\Arjun School Files\Projects\Research Papers\pedestrian-abs scitepress\pedestrian-abs scitepress\sim\core\helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [16, 43]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+C:\Users\arjun\Downloads\Arjun School Files\Projects\Research Papers\pedestrian-abs scitepress\pedestrian-abs scitepress\sim\core\helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [16, 43]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+  [19/25] seed=60 evac=145.3s coll=279 wall=175s
+  [20/25] seed=61 evac=inf coll=366 wall=247s
+  [21/25] seed=62 evac=152.7s coll=365 wall=180s
+  [22/25] seed=63 evac=inf coll=308 wall=246s
+C:\Users\arjun\Downloads\Arjun School Files\Projects\Research Papers\pedestrian-abs scitepress\pedestrian-abs scitepress\sim\core\helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [61, 79]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+C:\Users\arjun\Downloads\Arjun School Files\Projects\Research Papers\pedestrian-abs scitepress\pedestrian-abs scitepress\sim\core\helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [61, 79]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+  [23/25] seed=64 evac=inf coll=451 wall=239s
+C:\Users\arjun\Downloads\Arjun School Files\Projects\Research Papers\pedestrian-abs scitepress\pedestrian-abs scitepress\sim\core\helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [16, 84]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+C:\Users\arjun\Downloads\Arjun School Files\Projects\Research Papers\pedestrian-abs scitepress\pedestrian-abs scitepress\sim\core\helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [16]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+  [24/25] seed=65 evac=inf coll=269 wall=254s
+  [25/25] seed=66 evac=inf coll=346 wall=247s
+
+Done. 7/25 evacuations completed.
+Completion rate: 28%

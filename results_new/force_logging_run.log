@@ -1,0 +1,7 @@
+R3.2 Force-magnitude logging: 5 seeds
+  [1/5] seed=42 10665 rows, 312s
+  [2/5] seed=43 12607 rows, 386s
+  [3/5] seed=44 10052 rows, 313s
+  [4/5] seed=45 11534 rows, 339s
+  [5/5] seed=46 10869 rows, 354s
+Done.
