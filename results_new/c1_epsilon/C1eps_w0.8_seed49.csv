@@ -1,0 +1,2 @@
+scenario,config,seed,epsilon_sigma,wall_time_s,n_steps,evacuation_time,mean_speed,max_density,collision_count,flow_rate,agents_exited,mean_risk,max_risk,time_above_critical
+BottleneckScenario,C1+eps,49,0.05,158.96493740000005,19062,190.6199999999716,0.365274429675377,2.369640263812664,335,0.52460392403743,100,0.0,0.0,0
