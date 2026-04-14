@@ -34,7 +34,7 @@
 % results_new/sigma_sweep_stats.json (sha256 ce706dbf...); crossing throughput
 % from results/crossing_summary.csv; FD RMSE from results/calibration.json;
 % OOD bias from results_analysis/ood_validation.csv.
-\abstract{No single pedestrian steering paradigm performs well across all crowd scenarios. We present a diagnostic zone-decomposed ablation of Social Force (SFM), time-to-collision (TTC), and Optimal Reciprocal Collision Avoidance (ORCA) steering across bottleneck, bidirectional, and crossing geometries ($n = 25$ per cell), and identify two failure modes that single-paradigm models do not avoid in the scenarios tested. At a 0.8\,m bottleneck, neither plain SFM nor SFM+TTC evacuates any of 25 trials, whereas ORCA-enabled configurations evacuate 52--56\% --- a gap a symmetry-breaking control experiment attributes to perturbation rather than to ORCA-specific velocity optimisation ($\sigma_{50} = 0.049$\,m/s, 95\% CI $[0.044, 0.053]$); within $n = 25$ we cannot separate a residual velocity-space-optimisation contribution from noise. ORCA yielding produces gridlock in counterflow. A density-adaptive additive blend in which only the ORCA contribution is density-modulated mitigates each failure mode within the scenarios and parameter regimes tested. The desired-force calibration cuts in-sample FZJ speed--density RMSE by 60.5\% but underestimates held-out bottleneck flows by 26--43\%. Zone-decomposition shows that TTC reduces upstream queue-formation contact-overlaps by 30\% (NB GLM IRR $= 0.695$, $p_{\mathrm{HS}} < 0.001$), with the reduction concentrated upstream rather than at the throat. At 90\textdegree{} crossings the blend triples throughput over plain SFM (17.1 of 200 agents vs.\ 5.9; $p_{\mathrm{HS}} < 0.001$).}
+\abstract{No single pedestrian steering paradigm performs well across all crowd scenarios. We present a diagnostic zone-decomposed ablation of Social Force (SFM), time-to-collision (TTC), and Optimal Reciprocal Collision Avoidance (ORCA) steering across bottleneck, bidirectional, and crossing geometries ($n = 25$ per cell), and identify two failure modes that single-paradigm models do not avoid in the scenarios tested. At a 0.8\,m bottleneck, neither plain SFM nor SFM+TTC evacuates any of 25 trials, whereas ORCA-enabled configurations evacuate 52--56\% --- a gap a symmetry-breaking control experiment attributes to perturbation rather than to ORCA-specific velocity optimisation ($\sigma_{50} = 0.049$\,m/s, 95\% CI $[0.044, 0.053]$); within $n = 25$ we cannot separate a residual velocity-space-optimisation contribution from noise. ORCA yielding produces gridlock in counterflow. A density-adaptive additive blend in which only the ORCA contribution is density-modulated mitigates each failure mode within the scenarios and parameter regimes tested. The desired-force calibration substantially reduces in-sample FZJ speed--density RMSE (see \S\ref{sec:fd-validation}) but underestimates held-out bottleneck flows by 26--43\%. Zone-decomposition shows that TTC reduces upstream queue-formation contact-overlaps by 30\% (NB GLM IRR $= 0.695$, $p_{\mathrm{HS}} < 0.001$), with the reduction concentrated upstream rather than at the throat. At 90\textdegree{} crossings the blend triples throughput over plain SFM (17.1 of 200 agents vs.\ 5.9; $p_{\mathrm{HS}} < 0.001$).}
 
 \onecolumn \maketitle \normalsize \setcounter{footnote}{0} \vfill
 
@@ -177,17 +177,13 @@ The blending weight $w_o(\rho_i)$ in Eq.~\eqref{eq:hybrid} is driven by a per-ag
 \subsection{Phenomenological Calibration of the Speed--Density Curve}
 \label{sec:calibration}
 
-The Weidmann~\cite{Weidmann93} coefficients $\gamma$ and $\rho_{\max}$ that drive the density-dependent speed reduction in Eq.~\eqref{eq:desired} are precisely the parameters responsible for any mismatch between simulated and empirical fundamental diagrams.
-We therefore treat these, together with the SFM social-repulsion parameters~$A$ and $B$, as a 4-vector~$\boldsymbol{\phi} = (\gamma, \rho_{\max}, A, B)$ to be fit to empirical data.
+The Weidmann~\cite{Weidmann93} coefficients $\gamma$ and $\rho_{\max}$ that drive the density-dependent speed reduction in Eq.~\eqref{eq:desired} are the parameters primarily responsible for any mismatch between simulated and empirical fundamental diagrams. We fit $\boldsymbol{\phi} = (\gamma, \rho_{\max})$ to empirical data with the SFM social-repulsion parameters $A$ and $B$ held fixed at the textbook Helbing et al.~\cite{Helbing00} values ($A = 2000$\,N, $B = 0.08$\,m). This departs from an earlier 4-parameter fit reported in our preliminary experiments: a post-hoc sanity sweep at the calibrated $(\gamma^*, \rho_{\max}^*)$ optimum shows that $A$ varies FD RMSE by 35\% across [500, 4000]\,N and $B$ by 272\% across [0.01, 0.3]\,m (3-point sweep each, $n=1$ seed per bin), so $A$ and $B$ are identifiable from the FD; but the sweep also shows that textbook $A = 2000$ achieves marginally lower RMSE than the earlier single-start fitted value $A^* = 1920.4$ at the same $(\gamma, \rho_{\max}, B)$, indicating that the earlier 31-evaluation single-start fit did not converge in $A$. A full 4-parameter multi-restart refit with increased seed averaging is deferred (\S\ref{sec:conclusion}) because it exceeds our compute budget under the measured 2.2$\times$ cross-bin parallelism cap.
 
-Given binned empirical measurements $\{(\rho_k, v_k^{\text{emp}})\}$ extracted from the FZJ unidirectional corridor experiments, we minimize:
+Given binned empirical measurements $\{(\rho_k, v_k^{\text{emp}})\}$ extracted from the FZJ unidirectional corridor experiments (10 bins, $\rho \in [0.5, 5.0]$\,ped/m$^2$, step 0.5, median speed per bin), we minimise:
 \begin{equation}\label{eq:calibration}
 \boldsymbol{\phi}^* = \arg\min_{\boldsymbol{\phi}} \sqrt{\frac{1}{K}\sum_{k=1}^{K}\left(v_k^{\text{sim}}(\boldsymbol{\phi}) - v_k^{\text{emp}}\right)^2}
 \end{equation}
-where $v_k^{\text{sim}}(\boldsymbol{\phi})$ is the mean speed in a periodic-boundary FZJ-matched corridor (18\,m $\times$ 5\,m) populated to density~$\rho_k$ and simulated with parameter vector~$\boldsymbol{\phi}$.
-Each evaluation averages over multiple random seeds to reduce stochastic noise in the fit.
-We solve Eq.~\eqref{eq:calibration} with Nelder-Mead, using the textbook Weidmann values ($\gamma = 1.913$, $\rho_{\max} = 5.4$, $A = 2000$, $B = 0.08$) as the initial guess.
-Section~\ref{sec:fd-validation} reports the resulting RMSE reduction and the closeness of the calibrated fundamental diagram to empirical data.
+where $v_k^{\text{sim}}(\boldsymbol{\phi})$ is the mean speed in a periodic-boundary FZJ-matched corridor (18\,m $\times$ 5\,m) populated to density~$\rho_k$ and simulated with $\boldsymbol{\phi} = (\gamma, \rho_{\max})$ and $(A, B)$ fixed. Each evaluation averages over 3 random seeds (seed values 42, 43, 44). Nelder-Mead is run from the textbook initial point $\boldsymbol{\phi}_0 = (1.913, 5.4)$ with hard bounds $\gamma \in [0.3, 3]$, $\rho_{\max} \in [3, 7]$ and tolerances $x_{\text{atol}} = 10^{-3}$, $f_{\text{atol}} = 10^{-4}$. The fit is a single start (no multi-restart global search); optimisation terminates at the seed-noise floor (evaluations 44--53 oscillate within $\pm 0.003$\,m/s of the best RMSE at near-identical $(\gamma, \rho_{\max})$) rather than at formal tolerance convergence. Section~\ref{sec:fd-validation} reports the calibrated values, RMSE reduction, and the closeness of the calibrated fundamental diagram to empirical data. The full protocol and per-evaluation trace are persisted as \texttt{results\_new/calibration\_alight\_result.json} (sha256 \texttt{b45bb036…}) and \texttt{results\_new/calibration\_protocol.json}.
 
 
 %% ============================================================
@@ -206,17 +202,17 @@ We allocate $n = 25$ replications per cell for all ablation experiments (bottlen
 Statistical tests are negative-binomial GLM (data-driven $\alpha$) for collision counts, Cox proportional hazards for deadlock survival with Fisher's exact for the C2 complete-separation case, and linear mixed models with random intercept by seed for continuous metrics. Holm--\v{S}id\'ak correction is applied across the family of pairwise configuration comparisons within each scenario $\times$ metric combination. Paired tests are used where seeds match across configurations.
 
 \begin{table}[h]
-\caption{Model parameters. $^{\dagger}$Calibrated via Nelder-Mead (Sec.~\ref{sec:fd-validation}).}\label{tab:params}
+\caption{Model parameters. $^{\dagger}$$\gamma$ and $\rho_{\max}$ refit via single-start Nelder-Mead with tight tolerances (xatol$=10^{-3}$, fatol$=10^{-4}$) from textbook initialisation, 53 evaluations terminated at the seed-noise floor (seeds\_per\_eval$=3$). $A$ and $B$ held fixed at textbook values; a sanity sweep at the $(\gamma^*, \rho_{\max}^*)$ optimum confirms both are identifiable from FD data but near-optimal at textbook. A full 4-parameter multi-restart refit is deferred to future work (\S\ref{sec:conclusion}). See Sec.~\ref{sec:fd-validation}.}\label{tab:params}
 \centering
 \footnotesize
 \begin{tabular}{@{}llrr@{}}
 \toprule
 \textbf{Parameter} & \textbf{Symbol} & \textbf{Default} & \textbf{Calibrated$^{\dagger}$} \\
 \midrule
-Weidmann shape & $\gamma$ & 1.913 & 0.888 \\
-Jam density & $\rho_{\max}$ & 5.4 & 5.36 \\
-Social repulsion & $A$ (N) & 2000 & 1920 \\
-Repulsion range & $B$ (m) & 0.08 & 0.112 \\
+Weidmann shape & $\gamma$ & 1.913 & 0.833 \\
+Jam density & $\rho_{\max}$ & 5.4 & 5.98 \\
+Social repulsion & $A$ (N) & 2000 & --- (fixed) \\
+Repulsion range & $B$ (m) & 0.08 & --- (fixed) \\
 Body compression & $k$ (kg/s$^2$) & $1.2{\times}10^5$ & --- \\
 Friction & $\kappa$ (kg/ms) & $2.4{\times}10^5$ & --- \\
 TTC gain & $k_{\text{ttc}}$ & 1.5 & --- \\
@@ -263,19 +259,19 @@ We measure the speed-density relationship using a periodic corridor with wrap-ar
 Density is controlled directly by the number of agents after 300 warmup steps; mean speed is then recorded over 500 measurement steps.
 We run all four configurations (C1--C4) at densities from 0.28 to 5.0~ped/m\textsuperscript{2}, with 30 replications for C1/C2 and 25 for C3/C4 (ORCA's higher per-step cost).
 
+\textbf{The FD is insensitive to steering choice.}
+Because the FD is identical across C1--C4, the calibration reported below aligns the desired-force speed--density curve to empirical data and does \emph{not} validate the steering paradigm comparison. Figure~\ref{fig:fd} shows the fundamental diagram for all four configurations overlaid on 4776 empirical FZJ data points; all configurations produce nearly indistinguishable speed--density curves.
+
 \textbf{Pre-calibration.}
-Figure~\ref{fig:fd} shows the fundamental diagram for all four configurations overlaid on 4776 empirical FZJ data points.
-All configurations produce nearly identical speed-density curves --- the FD is driven by the Weidmann speed-reduction in the desired force rather than by steering choice. This insensitivity is itself a finding: the FD calibration that follows is therefore a phenomenological alignment of the speed--density curve, \emph{not} a validation of the steering paradigm comparison.
-With textbook Weidmann parameters ($\gamma = 1.913$, $\rho_{\max} = 5.4$) the simulated curve sits above empirical FZJ data at mid-density ($\rho = 2$--$4$), giving an in-sample RMSE of 0.230~m/s.
+With textbook Weidmann parameters ($\gamma = 1.913$, $\rho_{\max} = 5.4$) and textbook Helbing SFM parameters ($A = 2000$\,N, $B = 0.08$\,m), the simulated curve sits above empirical FZJ data at mid-density ($\rho = 2$--$4$), giving an in-sample RMSE of 0.235~m/s (10 density bins, 3 seeds per bin).
 
 \textbf{Post-calibration.}
-Applying the calibration pipeline of Section~\ref{sec:calibration} with Nelder-Mead over the 4-parameter vector $\boldsymbol{\phi} = (\gamma, \rho_{\max}, A, B)$ reduces the in-sample FD RMSE to 0.091~m/s --- a 60.5\% improvement.
-The fitted Weidmann shape parameter $\gamma^* = 0.888$ (vs.\ textbook 1.913) produces a steeper mid-density speed decay that better matches the FZJ data.
+Applying the 2-parameter $(\gamma, \rho_{\max})$ single-start Nelder-Mead fit of Section~\ref{sec:calibration} (with $A$ and $B$ fixed at textbook) reduces the in-sample FD RMSE to 0.0994~m/s --- a 57.7\% reduction. The fitted values are $\gamma^* = 0.833$ and $\rho_{\max}^* = 5.98$; the lower $\gamma$ (vs.\ textbook 1.913) produces a steeper mid-density speed decay that better matches the FZJ data. An earlier 4-parameter fit reported in our preliminary experiments ($\gamma^* = 0.888$, $\rho_{\max}^* = 5.36$, $A^* = 1920$\,N, $B^* = 0.112$\,m, 60.5\% in-sample RMSE reduction) was a single-start Nelder-Mead run with loose tolerances (xatol\,$=10^{-2}$) that did not converge on $A$; the 2-parameter refit reported here is methodologically preferred despite the slightly higher RMSE, because it reflects identifiability-aware fitting and terminates at the seed-noise floor of a tighter-tolerance problem.
 
 \begin{figure}[!h]
 \centering
 \includegraphics[width=\columnwidth]{../figures/fundamental_diagram.pdf}
-\caption{Speed-density fundamental diagram. Coloured points: simulation (C1--C4; $n = 30$ per density for C1/C2, $n = 25$ for C3/C4). Grey: FZJ empirical data (4776 points, $\rho \leq 6$). The four configurations are nearly indistinguishable --- the FD is determined by the Weidmann speed-reduction term in the desired force, not by steering choice. Automated calibration of $(\gamma, \rho_{\max}, A, B)$ reduces the in-sample RMSE from 0.230 to 0.091\,m/s (60.5\%).}\label{fig:fd}
+\caption{Speed-density fundamental diagram. Coloured points: simulation (C1--C4; $n = 30$ per density for C1/C2, $n = 25$ for C3/C4). Grey: FZJ empirical data (4776 points, $\rho \leq 6$). The four configurations are nearly indistinguishable --- the FD is determined by the Weidmann speed-reduction term in the desired force, not by steering choice. Single-start 2-parameter calibration of $(\gamma, \rho_{\max})$ with $A$, $B$ fixed at textbook reduces the in-sample RMSE from 0.235 to 0.0994\,m/s (57.7\%).}\label{fig:fd}
 \end{figure}
 
 \subsection{Held-Out OOD Validation}
@@ -437,7 +433,7 @@ We quantify the stability of the arching deadlock via the \emph{terminal stall}:
 
 \textbf{Phenomenological calibration of the speed--density curve.}
 Prior SFM-based studies report a ``calibration gap'' at mid-densities where textbook Weidmann parameters produce speeds above empirical data.
-Our automated calibration (Section~\ref{sec:calibration}) treats this as a numerical fitting problem: a 4-parameter Nelder-Mead fit against binned FZJ data reduces the in-sample FD RMSE by 60.5\%.
+Our automated calibration (Section~\ref{sec:calibration}) treats this as a numerical fitting problem: a 2-parameter Nelder-Mead fit of $(\gamma, \rho_{\max})$ with $A$, $B$ fixed at textbook reduces the in-sample FD RMSE by 57.7\%.
 This calibrates the desired-force speed--density relation only; because Figure~\ref{fig:fd} shows the FD is identical across C1--C4, this fit does \emph{not} validate the steering paradigm comparison and is reported as a phenomenological alignment of the speed--density curve.
 
 \textbf{Limitations.}
@@ -450,9 +446,9 @@ Replication counts of $n = 25$ per cell reflect a fixed computational budget; ef
 \section{\uppercase{Conclusions}}
 \label{sec:conclusion}
 
-We presented a diagnostic ablation of three pedestrian steering paradigms --- SFM, TTC, and ORCA --- that identifies two failure modes single-paradigm models cannot avoid: TTC anticipation locks symmetric arches at narrow exits (0/25 versus 1/25 for plain SFM), and ORCA-style yielding produces gridlock in counterflow. A density-modulated additive blend of the three paradigms (with only the ORCA term density-weighted) mitigates each failure mode, resolving arching deadlocks in 56\% of trials versus 4\% for SFM alone (Fisher's exact $p < 0.001$) and tripling throughput at 90\textdegree{} crossings ($p < 0.001$). The Weidmann speed--density curve was calibrated phenomenologically against 4776 FZJ data points (in-sample RMSE reduction 60.5\%), but because the FD is identical across C1--C4 this calibration validates only the desired-force speed reduction and not the steering paradigms themselves. Code, data, and reproduction scripts are released with the paper.
+We presented a diagnostic ablation of three pedestrian steering paradigms --- SFM, TTC, and ORCA --- that identifies two failure modes single-paradigm models cannot avoid: TTC anticipation locks symmetric arches at narrow exits (0/25 versus 1/25 for plain SFM), and ORCA-style yielding produces gridlock in counterflow. A density-modulated additive blend of the three paradigms (with only the ORCA term density-weighted) mitigates each failure mode, resolving arching deadlocks in 56\% of trials versus 4\% for SFM alone (Fisher's exact $p < 0.001$) and tripling throughput at 90\textdegree{} crossings ($p < 0.001$). The Weidmann speed--density curve was calibrated phenomenologically against 4776 FZJ data points (in-sample RMSE reduction 57.7\% via a single-start 2-parameter Nelder-Mead fit of $(\gamma, \rho_{\max})$ with $A$, $B$ fixed at textbook), but because the FD is identical across C1--C4 this calibration validates only the desired-force speed reduction and not the steering paradigms themselves. Code, data, and reproduction scripts are released with the paper.
 
-Future work targets held-out calibration on FZJ bottleneck trajectories, C/C++ acceleration of the ORCA linear program, and integration into digital twin pipelines for real-time venue monitoring. The implementation also supports a density-gated crush term that suppresses goal-seeking at extreme density; we set this term to zero in all reported experiments because our scenarios do not reach the crush regime, and evaluating it is left to future work.
+Future work targets a full 4-parameter multi-restart calibration of $(\gamma, \rho_{\max}, A, B)$ with increased seeds-per-evaluation to smooth the seed-noise floor (compute cost under our current cross-bin parallelism cap makes this deferred), held-out calibration on FZJ bottleneck trajectories, C/C++ acceleration of the ORCA linear program, and integration into digital twin pipelines for real-time venue monitoring. The implementation also supports a density-gated crush term that suppresses goal-seeking at extreme density; we set this term to zero in all reported experiments because our scenarios do not reach the crush regime, and evaluating it is left to future work.
 
 %% ============================================================
 %% REFERENCES
