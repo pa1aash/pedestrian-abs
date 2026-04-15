@@ -433,15 +433,14 @@ To contextualise our framework against a mature published simulator, we compared
 \subsection{Computational Performance}
 \label{sec:scaling-eval}
 
-Figure~\ref{fig:scaling} shows per-step timing for C1 and C4 on a single CPU core (Python 3.11).
-C1 rises from 2.9\,ms at 50 agents to 416\,ms at 1000 agents, following the sparse $O(N \cdot k)$ KDTree pair computation.
-C4 is dominated by ORCA's per-agent LP: 131\,ms at 50 agents and 14{,}172\,ms at 500 agents (45--110$\times$ C1 overhead).
-Real-time operation ($\leq$33\,ms/step) is achievable for C1 at $\sim$100 agents; C4 requires C/C++ acceleration of the ORCA loop.
+All timings measured on Apple M1, 8\,GB RAM, macOS 26.3, Python 3.13.12 with numpy 2.4.4, scipy 1.17.1, shapely 2.1.2 (single CPU core). Figure~\ref{fig:scaling} shows per-step timing for C1 and C4 (results\_new/scaling\_C1.csv, scaling\_C4.csv). C1 rises from $2.0$\,ms at 50 agents to $744$\,ms at 1000 agents, following the sparse $O(N \cdot k)$ KDTree pair computation. C4 is dominated by ORCA's per-agent 2D linear program: $58.7$\,ms at 50 agents and $6347$\,ms at 500 agents. ORCA introduces 29--36$\times$ overhead over SFM at the tested agent counts.
+
+The current pure-Python implementation is not real-time ($\leq 33$\,ms/step) beyond approximately 100 agents for C1 (at 1000 agents, per-step wall-time is 744\,ms, or 1.3 steps/s) and approximately 30 agents for C4. The dominant hotspot is the ORCA LP solve (38\% of C4 wall-time at 200 agents from cProfile, with ORCA as a whole consuming 82\% including the halfplane construction); C/C++ acceleration of the ORCA loop would be required to run C4 at real-time rates. C4 was not profiled beyond 500 agents due to ORCA LP cost; linear extrapolation of the observed scaling trend predicts $\sim$13\,s/step at 1000 agents, consistent with the real-time-ineligible conclusion at larger agent counts.
 
 \begin{figure}[!h]
 \centering
 \includegraphics[width=0.85\columnwidth]{../figures/scaling.pdf}
-\caption{Computation time per step vs.\ agent count (log-log). C1 (SFM only) and C4 (full hybrid). C4 overhead is dominated by ORCA's per-agent linear program ($\sim$45$\times$ slower than C1 at 50 agents).}\label{fig:scaling}
+\caption{Per-step wall-time scaling (log-log). C1 (SFM only) measured to 1000 agents; C4 (full hybrid) measured to 500 agents. ORCA introduces 29--36$\times$ overhead over SFM. Hardware: Apple M1, Python 3.13.12. Dotted line: real-time threshold (33\,ms/step at dt = 0.01\,s).}\label{fig:scaling}
 \end{figure}
 
 

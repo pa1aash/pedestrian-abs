@@ -1,0 +1,109 @@
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [3, 101]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [3]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme TTC forces at agents [12, 56, 72, 134, 138]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme crush forces at agents [150]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [56, 134, 138, 143, 164]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme TTC forces at agents [36, 111]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme crush forces at agents [12, 41, 45, 182]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [36, 111]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme TTC forces at agents [5, 62, 129, 173]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme crush forces at agents [0, 53, 59, 63, 104]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [5, 62, 129, 173]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [126, 133]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme TTC forces at agents [48, 105]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme crush forces at agents [82, 133]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [48, 126, 133]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme TTC forces at agents [94, 160]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme crush forces at agents [3, 183]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [94, 160]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [12]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme TTC forces at agents [44, 103]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [12, 44, 103]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [30]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme crush forces at agents [186]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme TTC forces at agents [20, 37, 52, 113, 116]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [20, 52, 113, 196]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [155, 196]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme TTC forces at agents [144, 170]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme crush forces at agents [159]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [144, 170, 196]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme TTC forces at agents [56, 79]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [56, 79]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme TTC forces at agents [46, 113]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [46, 113]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme TTC forces at agents [15, 73]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [15, 73]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme TTC forces at agents [106, 116]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [106, 116]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme TTC forces at agents [2, 143]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [2, 143]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [1]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [1]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme crush forces at agents [114, 172]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme TTC forces at agents [12, 48, 87, 184]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme crush forces at agents [67, 174]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [12, 48, 87, 184]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme TTC forces at agents [39, 147]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [39, 147]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme crush forces at agents [168]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [125, 159]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [159]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme TTC forces at agents [19, 143]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [19, 143]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme TTC forces at agents [21, 73]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [21]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+DONE wall=319.99s -> /Users/palaash/Desktop/pedestrian-abs scitepress /revision-notes/14-profile.txt

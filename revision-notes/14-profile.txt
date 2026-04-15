@@ -1,0 +1,122 @@
+cProfile: C4 n=200 duration=10.0s seed=42
+Wall: 319.99 s
+
+         537992161 function calls (537988377 primitive calls) in 319.986 seconds
+
+   Ordered by: cumulative time
+   List reduced from 956 to 60 due to restriction <60>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000  319.986  319.986 profile_c4.py:29(run)
+        1    0.092    0.092  319.805  319.805 simulation.py:278(run)
+     1001    6.972    0.007  319.707    0.319 simulation.py:76(step)
+     1001    0.107    0.000  302.933    0.303 hybrid.py:80(compute_forces)
+     1001   22.225    0.022  261.794    0.262 orca.py:274(compute_orca_forces)
+   177364  103.250    0.001  122.507    0.001 orca.py:123(solve_2d_lp)
+  8473760   60.050    0.000   95.161    0.000 orca.py:47(_halfplane_normal)
+ 31455362   33.707    0.000   69.144    0.000 _linalg.py:2598(norm)
+  8659871    9.707    0.000   30.004    0.000 helpers.py:31(safe_normalize)
+     1001   10.511    0.011   28.825    0.029 crush.py:33(compute_crush_forces)
+ 31443299   16.281    0.000   16.281    0.000 {method 'dot' of 'numpy.ndarray' objects}
+127371110    8.789    0.000    8.789    0.000 multiarray.py:748(dot)
+ 31443299    5.242    0.000    7.617    0.000 _linalg.py:169(isComplexType)
+ 31443299    6.064    0.000    6.064    0.000 {method 'ravel' of 'numpy.ndarray' objects}
+     1001    3.414    0.003    5.988    0.006 sfm.py:41(compute_agent_forces)
+     1001    3.382    0.003    5.800    0.006 ttc.py:39(compute_ttc_forces)
+ 62900665    5.049    0.000    5.049    0.000 {built-in method builtins.issubclass}
+ 42425099    4.353    0.000    4.353    0.000 {method 'append' of 'list' objects}
+ 44596473    4.007    0.000    4.007    0.000 {built-in method builtins.abs}
+ 31460369    2.696    0.000    2.696    0.000 {built-in method numpy.asarray}
+ 22924964    2.480    0.000    2.480    0.000 {built-in method builtins.max}
+ 23109107    2.448    0.000    2.448    0.000 {built-in method builtins.min}
+ 31455362    2.433    0.000    2.433    0.000 _linalg.py:2594(_norm_dispatcher)
+   719027    0.567    0.000    2.367    0.000 fromnumeric.py:2207(clip)
+  3430147    2.352    0.000    2.352    0.000 {built-in method numpy.array}
+   719027    0.293    0.000    1.800    0.000 fromnumeric.py:48(_wrapfunc)
+   712967    0.493    0.000    1.391    0.000 {method 'clip' of 'numpy.generic' objects}
+   719027    0.909    0.000    0.909    0.000 _methods.py:96(_clip)
+     1001    0.452    0.000    0.455    0.000 _kdtree.py:486(query_ball_point)
+    51212    0.415    0.000    0.415    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+     1001    0.113    0.000    0.337    0.000 walls.py:41(compute_wall_forces)
+    14071    0.018    0.000    0.292    0.000 fromnumeric.py:66(_wrapreduction)
+    11067    0.012    0.000    0.291    0.000 fromnumeric.py:2304(sum)
+       17    0.000    0.000    0.275    0.016 __init__.py:1(<module>)
+     2054    0.254    0.000    0.254    0.000 {method 'at' of 'numpy.ufunc' objects}
+     1001    0.109    0.000    0.183    0.000 world.py:87(agents_to_walls)
+        1    0.000    0.000    0.181    0.181 simulation.py:325(from_scenario)
+    180/3    0.001    0.000    0.176    0.059 <frozen importlib._bootstrap>:1349(_find_and_load)
+    179/3    0.000    0.000    0.176    0.059 <frozen importlib._bootstrap>:1304(_find_and_load_unlocked)
+    171/4    0.000    0.000    0.175    0.044 <frozen importlib._bootstrap>:911(_load_unlocked)
+    149/4    0.000    0.000    0.175    0.044 <frozen importlib._bootstrap_external>:1017(exec_module)
+    406/7    0.000    0.000    0.175    0.025 <frozen importlib._bootstrap>:480(_call_with_frames_removed)
+    156/4    0.001    0.000    0.174    0.044 {built-in method builtins.exec}
+        1    0.000    0.000    0.158    0.158 hybrid.py:1(<module>)
+        1    0.000    0.000    0.157    0.157 orca.py:1(<module>)
+     7007    0.040    0.000    0.107    0.000 helpers.py:7(check_forces)
+   720684    0.101    0.000    0.101    0.000 {built-in method builtins.getattr}
+    22074    0.015    0.000    0.081    0.000 fromnumeric.py:2436(any)
+   719027    0.070    0.000    0.070    0.000 fromnumeric.py:2202(_clip_dispatcher)
+        1    0.000    0.000    0.070    0.070 _linprog.py:1(<module>)
+     1001    0.049    0.000    0.068    0.000 _kdtree.py:359(__init__)
+    22074    0.025    0.000    0.066    0.000 fromnumeric.py:86(_wrapreduction_any_all)
+   177364    0.063    0.000    0.063    0.000 {method 'copy' of 'numpy.ndarray' objects}
+     6746    0.025    0.000    0.061    0.000 orca.py:21(_halfplane_collision)
+      171    0.000    0.000    0.058    0.000 <frozen importlib._bootstrap>:806(module_from_spec)
+     1001    0.017    0.000    0.056    0.000 desired.py:16(compute_desired_force)
+       22    0.000    0.000    0.056    0.003 <frozen importlib._bootstrap_external>:1315(create_module)
+       22    0.056    0.003    0.056    0.003 {built-in method _imp.create_dynamic}
+    22/20    0.000    0.000    0.051    0.003 <frozen importlib._bootstrap_external>:1323(exec_module)
+    22/20    0.009    0.000    0.050    0.003 {built-in method _imp.exec_dynamic}
+
+
+
+
+=== BY TOTAL TIME ===
+         537992161 function calls (537988377 primitive calls) in 319.986 seconds
+
+   Ordered by: internal time
+   List reduced from 956 to 40 due to restriction <40>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+   177364  103.250    0.001  122.507    0.001 orca.py:123(solve_2d_lp)
+  8473760   60.050    0.000   95.161    0.000 orca.py:47(_halfplane_normal)
+ 31455362   33.707    0.000   69.144    0.000 _linalg.py:2598(norm)
+     1001   22.225    0.022  261.794    0.262 orca.py:274(compute_orca_forces)
+ 31443299   16.281    0.000   16.281    0.000 {method 'dot' of 'numpy.ndarray' objects}
+     1001   10.511    0.011   28.825    0.029 crush.py:33(compute_crush_forces)
+  8659871    9.707    0.000   30.004    0.000 helpers.py:31(safe_normalize)
+127371110    8.789    0.000    8.789    0.000 multiarray.py:748(dot)
+     1001    6.972    0.007  319.707    0.319 simulation.py:76(step)
+ 31443299    6.064    0.000    6.064    0.000 {method 'ravel' of 'numpy.ndarray' objects}
+ 31443299    5.242    0.000    7.617    0.000 _linalg.py:169(isComplexType)
+ 62900665    5.049    0.000    5.049    0.000 {built-in method builtins.issubclass}
+ 42425099    4.353    0.000    4.353    0.000 {method 'append' of 'list' objects}
+ 44596473    4.007    0.000    4.007    0.000 {built-in method builtins.abs}
+     1001    3.414    0.003    5.988    0.006 sfm.py:41(compute_agent_forces)
+     1001    3.382    0.003    5.800    0.006 ttc.py:39(compute_ttc_forces)
+ 31460369    2.696    0.000    2.696    0.000 {built-in method numpy.asarray}
+ 22924964    2.480    0.000    2.480    0.000 {built-in method builtins.max}
+ 23109107    2.448    0.000    2.448    0.000 {built-in method builtins.min}
+ 31455362    2.433    0.000    2.433    0.000 _linalg.py:2594(_norm_dispatcher)
+  3430147    2.352    0.000    2.352    0.000 {built-in method numpy.array}
+   719027    0.909    0.000    0.909    0.000 _methods.py:96(_clip)
+   719027    0.567    0.000    2.367    0.000 fromnumeric.py:2207(clip)
+   712967    0.493    0.000    1.391    0.000 {method 'clip' of 'numpy.generic' objects}
+     1001    0.452    0.000    0.455    0.000 _kdtree.py:486(query_ball_point)
+    51212    0.415    0.000    0.415    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+   719027    0.293    0.000    1.800    0.000 fromnumeric.py:48(_wrapfunc)
+     2054    0.254    0.000    0.254    0.000 {method 'at' of 'numpy.ufunc' objects}
+     1001    0.113    0.000    0.337    0.000 walls.py:41(compute_wall_forces)
+     1001    0.109    0.000    0.183    0.000 world.py:87(agents_to_walls)
+     1001    0.107    0.000  302.933    0.303 hybrid.py:80(compute_forces)
+   720684    0.101    0.000    0.101    0.000 {built-in method builtins.getattr}
+        1    0.092    0.092  319.805  319.805 simulation.py:278(run)
+   719027    0.070    0.000    0.070    0.000 fromnumeric.py:2202(_clip_dispatcher)
+   177364    0.063    0.000    0.063    0.000 {method 'copy' of 'numpy.ndarray' objects}
+       22    0.056    0.003    0.056    0.003 {built-in method _imp.create_dynamic}
+     1001    0.049    0.000    0.068    0.000 _kdtree.py:359(__init__)
+     7007    0.040    0.000    0.107    0.000 helpers.py:7(check_forces)
+     6746    0.025    0.000    0.061    0.000 orca.py:21(_halfplane_collision)
+    22074    0.025    0.000    0.066    0.000 fromnumeric.py:86(_wrapreduction_any_all)
+
+
