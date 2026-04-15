@@ -1,0 +1,91 @@
+OOD C1/C4 runner: 64 remaining of 100 total
+CHECKPOINT: C1 w=2.4 complete (0 errors) elapsed=0.0min
+  [1] C4 w=2.4 seed=53 J=3.131 ped/s exited=50 evac=16.0s wall=18.2s elapsed=0.3min
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme TTC forces at agents [28, 39]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [28, 39]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+  [2] C4 w=2.4 seed=54 J=3.056 ped/s exited=50 evac=16.4s wall=18.3s elapsed=0.6min
+  [3] C4 w=2.4 seed=55 J=2.919 ped/s exited=50 evac=17.1s wall=24.4s elapsed=1.0min
+  [4] C4 w=2.4 seed=56 J=3.127 ped/s exited=50 evac=16.0s wall=22.3s elapsed=1.4min
+  [5] C4 w=2.4 seed=57 J=3.541 ped/s exited=50 evac=14.1s wall=18.5s elapsed=1.7min
+  [6] C4 w=2.4 seed=58 J=3.117 ped/s exited=50 evac=16.0s wall=20.7s elapsed=2.0min
+  [7] C4 w=2.4 seed=59 J=3.036 ped/s exited=50 evac=16.5s wall=20.3s elapsed=2.4min
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [7, 24]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [24]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+  [8] C4 w=2.4 seed=60 J=3.197 ped/s exited=50 evac=15.6s wall=19.0s elapsed=2.7min
+  [9] C4 w=2.4 seed=61 J=3.173 ped/s exited=50 evac=15.8s wall=21.4s elapsed=3.1min
+  [10] C4 w=2.4 seed=62 J=3.296 ped/s exited=50 evac=15.2s wall=19.6s elapsed=3.4min
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme TTC forces at agents [6, 41]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [6]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+  [11] C4 w=2.4 seed=63 J=2.784 ped/s exited=50 evac=18.0s wall=20.2s elapsed=3.7min
+  [12] C4 w=2.4 seed=64 J=3.245 ped/s exited=50 evac=15.4s wall=22.1s elapsed=4.1min
+  [13] C4 w=2.4 seed=65 J=2.869 ped/s exited=50 evac=17.4s wall=21.3s elapsed=4.4min
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [14, 28]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [14]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+  [14] C4 w=2.4 seed=66 J=3.005 ped/s exited=50 evac=16.6s wall=20.9s elapsed=4.8min
+CHECKPOINT: C4 w=2.4 complete (0 errors) elapsed=4.8min
+  [15] C1 w=3.6 seed=42 J=3.679 ped/s exited=50 evac=13.6s wall=1.7s elapsed=4.8min
+  [16] C1 w=3.6 seed=43 J=3.690 ped/s exited=50 evac=13.5s wall=1.7s elapsed=4.8min
+  [17] C1 w=3.6 seed=44 J=4.072 ped/s exited=50 evac=12.3s wall=1.4s elapsed=4.9min
+  [18] C1 w=3.6 seed=45 J=3.521 ped/s exited=50 evac=14.2s wall=1.6s elapsed=4.9min
+  [19] C1 w=3.6 seed=46 J=3.918 ped/s exited=50 evac=12.8s wall=1.5s elapsed=4.9min
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme SFM forces at agents [1, 10]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+/Users/palaash/Desktop/pedestrian-abs scitepress /sim/core/helpers.py:26: UserWarning: Clamped extreme hybrid forces at agents [1]
+  warnings.warn(f"Clamped extreme {name} forces at agents {bad[:5].tolist()}")
+  [20] C1 w=3.6 seed=47 J=3.987 ped/s exited=50 evac=12.5s wall=1.3s elapsed=4.9min
+  [21] C1 w=3.6 seed=48 J=3.953 ped/s exited=50 evac=12.6s wall=1.5s elapsed=5.0min
+  [22] C1 w=3.6 seed=49 J=3.925 ped/s exited=50 evac=12.7s wall=1.4s elapsed=5.0min
+  [23] C1 w=3.6 seed=50 J=3.864 ped/s exited=50 evac=12.9s wall=1.5s elapsed=5.0min
+  [24] C1 w=3.6 seed=51 J=4.307 ped/s exited=50 evac=11.6s wall=1.5s elapsed=5.0min
+  [25] C1 w=3.6 seed=52 J=3.814 ped/s exited=50 evac=13.1s wall=1.4s elapsed=5.1min
+  [26] C1 w=3.6 seed=53 J=3.690 ped/s exited=50 evac=13.5s wall=1.5s elapsed=5.1min
+  [27] C1 w=3.6 seed=54 J=3.882 ped/s exited=50 evac=12.9s wall=1.5s elapsed=5.1min
+  [28] C1 w=3.6 seed=55 J=3.489 ped/s exited=50 evac=14.3s wall=1.5s elapsed=5.1min
+  [29] C1 w=3.6 seed=56 J=3.690 ped/s exited=50 evac=13.5s wall=1.6s elapsed=5.2min
+  [30] C1 w=3.6 seed=57 J=4.102 ped/s exited=50 evac=12.2s wall=1.5s elapsed=5.2min
+  [31] C1 w=3.6 seed=58 J=3.891 ped/s exited=50 evac=12.8s wall=1.5s elapsed=5.2min
+  [32] C1 w=3.6 seed=59 J=3.940 ped/s exited=50 evac=12.7s wall=1.5s elapsed=5.2min
+  [33] C1 w=3.6 seed=60 J=3.840 ped/s exited=50 evac=13.0s wall=1.5s elapsed=5.3min
+  [34] C1 w=3.6 seed=61 J=4.026 ped/s exited=50 evac=12.4s wall=1.5s elapsed=5.3min
+  [35] C1 w=3.6 seed=62 J=4.082 ped/s exited=50 evac=12.2s wall=1.4s elapsed=5.3min
+  [36] C1 w=3.6 seed=63 J=3.600 ped/s exited=50 evac=13.9s wall=1.6s elapsed=5.3min
+  [37] C1 w=3.6 seed=64 J=4.032 ped/s exited=50 evac=12.4s wall=1.5s elapsed=5.4min
+  [38] C1 w=3.6 seed=65 J=3.546 ped/s exited=50 evac=14.1s wall=1.5s elapsed=5.4min
+  [39] C1 w=3.6 seed=66 J=3.779 ped/s exited=50 evac=13.2s wall=1.5s elapsed=5.4min
+CHECKPOINT: C1 w=3.6 complete (0 errors) elapsed=5.4min
+  [40] C4 w=3.6 seed=42 J=3.975 ped/s exited=50 evac=12.6s wall=19.8s elapsed=5.7min
+  [41] C4 w=3.6 seed=43 J=3.650 ped/s exited=50 evac=13.7s wall=18.7s elapsed=6.1min
+  [42] C4 w=3.6 seed=44 J=4.092 ped/s exited=50 evac=12.2s wall=17.6s elapsed=6.3min
+  [43] C4 w=3.6 seed=45 J=3.608 ped/s exited=50 evac=13.9s wall=19.8s elapsed=6.7min
+  [44] C4 w=3.6 seed=46 J=3.949 ped/s exited=50 evac=12.7s wall=19.9s elapsed=7.0min
+  [45] C4 w=3.6 seed=47 J=3.843 ped/s exited=50 evac=13.0s wall=17.4s elapsed=7.3min
+  [46] C4 w=3.6 seed=48 J=3.826 ped/s exited=50 evac=13.1s wall=17.0s elapsed=7.6min
+  [47] C4 w=3.6 seed=49 J=3.978 ped/s exited=50 evac=12.6s wall=16.5s elapsed=7.9min
+  [48] C4 w=3.6 seed=50 J=3.894 ped/s exited=50 evac=12.8s wall=17.6s elapsed=8.2min
+  [49] C4 w=3.6 seed=51 J=4.129 ped/s exited=50 evac=12.1s wall=18.3s elapsed=8.5min
+  [50] C4 w=3.6 seed=52 J=3.891 ped/s exited=50 evac=12.8s wall=16.7s elapsed=8.7min
+  [51] C4 w=3.6 seed=53 J=3.984 ped/s exited=50 evac=12.5s wall=17.1s elapsed=9.0min
+  [52] C4 w=3.6 seed=54 J=4.068 ped/s exited=50 evac=12.3s wall=15.3s elapsed=9.3min
+  [53] C4 w=3.6 seed=55 J=3.861 ped/s exited=50 evac=12.9s wall=15.1s elapsed=9.5min
+  [54] C4 w=3.6 seed=56 J=3.922 ped/s exited=50 evac=12.7s wall=18.3s elapsed=9.8min
+  [55] C4 w=3.6 seed=57 J=4.421 ped/s exited=50 evac=11.3s wall=15.7s elapsed=10.1min
+  [56] C4 w=3.6 seed=58 J=3.990 ped/s exited=50 evac=12.5s wall=16.4s elapsed=10.4min
+  [57] C4 w=3.6 seed=59 J=3.849 ped/s exited=50 evac=13.0s wall=16.3s elapsed=10.6min
+  [58] C4 w=3.6 seed=60 J=4.006 ped/s exited=50 evac=12.5s wall=15.0s elapsed=10.9min
+  [59] C4 w=3.6 seed=61 J=4.052 ped/s exited=50 evac=12.3s wall=17.4s elapsed=11.2min
+  [60] C4 w=3.6 seed=62 J=4.075 ped/s exited=50 evac=12.3s wall=15.8s elapsed=11.4min
+  [61] C4 w=3.6 seed=63 J=3.546 ped/s exited=50 evac=14.1s wall=15.8s elapsed=11.7min
+  [62] C4 w=3.6 seed=64 J=4.219 ped/s exited=50 evac=11.8s wall=15.3s elapsed=12.0min
+  [63] C4 w=3.6 seed=65 J=3.458 ped/s exited=50 evac=14.5s wall=16.1s elapsed=12.2min
+  [64] C4 w=3.6 seed=66 J=3.788 ped/s exited=50 evac=13.2s wall=14.5s elapsed=12.5min
+CHECKPOINT: C4 w=3.6 complete (0 errors) elapsed=12.5min
+
+Done: 64 new runs, total elapsed 0.21 hr
