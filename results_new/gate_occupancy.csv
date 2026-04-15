@@ -1,0 +1,4 @@
+scenario,frac_orca_dominant,frac_force_dominant,frac_transition,n_agent_timesteps
+bottleneck_w1.0,1.0,0.0,0.0,55727
+crossing,NA,NA,NA,0
+bidirectional,NA,NA,NA,0
