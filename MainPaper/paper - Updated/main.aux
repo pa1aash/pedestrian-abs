@@ -1,0 +1,106 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{Lee24}
+\citation{Helbing12}
+\citation{Helbing95,Helbing00}
+\citation{Karamouzas14}
+\citation{Fiorini98,VandenBerg11}
+\newlabel{sec:introduction}{{1}{1}{\uppercase {Introduction}}{section.1}{}}
+\citation{Helbing95}
+\citation{Helbing00}
+\citation{Chraibi10}
+\citation{Reynolds99}
+\citation{Fiorini98}
+\citation{VandenBerg11}
+\citation{Karamouzas14}
+\citation{Guy10}
+\citation{VanToll21}
+\citation{Moussaid11}
+\citation{Cristiani23}
+\citation{Gaudou24}
+\citation{Fruin71}
+\citation{Helbing07}
+\citation{Steffen10}
+\citation{Tordeux15}
+\citation{Seyfried09}
+\citation{Hoogendoorn05}
+\newlabel{sec:related}{{2}{2}{\uppercase {Related Work}}{section.2}{}}
+\citation{Weidmann93}
+\citation{Helbing00}
+\citation{Karamouzas14}
+\citation{VandenBerg11}
+\citation{Guy10}
+\citation{Fruin71}
+\newlabel{sec:framework}{{3}{3}{\uppercase {Methodology}}{section.3}{}}
+\newlabel{sec:hybrid}{{3.1}{3}{Hybrid Steering Model}{subsection.3.1}{}}
+\newlabel{eq:hybrid}{{1}{3}{Hybrid Steering Model}{equation.1}{}}
+\newlabel{eq:desired}{{2}{3}{Hybrid Steering Model}{equation.2}{}}
+\newlabel{eq:sfm}{{3}{3}{Hybrid Steering Model}{equation.3}{}}
+\newlabel{eq:ttc}{{4}{3}{Hybrid Steering Model}{equation.4}{}}
+\newlabel{eq:sigmoid}{{5}{3}{Hybrid Steering Model}{equation.5}{}}
+\citation{Helbing00}
+\citation{Helbing00}
+\citation{Mullick24}
+\citation{Steffen10}
+\citation{Helbing00}
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{alg:step}{{1}{4}{One simulation timestep (density-modulated additive steering)}{algorithm.1}{}}
+\newlabel{sec:density}{{3.2}{4}{Local Density via Voronoi Tessellation}{subsection.3.2}{}}
+\newlabel{tab:params}{{1}{4}{Model parameters. $^{\dagger }$$\gamma $ and $\rho _{\max }$ refit via single-start Nelder--Mead ($x_{\text {atol}}{=}10^{-3}$, $f_{\text {atol}}{=}10^{-4}$); terminated at the seed-noise floor (53 evaluations, 3 seeds each). $A$, $B$ fixed at textbook values~\cite {Helbing00}; a full 4-parameter multi-restart refit is deferred to future work (\S \ref {sec:conclusion})}{table.caption.1}{}}
+\newlabel{sec:calibration}{{3.3}{4}{Phenomenological Calibration}{subsection.3.3}{}}
+\newlabel{eq:calibration}{{6}{4}{Phenomenological Calibration}{equation.6}{}}
+\citation{FZJ13a}
+\newlabel{tab:scenarios}{{2}{5}{Scenario summary}{table.caption.2}{}}
+\newlabel{sec:experiments}{{4}{5}{\uppercase {Experiments and Results}}{section.4}{}}
+\newlabel{sec:fd-validation}{{4.2}{5}{FD Calibration}{subsection.4.2}{}}
+\newlabel{fig:fd}{{1}{5}{Speed--density fundamental diagram, separated by steering configuration. Coloured curves: simulation mean (line) with $\pm $ std band (shaded), bin centres marked. Grey: 4\,776 FZJ empirical points with their binned mean (dotted). Dashed: calibrated Weidmann reference. All four configurations yield nearly indistinguishable trends; the FD is determined by the Weidmann term, not by steering choice. Calibration reduces in-sample RMSE from 0.235 to 0.099\,m/s}{figure.caption.3}{}}
+\newlabel{sec:ood}{{4.3}{5}{Held-Out OOD Validation}{subsection.4.3}{}}
+\newlabel{tab:ood}{{3}{6}{Held-out OOD validation: simulated vs.\ FZJ empirical bottleneck flow rates. All relative errors are negative (systematic underestimation)}{table.caption.4}{}}
+\newlabel{tab:ood-per-paradigm}{{4}{6}{Per-paradigm OOD decomposition at $w=2.4$ and $3.6$\,m ($n=25$, $n_{\mathrm {agents}}=50$). $J_{\mathrm {sim}}$ mean\,$\pm $\,sd (ped/s) and relative error vs.\ $J_{\mathrm {emp}}$ (Table~\ref {tab:ood})}{table.caption.5}{}}
+\newlabel{sec:force-diag}{{4.4}{6}{Density-Adaptive Gate}{subsection.4.4}{}}
+\newlabel{fig:force}{{2}{6}{Force-component magnitudes vs.\ local Voronoi density (C4, $w=1.0$\,m, $n=5$ seeds, 55\,727 samples; per-seed median per log-spaced bin, across-seed mean $\pm $ 1\,std). The SFM and ORCA curves cross near $\rho \!\approx \!0.07$\,ped/m$^2$ (dotted). The gate centre $\rho _0{=}4.0$\,ped/m$^2$ (dashed) is orders of magnitude above the observed density range, so the sigmoid functions as a fixed blend rather than an adaptive transition}{figure.caption.6}{}}
+\citation{VandenBerg11}
+\newlabel{sec:ablation}{{4.5}{7}{Zone-Decomposed Ablation}{subsection.4.5}{}}
+\newlabel{tab:zonal}{{5}{7}{Mean contact-overlaps by spatial zone ($n=25$, mean\,$\pm $\,std)}{table.caption.7}{}}
+\newlabel{fig:zonal}{{3}{7}{Contact-overlaps by zone at $w=1.0$\,m ($n=25$, mean $\pm $ std). Bars per configuration are split into upstream (queue), throat (exit aperture), and downstream. The C1\,$\to $\,C4 reduction lives in the upstream band; throat and downstream zones are essentially empty in both configurations}{figure.caption.8}{}}
+\newlabel{sec:bottleneck-evac}{{4.6}{8}{Bottleneck Deadlock and Mechanism}{subsection.4.6}{}}
+\newlabel{fig:sigma-sweep}{{4}{8}{$C_1{+}\varepsilon $ deadlock-resolution probability vs.\ Gaussian velocity noise $\sigma $ ($w=0.8$\,m, 100 agents, $n=25$). Blue: logistic fit. Vertical dotted line: $\sigma _{50}=0.049$\,m/s, 95\% CI $[0.044,0.053]$ (shaded). Horizontal dashed line: C3 completion rate (13/25)}{figure.caption.9}{}}
+\newlabel{sec:external}{{4.7}{8}{External Simulator Comparison}{subsection.4.7}{}}
+\newlabel{tab:bottleneck}{{6}{9}{Bottleneck evacuation time and contact-overlaps (mean\,$\pm $\,std, $n=25$). $^{**}$\,$p_{\mathrm {HS}}\!<\!0.01$; $^{*}$\,$p_{\mathrm {HS}}\!<\!0.05$ for C1 vs.\ C4 via LMM}{table.caption.10}{}}
+\newlabel{fig:evac_width}{{5}{9}{Evacuation time vs.\ exit width for C1 and C4. Error bars: 95\% CIs, $n=25$}{figure.caption.11}{}}
+\newlabel{fig:traj}{{6}{9}{Agent trajectories at $w=0.8$\,m (100 agents, seed 46). \textbf {Left:} C1 forms a stable arching deadlock at the exit throat. \textbf {Right:} C4 destabilises the arch and evacuates all 100 agents. Colour: normalised time}{figure.caption.12}{}}
+\newlabel{tab:external}{{7}{9}{External simulator comparison at $w=1.0$\,m bottleneck, 50 agents, $n=25$ seeds. JuPedSim uses tool-default parameters (not tuned to match ours). JuPedSim SF did not complete evacuation in any seed within 60\,s; agents exited is reported instead of evacuation time}{table.caption.13}{}}
+\newlabel{sec:scaling-eval}{{4.8}{9}{Computational Performance}{subsection.4.8}{}}
+\newlabel{fig:scaling}{{7}{10}{Per-step wall-time scaling (log--log). C1 measured to 1\,000 agents; C4 to 500. ORCA introduces 29--36$\times $ overhead over SFM. Hardware: Apple M1, Python 3.13.12. Dotted line: real-time threshold (33\,ms/step at $\Delta t=0.01$\,s)}{figure.caption.14}{}}
+\newlabel{sec:discussion}{{5}{10}{\uppercase {Discussion}}{section.5}{}}
+\bibstyle{apalike}
+\bibdata{references}
+\bibcite{Chraibi10}{Chraibi et~al., 2010}
+\bibcite{Cristiani23}{Cristiani et~al., 2023}
+\bibcite{Gaudou24}{Dang et~al., 2024}
+\bibcite{Fiorini98}{Fiorini and Shiller, 1998}
+\bibcite{FZJ13a}{{Forschungszentrum J\"{u}lich}, 2013}
+\bibcite{Fruin71}{Fruin, 1971}
+\bibcite{Guy10}{Guy et~al., 2010}
+\bibcite{Helbing00}{Helbing et~al., 2000}
+\newlabel{sec:conclusion}{{6}{11}{\uppercase {Conclusions}}{section.6}{}}
+\bibcite{Helbing07}{Helbing et~al., 2007}
+\bibcite{Helbing95}{Helbing and Moln{\'a}r, 1995}
+\bibcite{Helbing12}{Helbing and Mukerji, 2012}
+\bibcite{Hoogendoorn05}{Hoogendoorn and Daamen, 2005}
+\bibcite{Karamouzas14}{Karamouzas et~al., 2014}
+\bibcite{Lee24}{Lee et~al., 2024}
+\bibcite{Moussaid11}{Moussa{\"\i }d et~al., 2011}
+\bibcite{Mullick24}{Mullick et~al., 2024}
+\bibcite{Reynolds99}{Reynolds, 1999}
+\bibcite{Seyfried09}{Seyfried et~al., 2009}
+\bibcite{Steffen10}{Steffen and Seyfried, 2010}
+\bibcite{Tordeux15}{Tordeux et~al., 2015}
+\bibcite{VandenBerg11}{van~den Berg et~al., 2011}
+\bibcite{VanToll21}{van Toll et~al., 2021}
+\bibcite{Weidmann93}{Weidmann, 1993}
+\citation{Helbing00,Karamouzas14,VandenBerg11}
+\newlabel{sec:appendix}{{A}{12}{\uppercase {Reproducibility}}{appendix.A}{}}
+\gdef \@abspage@last{12}

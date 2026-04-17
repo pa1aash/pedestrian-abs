@@ -1,0 +1,2 @@
+config,sigma,seed,completion,evacuation_time,mean_speed,max_density,collision_count,agents_exited,wall_time_s
+C1,0.032,42,0,-1.0,0.22050163351064814,2.334272498681132,335,97,91.51951680000639
