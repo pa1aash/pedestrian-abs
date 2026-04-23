@@ -1,0 +1,14 @@
+\begin{table}[h]
+\caption{External simulator comparison at $w=1.0$\,m bottleneck, 50 agents, $n=25$ seeds. JuPedSim uses tool-default parameters (not tuned to match ours). JuPedSim SF did not complete evacuation in any seed within 60\,s; agents exited is reported instead of evacuation time.}\label{tab:external}
+\centering\resizebox{\columnwidth}{!}{
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+\textbf{Tool} & \textbf{Evac.\ time (s)} & \textbf{Agents exited} & \textbf{Contact-overlaps} & \textbf{Runtime (s)} \\
+\midrule
+Ours C1 (SFM) & $56.5 \pm 5.5$ & 50/50 & $42 \pm 17$ & 17.5 \\
+Ours C4 (hybrid) & $50.8 \pm 4.4$ & 50/50 & $29 \pm 12$ & 77.0 \\
+JuPedSim CFS & $33.6 \pm 1.2$ & 50/50 & --- & 0.4 \\
+JuPedSim SF & --- (0/25 complete) & $31.3 \pm 2.3$/50 & --- & 0.6 \\
+\bottomrule
+\end{tabular}}
+\end{table}

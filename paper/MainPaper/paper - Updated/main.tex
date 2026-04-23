@@ -1,0 +1,528 @@
+\documentclass[a4paper,twoside]{article}
+
+\usepackage{epsfig}
+\usepackage{subcaption}
+\usepackage{calc}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{multicol}
+\usepackage{pslatex}
+\usepackage{apalike}
+\usepackage[bottom]{footmisc}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+% SCITEPRESS.sty expects algorithm2e-style commands; provide stubs so its
+% caption settings compile under the algorithmicx ecosystem.
+\providecommand{\AlCapFnt}{}
+\providecommand{\SetAlCapHSkip}[1]{}
+\providecommand{\SetAlCapNameFnt}[1]{}
+\usepackage{SCITEPRESS}
+\hypersetup{pdfauthor={},pdftitle={},pdfsubject={},pdfkeywords={}}
+
+\begin{document}
+
+\title{Failure-Mode Ablation of SFM, TTC, and ORCA Pedestrian
+Steering Paradigms
+with a Symmetry-Breaking Control Experiment}
+
+\author{\authorname{Anonymous Authors}
+\affiliation{}
+\email{}
+}
+
+\keywords{Crowd Simulation, Pedestrian Dynamics, Steering Ablation, Social Force Model, Collision Avoidance, Crowd Safety, Empirical Calibration.}
+
+\abstract{Every pedestrian steering paradigm has a regime where it fails. We present a failure-mode ablation of Social Force (SFM), time-to-collision (TTC), and Optimal Reciprocal Collision Avoidance (ORCA) across bottleneck, bidirectional, and crossing geometries ($n=25$ per cell), and isolate two paradigm-specific failure modes. First, TTC anticipation does not break symmetric arching deadlocks at narrow exits: neither SFM nor SFM+TTC evacuates any of 25 trials at $w=0.8$\,m, while ORCA-enabled configurations evacuate 52--56\%. A symmetry-breaking control experiment with per-step Gaussian velocity noise locates the deadlock-resolution threshold at $\sigma_{50} = 0.049$\,m/s (95\% CI $[0.044, 0.053]$); within $n = 25$, passive noise at this threshold is indistinguishable from ORCA's LP-based velocity selection as a deadlock-breaking mechanism. Second, ORCA reciprocal yielding produces gridlock in counterflow. An additive blend with a density-gated ORCA term (calibrated but not exercised in-regime in our scenarios, §4.4) mitigates both failure modes: the blend triples throughput over plain SFM at 90\textdegree{} crossings (17.1 vs.\ 5.9 agents; $p_{\mathrm{HS}}\!<\!10^{-48}$), and TTC-containing configurations eliminate persistent exit-throat overlaps at narrow bottlenecks after spawn-placement artefacts are removed. Calibration against 4\,776 FZJ pedestrian trajectories reduces in-sample speed--density error; we report a $-26\%$ to $-43\%$ gap on held-out bottleneck geometries as an explicit out-of-distribution calibration bound, with the bias uniform across C1--C4 ($\leq$\,2\,pp spread) so ablation conclusions survive it while absolute flow predictions do not.}
+
+\onecolumn \maketitle \normalsize \setcounter{footnote}{0} \vfill
+
+%% ============================================================
+%% SECTION 1: INTRODUCTION
+%% ============================================================
+\section{\uppercase{Introduction}}
+\label{sec:introduction}
+
+Crowd disasters remain a persistent threat to public safety. The 2022 Itaewon crush killed 159 people in a narrow alley in Seoul during a Halloween gathering~\cite{Lee24}; the 2010 Love Parade disaster killed 21 at a tunnel bottleneck in Duisburg~\cite{Helbing12}. Both events share a common aetiology: localised pedestrian density exceeded survivable thresholds long before organisers detected the hazard, and passive crowd dynamics alone were insufficient to dissipate the buildup. Predictive tools that can anticipate dangerous density accumulations and evaluate mitigations \emph{before} an event are therefore a prerequisite for evidence-based crowd safety management, and the reliability of such tools rests, ultimately, on the pedestrian steering model at their core.
+
+This paper is a \textbf{diagnostic ablation study}, not a new-method paper. Rather than propose a production steering controller, we ask where and why each of the three dominant pedestrian steering paradigms -- Social Force (SFM)~\cite{Helbing95,Helbing00}, time-to-collision anticipation (TTC)~\cite{Karamouzas14}, and velocity-obstacle / reciprocal avoidance (ORCA)~\cite{Fiorini98,VandenBerg11} -- fails when isolated on a common benchmark. We then use a density-modulated additive blend, in which only the ORCA contribution is density-weighted, as a \emph{mitigation probe} to test whether each failure mode can be attenuated without scenario classification at runtime. Single-paradigm comparisons are widespread in the literature, and hybrids that combine at most two of the three paradigms under discrete scenario-dependent switches have been reported; to our knowledge, no prior work has (a) isolated the paradigm-specific \emph{failure modes} of the full SFM/TTC/ORCA triad on a common benchmark, (b) separated passive symmetry-breaking from velocity-space optimisation as distinct deadlock-breaking mechanisms via a controlled noise intervention, or (c) used that attribution to motivate a continuous density-gated blend. The diagnostic value of this ablation is substantial: aggregate metrics such as global collision count or mean evacuation time conflate distinct physical mechanisms (queue compression, exit-throat jamming, symmetry-breaking at narrow apertures) and therefore obscure which paradigm is responsible for which failure.
+
+Our contributions are threefold. (i) A symmetry-breaking control experiment (C1+$\varepsilon$) that characterises the noise threshold for deadlock resolution ($\sigma_{50} \approx 0.049$\,m/s, 95\% CI $[0.044, 0.053]$) and establishes that within $n = 25$ passive Gaussian velocity noise is indistinguishable from ORCA's LP-based velocity selection as a deadlock-breaking mechanism; larger-$n$ separation remains future work. (ii) A failure-mode ablation of SFM, TTC, and ORCA across bottleneck, bidirectional, and crossing geometries that isolates two paradigm-specific failure modes: TTC anticipation does not break symmetric arches at narrow exits (0/25 evacuations for both C1 and C2 at $w=0.8$\,m), and ORCA-style reciprocal yielding depresses throughput in counterflow. (iii) Evaluation of a density-modulated additive blend of the three paradigms as a mitigation probe, calibrated phenomenologically against 4\,776 FZJ unidirectional-corridor data points and benchmarked against JuPedSim as a qualitative external sanity check. We report a systematic $-26\%$ to $-43\%$ out-of-distribution (OOD) underestimation on held-out FZJ bottleneck flow rates and do not claim that the blend generalises quantitatively across geometries; the gap is reported explicitly as an honest calibration bound.
+
+Three research questions structure the study: \textbf{RQ1} -- under what scenario conditions does each of SFM, TTC, and ORCA fail when isolated (arching deadlock, counterflow gridlock, intersection stand-off), and which failure modes are paradigm-specific versus shared? \textbf{RQ2} -- does a density-gated additive blend attenuate each paradigm-specific failure mode without requiring scenario classification at runtime? \textbf{RQ3} -- is ORCA's LP-based velocity selection the operative mechanism that breaks arching deadlocks, or is any perturbation sufficient to break geometric symmetry equally effective? Code, data, and reproduction scripts will be released on acceptance (anonymised artefacts for review are described in Appendix~\ref{sec:appendix}).
+
+The remainder of the paper is organised as follows. Section~\ref{sec:related} reviews the relevant prior art along three thematic axes (force/velocity-based models, hybrids, and crowd safety metrics). Section~\ref{sec:framework} presents the methodology: the additive blend, the Voronoi density estimator driving the blending weight, and the 2-parameter phenomenological calibration. Section~\ref{sec:experiments} reports the experimental results across FD calibration, held-out OOD validation, the density-adaptive gate, the paradigm ablation, the deadlock mechanism study, the JuPedSim comparison, and computational performance. Section~\ref{sec:discussion} discusses findings, theoretical positioning, practical implications, and limitations. Section~\ref{sec:conclusion} concludes.
+
+
+%% ============================================================
+%% SECTION 2: RELATED WORK
+%% ============================================================
+\section{\uppercase{Related Work}}
+\label{sec:related}
+
+\textbf{Force-based and velocity-based models.}
+The Social Force Model (SFM) of Helbing and Moln\'{a}r~\cite{Helbing95} represents pedestrians as particles subject to desired, social-repulsive, and contact forces; the extended formulation~\cite{Helbing00} adds body compression and sliding friction for dense-crowd simulation and remains the workhorse of pedestrian dynamics. Reynolds~\cite{Reynolds99} proposed composable steering behaviours for autonomous characters, and Fiorini and Shiller~\cite{Fiorini98} formalised velocity obstacles as a collision-avoidance primitive. Van den Berg et al.~\cite{VandenBerg11} introduced Optimal Reciprocal Collision Avoidance (ORCA), which constructs half-plane velocity constraints and solves a 2D linear program (LP) for the velocity closest to the preferred velocity under mutual avoidance. Karamouzas et al.~\cite{Karamouzas14} derived, from human trajectory statistics, an anticipatory inverse power-law force with exponential time-to-collision decay. Guy et al.~\cite{Guy10} presented PLEdestrians, calibrating agent parameters against real trajectories through an effort-minimisation principle. Although these paradigms are complementary in principle, they are typically deployed individually. Force-based approaches handle contact-rich scenarios well but yield oscillatory paths at low density; velocity-based methods produce smooth trajectories but cannot represent physical compression or the friction phenomena observed in panic crowds.
+
+\textbf{Hybrid and multi-regime models.}
+Van Toll et al.~\cite{VanToll21} couple agents with SPH for extreme-density crowds, switching micro- to macro-scale; Moussa\"{\i}d et al.~\cite{Moussaid11} develop cognitive-heuristic models calibrated to bottlenecks but remain single-paradigm; Cristiani et al.\ (2023) present an all-densities simulator in which maximum density is a state variable, spanning low- and high-density regimes without an explicit switch; Gaudou et al.~\cite{Gaudou24} survey the field. These hybrids typically combine at most two paradigms via discrete switching, whose switch points must be calibrated and whose transition behaviour is often numerically brittle. We do not find prior work that (i) blends SFM contact, TTC anticipation, and ORCA LP velocities \emph{within a single per-agent step} under a continuous density-dependent weight, or (ii) isolates each paradigm's failure modes with a controlled intervention separating passive symmetry-breaking from velocity-space optimisation. Understanding \emph{how} and \emph{why} a paradigm fails is a precondition for choosing, or blending, paradigms sensibly.
+
+\textbf{Safety metrics and density estimation.}
+Fruin~\cite{Fruin71} established the Level-of-Service (LoS) framework relating density to comfort and safety; the LoS-E boundary at $\rho\!\approx\!4$\,ped/m$^2$ marks the density above which pedestrians lose the freedom to choose their walking direction, and this threshold motivates the sigmoid centre we adopt for ORCA fade-out (\S\ref{sec:hybrid}). Helbing et al.~\cite{Helbing07} characterised crowd turbulence as an emergent regime at sustained high density, providing an empirical rationale for paradigm switching at the density Fruin identified. On the measurement side, Steffen and Seyfried~\cite{Steffen10} and Tordeux et al.~\cite{Tordeux15} established that Voronoi tessellation yields a higher-fidelity local density estimator than fixed-disk grid counting, particularly at narrow throats where small grid cells are heavily aliased; this motivates our per-agent density signal.
+
+
+%% ============================================================
+%% SECTION 3: METHODOLOGY
+%% ============================================================
+\section{\uppercase{Methodology}}
+\label{sec:framework}
+
+We describe (i) the density-modulated additive acceleration formulation that defines steering configurations C1--C4, (ii) the Voronoi-based density estimator driving the blending weight, and (iii) the phenomenological speed--density calibration.
+
+\subsection{Hybrid Steering Model}
+\label{sec:hybrid}
+
+Each agent~$i$ is characterised by position~$\mathbf{x}_i$, velocity~$\mathbf{v}_i$, goal~$\mathbf{g}_i$, radius~$r_i$, desired speed~$v_i^0$, mass~$m_i$, and relaxation time~$\tau_i$. The per-agent steering is an \emph{additive blend} of accelerations in which only the ORCA term is density-weighted:
+\begin{equation}\label{eq:hybrid}
+    \mathbf{a}_i = \mathbf{a}^{\mathrm{des}}_i + \mathbf{a}^{\mathrm{SFM}}_i + \mathbf{a}^{\mathrm{TTC}}_i + w_o(\rho_i)\,\mathbf{a}^{\mathrm{ORCA}}_i + \mathbf{a}^{\mathrm{wall}}_i,
+\end{equation}
+where $w_o(\rho_i)\!\in\![0,1]$ fades ORCA out as local density rises (Eq.~\ref{eq:sigmoid}), and the desired, SFM, TTC, and wall components are unconditional. Per-component accelerations are obtained as $\mathbf{F}/m_i$ from the force expressions below. This yields four steering configurations: C1 (SFM only), C2 (SFM+TTC), C3 (SFM+ORCA), and C4 (the full blend). Algorithm~\ref{alg:step} summarises one simulation timestep; Figure~\ref{fig:arch} shows the architecture schematically.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+  node distance=2.5mm and 6mm,
+  box/.style={draw, rounded corners=1pt, minimum width=14mm,
+              minimum height=4.5mm, font=\footnotesize, inner sep=2pt},
+  op/.style={draw, circle, inner sep=0pt, minimum size=4.5mm, font=\footnotesize},
+  intg/.style={draw, minimum width=14mm, minimum height=4.5mm,
+               font=\footnotesize, inner sep=2pt},
+  lbl/.style={font=\scriptsize, inner sep=1pt},
+  src/.style={font=\scriptsize, align=right, inner sep=1pt},
+  arrow/.style={-{Latex[length=1.3mm]}, thin}
+]
+% input acceleration boxes (stacked)
+\node[box] (des)                 {$\mathbf{a}^{\mathrm{des}}_i$};
+\node[box, below=of des]  (sfm)  {$\mathbf{a}^{\mathrm{SFM}}_i$};
+\node[box, below=of sfm]  (ttc)  {$\mathbf{a}^{\mathrm{TTC}}_i$};
+\node[box, below=of ttc]  (orca) {$\mathbf{a}^{\mathrm{ORCA}}_i$};
+\node[box, below=of orca] (wall) {$\mathbf{a}^{\mathrm{wall}}_i$};
+
+% source labels on the left
+\node[src, left=2mm of des]  {goal $\hat{\mathbf{e}}_i,\,v^{\mathrm{eff}}_i$};
+\node[src, left=2mm of sfm]  {neighbours};
+\node[src, left=2mm of ttc]  {neighbours};
+\node[src, left=2mm of orca] {half-plane LP};
+\node[src, left=2mm of wall] {walls};
+
+% density-gated multiplier on ORCA only
+\node[op, right=6mm of orca] (gate) {$\times$};
+\node[lbl, above=0.3mm of gate] {$w_o(\rho_i)$};
+
+% summation node
+\node[op] (sum) at ($(ttc.east)+(22mm,0)$) {$+$};
+
+% integrator
+\node[intg, right=7mm of sum] (intg) {Euler $\Delta t$};
+
+% output
+\node[lbl, right=3mm of intg] (out) {$\mathbf{v}_i,\,\mathbf{x}_i$};
+
+% density source feeding the gate
+\node[lbl, below=3mm of wall, align=center] (rho)
+  {Voronoi density\\ $\rho_i$};
+
+% unmodulated paths
+\draw[arrow] (des.east)  -- (sum);
+\draw[arrow] (sfm.east)  -- (sum);
+\draw[arrow] (ttc.east)  -- (sum);
+\draw[arrow] (wall.east) -| (sum);
+
+% ORCA through gate, then to sum
+\draw[arrow] (orca.east) -- (gate);
+\draw[arrow] (gate)      -| (sum);
+
+% density feeds gate
+\draw[arrow] (rho) -| (gate);
+
+% sum to integrator (labelled with a_i), integrator to output
+\draw[arrow] (sum)  -- node[above, lbl] {$\mathbf{a}_i$} (intg);
+\draw[arrow] (intg) -- (out);
+\end{tikzpicture}
+\caption{Density-modulated additive steering architecture (Eq.~\ref{eq:hybrid}). Four acceleration components feed the accumulator unmodulated; the ORCA term is scaled by $w_o(\rho_i)=1-\sigma(\rho_i;\rho_0,k)$, with $\rho_i$ the local Voronoi-cell density. The sum $\mathbf{a}_i$ drives the Euler integrator to update $(\mathbf{v}_i,\mathbf{x}_i)$.}\label{fig:arch}
+\end{figure}
+
+\textbf{Theoretical positioning.}
+Gating only the ORCA term -- rather than mixing all three paradigms through competing weights -- reflects a deliberate separation between \emph{regime-specific} and \emph{always-on} contributions. SFM's body compression/sliding friction and TTC's anticipatory inverse-power-law decay remain physically meaningful at every observed density: body contact does not occur in the low-density regime and so SFM's contact term vanishes on its own, while TTC's decay timescale $\tau_0$ fades anticipatory repulsion smoothly as encounters become rare. ORCA, by contrast, presupposes a well-posed low-density velocity-selection problem that loses meaning once the set of LP-feasible velocities collapses at close packing. Gating ORCA alone therefore tracks a conceptual break in applicability rather than an ad-hoc blend of redundant forces. The conversion of the LP-selected velocity into a force via a finite relaxation time is an engineering choice (\S~ORCA below); we do not claim ORCA's collision-free guarantee after this conversion.
+
+\textbf{Desired force.}
+The goal-seeking force drives agents toward their destination with a density-dependent speed reduction following the Weidmann~\cite{Weidmann93} fundamental diagram (FD):
+\begin{equation}\label{eq:desired}
+    \mathbf{F}_i^{\text{des}} = \tfrac{m_i}{\tau_i}\!\left(v_i^{\text{eff}}(\rho_i)\,\hat{\mathbf{e}}_i - \mathbf{v}_i\right),\ v_i^{\text{eff}} = v_i^0\bigl(1 - e^{-\gamma(1/\rho_i - 1/\rho_{\max})}\bigr).
+\end{equation}
+
+\textbf{Social Force Model.}
+Agent-agent interaction follows Helbing et al.~\cite{Helbing00}:
+\begin{multline}\label{eq:sfm}
+    \mathbf{f}_{ij} = A\,e^{(r_{ij} - d_{ij})/B}\,\hat{\mathbf{n}}_{ij} + k\,g(r_{ij} - d_{ij})\,\hat{\mathbf{n}}_{ij} \\
+    + \kappa\,g(r_{ij} - d_{ij})\,(\Delta\mathbf{v}_{ji}{\cdot}\hat{\mathbf{t}}_{ij})\,\hat{\mathbf{t}}_{ij},
+\end{multline}
+with $r_{ij}=r_i+r_j$, $d_{ij}=\|\mathbf{x}_i-\mathbf{x}_j\|$, $g(x)=\max(0,x)$, and parameters in Table~\ref{tab:params}.
+
+\textbf{Time-to-collision force.}
+Following Karamouzas et al.~\cite{Karamouzas14}, agents apply repulsive forces that decay exponentially with time-to-collision $\tau_{ij}$:
+\begin{equation}\label{eq:ttc}
+    F_{\mathrm{TTC}} = \frac{k_{\mathrm{ttc}}\,e^{-\tau_{ij}/\tau_0}}{\tau_{ij}^2},\ \tau_{ij} = \frac{-b - \sqrt{b^2-ac}}{a}.
+\end{equation}
+with $a=\|\Delta\mathbf{v}\|^2$, $b=\Delta\mathbf{v}\cdot\Delta\mathbf{r}$, and $c=\|\Delta\mathbf{r}\|^2-(r_i+r_j)^2$ the coefficients of the pair-collision quadratic for constant-velocity extrapolation~\cite{Karamouzas14}; $\tau_{ij}$ is set to $+\infty$ when the discriminant is negative (no predicted collision).
+
+\textbf{ORCA.}
+ORCA~\cite{VandenBerg11} constructs half-plane velocity constraints from each neighbour and solves a 2D linear program for the velocity closest to the preferred velocity $\mathbf{v}_i^{\text{pref}}=v_i^0\hat{\mathbf{e}}_i$. The LP-selected velocity is converted to a force $\mathbf{F}_i^{\text{ORCA}} = m_i(\mathbf{v}_i^{\text{ORCA}}-\mathbf{v}_i)/\tau_{\text{ORCA}}$ with $\tau_{\text{ORCA}}=0.5$\,s, following Guy et al.~\cite{Guy10}. This conversion is an engineering choice that allows ORCA to coexist with continuous-force paradigms inside Eq.~\eqref{eq:hybrid}, but it does not inherit ORCA's formal collision-free guarantee: that property is a feature of the LP-selected velocity itself and is not preserved by any force obtained through relaxation over a finite timescale.
+
+\textbf{Density-dependent weighting.}
+The ORCA contribution is modulated by a sigmoid of local density:
+\begin{equation}\label{eq:sigmoid}
+    w_o(\rho) = 1 - \sigma(\rho;\,4.0,\,2.0),\ \sigma(x;x_0,k) = \tfrac{1}{1+e^{-k(x-x_0)}}.
+\end{equation}
+The fade centre $\rho_0\!=\!4.0$\,ped/m$^2$ is the Fruin LoS-E boundary~\cite{Fruin71}, above which pedestrians lose the freedom to choose their walking direction. We emphasise that this value is \emph{not} fit to the empirical force-magnitude crossover $|\mathbf{F}_{\mathrm{SFM}}|\!=\!|\mathbf{F}_{\mathrm{ORCA}}|$, which occurs near $\rho\!\approx\!0.07$\,ped/m$^2$ (\S\ref{sec:force-diag}) and measures a different quantity (raw force-magnitude equality versus paradigm applicability). The slope $k\!=\!2.0$ yields a smooth transition of approximately $\pm 2$\,ped/m$^2$ around $\rho_0$. Only the ORCA term is density-modulated because SFM and TTC contribute body-compression/friction and anticipatory decay, respectively, that ORCA does not model.
+
+\begin{algorithm}[h]
+\caption{One simulation timestep (density-modulated additive steering).}\label{alg:step}
+\begin{algorithmic}[1]
+\State Build KDTree from active positions
+\State $\mathcal{N}_i \gets$ neighbours within $R=3.0$\,m
+\State $\rho_i \gets$ Voronoi cell density (\S\ref{sec:density})
+\State $w_o(\rho_i) \gets 1 - \sigma(\rho_i;\,4.0,\,2.0)$
+\State $\mathbf{a}^{\mathrm{des}}_i \gets (v^{\mathrm{eff}}_i(\rho_i)\hat{\mathbf{e}}_i - \mathbf{v}_i)/\tau_i$
+\State $\mathbf{a}^{\mathrm{SFM}}_i \gets (1/m_i)\sum_{j\in\mathcal{N}_i}\mathbf{f}_{ij}$ \Comment{Eq.~\ref{eq:sfm}}
+\State $\mathbf{a}^{\mathrm{TTC}}_i \gets (1/m_i)\sum_{j\in\mathcal{N}_i}\mathbf{F}_{\mathrm{TTC}}$ \Comment{Eq.~\ref{eq:ttc}}
+\State $\mathbf{v}^{\mathrm{ORCA}}_i \gets$ solve 2D LP from half-plane constraints
+\State $\mathbf{a}^{\mathrm{ORCA}}_i \gets (\mathbf{v}^{\mathrm{ORCA}}_i - \mathbf{v}_i)/\tau_{\mathrm{ORCA}}$
+\State $\mathbf{a}_i \gets \mathbf{a}^{\mathrm{des}}_i + \mathbf{a}^{\mathrm{SFM}}_i + \mathbf{a}^{\mathrm{TTC}}_i + w_o\,\mathbf{a}^{\mathrm{ORCA}}_i + \mathbf{a}^{\mathrm{wall}}_i$
+\State $\mathbf{v}_i \gets \mathbf{v}_i + \mathbf{a}_i\Delta t$; $\mathbf{x}_i \gets \mathbf{x}_i + \mathbf{v}_i\Delta t$
+\State Clamp $\|\mathbf{v}_i\|\le 2 v_i^0$; deactivate agents at goal
+\end{algorithmic}
+\end{algorithm}
+
+\begin{table}[h]
+\caption{Model parameters. $^{\dagger}$$\gamma$ and $\rho_{\max}$ refit via single-start Nelder--Mead ($x_{\text{atol}}{=}10^{-3}$, $f_{\text{atol}}{=}10^{-4}$); terminated at the seed-noise floor (53 evaluations, 3 seeds each). $A$, $B$ fixed at textbook values~\cite{Helbing00}; a full 4-parameter multi-restart refit is deferred to future work (\S\ref{sec:conclusion}).}\label{tab:params}
+\centering\scriptsize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}llrr@{}}
+\toprule
+\textbf{Parameter} & \textbf{Sym.} & \textbf{Default} & \textbf{Cal.$^{\dagger}$} \\
+\midrule
+Weidmann shape & $\gamma$ & 1.913 & 0.833 \\
+Jam density & $\rho_{\max}$ & 5.4 & 5.98 \\
+Social repulsion & $A$ (N) & 2000 & -- (fixed) \\
+Repulsion range & $B$ (m) & 0.08 & -- (fixed) \\
+Body compression & $k$ (kg/s$^2$) & $1.2{\times}10^5$ & -- \\
+Friction & $\kappa$ (kg/ms) & $2.4{\times}10^5$ & -- \\
+TTC gain / decay & $k_{\text{ttc}}$, $\tau_0$ & 1.5, 3.0\,s & -- \\
+ORCA horizon & $\tau_h$ (s) & 5.0 & -- \\
+Desired speed & $v_0$ (m/s) & 1.34 & -- \\
+Agent radius & $r$ (m) & 0.25 & -- \\
+Timestep & $\Delta t$ (s) & 0.01 & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Local Density via Voronoi Tessellation}
+\label{sec:density}
+
+The blending weight is driven by a per-agent local density estimate $\rho_V(i) = 1/A_i^{\text{Vor}}$, where $A_i^{\text{Vor}}$ is the Voronoi cell area clipped to the scenario domain. Boundary cells are stabilised with the mirror-point construction of Mullick et al.~\cite{Mullick24}, which reflects nearby agents across each wall to eliminate unbounded cells at the domain edge. Voronoi density is preferred over fixed-disk grid counting because grid averaging smooths over the local hotspots at narrow throats that drive paradigm switching~\cite{Steffen10}; an estimator that under-counts at the very location where the gating logic is supposed to act would compromise the semantics of the blend.
+
+\subsection{Phenomenological Calibration}
+\label{sec:calibration}
+
+The Weidmann coefficients $(\gamma,\rho_{\max})$ that drive the density-dependent speed reduction in Eq.~\eqref{eq:desired} are primarily responsible for any mismatch between simulated and empirical FDs. We fit $\boldsymbol{\phi}=(\gamma,\rho_{\max})$ with SFM social-repulsion $A$ and $B$ held fixed at textbook Helbing et al.~\cite{Helbing00} values, both to keep the optimisation well-posed (the two parameters are highly identifiable from FD data) and to avoid compounding calibration uncertainty with contact-force uncertainty. Given binned FZJ measurements $\{(\rho_k,v_k^{\text{emp}})\}$ (10 bins, $\rho\in[0.5,5.0]$\,ped/m$^2$, 3 seeds per bin), we minimise
+\begin{equation}\label{eq:calibration}
+\boldsymbol{\phi}^* = \arg\min_{\boldsymbol{\phi}} \sqrt{\tfrac{1}{K}\sum_{k=1}^{K}\!\bigl(v_k^{\text{sim}}(\boldsymbol{\phi})-v_k^{\text{emp}}\bigr)^2}
+\end{equation}
+via Nelder--Mead from the textbook initial point with tolerances $x_{\text{atol}}{=}10^{-3}$, $f_{\text{atol}}{=}10^{-4}$. Optimisation terminates at the seed-noise floor (evaluations 44--53 oscillate within $\pm 0.003$\,m/s) rather than at formal tolerance convergence; the protocol and per-evaluation trace are persisted as \texttt{calibration\_alight\_result.json}.
+
+\textbf{Metrics.}
+A \emph{contact-overlap} is counted each timestep in which two agents satisfy $d_{ij}<r_i{+}r_j$; the metric is timestep-dependent by construction (halving $\Delta t$ approximately doubles the per-run sum) and we use it for relative comparison at fixed $\Delta t{=}0.01$\,s. As a $\Delta t$-independent supplement we report \emph{contact-events} (maximal runs of consecutive overlap timesteps per pair; \S\ref{sec:bottleneck-evac}). Robustness to $\Delta t\in\{0.005,0.01,0.02\}$\,s is verified: the C1\,$>$\,C4 rank ordering holds at all three values, while absolute counts scale inversely with $\Delta t$ as expected. For scenarios that do not fully evacuate within the time window we report \emph{throughput} rather than evacuation time; deadlock success is a binomial proportion with 95\% Wilson CI. Table~\ref{tab:scenarios} summarises the four scenarios.
+
+\begin{table}[h]
+\caption{Scenario summary.}\label{tab:scenarios}
+\centering\scriptsize
+\begin{tabular}{@{}llrl@{}}
+\toprule
+\textbf{Scenario} & \textbf{Geometry} & $N$ & \textbf{Purpose} \\
+\midrule
+Corridor & 18$\times$5\,m, periodic & 9--162 & FD calibration \\
+Bottleneck & 10$\times$10\,m, var.\ exit & 50--100 & Evac., deadlock \\
+Bidirectional & 20$\times$3.6\,m & 200 & Counter-flow \\
+Crossing & 90\textdegree{}, corridors & 200 & Intersection \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+%% ============================================================
+%% SECTION 4: EXPERIMENTS AND RESULTS
+%% ============================================================
+\section{\uppercase{Experiments and Results}}
+\label{sec:experiments}
+
+\subsection{Experimental Setup}
+\label{sec:setup}
+
+We evaluate C1 (SFM only), C2 (SFM+TTC), C3 (SFM+ORCA), and C4 (full hybrid). Agents are heterogeneous with speed drawn from $\mathcal{N}(1.34,0.26)$\,m/s and radius from $\mathcal{N}(0.25,0.03)$\,m. ORCA's per-agent linear program makes C3/C4 approximately 40$\times$ slower than C1/C2 at 200 agents, imposing a practical budget of $n=25$ replications per cell for ablation experiments and for C3/C4 of the FD; C1/C2 of the FD use $n=30$ from an earlier run. Statistical tests are negative-binomial GLM (NB GLM) for contact-overlap counts (with the dispersion parameter estimated by method of moments and a duration offset for per-run rates), Cox proportional hazards for deadlock survival with Fisher's exact for the C2 complete-separation case, and linear mixed models (LMM) with random intercept by seed for continuous metrics. Holm--\v{S}id\'ak correction is applied across pairwise configuration comparisons within each scenario\,$\times$\,metric combination to control the family-wise error rate at $\alpha=0.05$; paired tests are used wherever seeds match across configurations.
+
+\subsection{FD Calibration}
+\label{sec:fd-validation}
+
+We measure the speed--density relationship in a periodic corridor (18\,m$\times$5\,m) matching the FZJ unidirectional-corridor geometry~\cite{FZJ13a}, controlling density by agent count after 300 warmup steps and recording mean speed over 500 measurement steps.
+
+\textbf{The FD is insensitive to steering.}
+Figure~\ref{fig:fd} shows the four configurations in separate panels overlaid on 4\,776 FZJ points; the simulated trends are nearly indistinguishable across C1--C4. The heterogeneous sample sizes noted in \S\ref{sec:setup} ($n=30$ for C1/C2, $n=25$ for C3/C4) do not affect this conclusion: the four mean curves lie within one another's $\pm$\,std bands at every density bin, so any residual between-configuration structure below that resolution is both smaller than the cell-to-cell variability and uncorrelated with the $n$ difference. The FD is therefore determined by the Weidmann speed-reduction term, not by steering choice, so the calibration below aligns the desired-force speed--density curve to empirical data and does \emph{not} validate the steering paradigm comparison. With textbook parameters the simulated curve sits above empirical data at mid-density, giving an in-sample RMSE of 0.235\,m/s. The 2-parameter $(\gamma,\rho_{\max})$ single-start Nelder--Mead fit of \S\ref{sec:calibration} (with $A$, $B$ fixed) reduces the in-sample FD RMSE to 0.099\,m/s, with $\gamma^*=0.833$ and $\rho_{\max}^*=5.98$.
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=\columnwidth]{../figures/fundamental_diagram.pdf}
+\caption{Speed--density fundamental diagram, separated by steering configuration (\textbf{C1}: SFM only; \textbf{C2}: SFM+TTC; \textbf{C3}: SFM+ORCA; \textbf{C4}: full hybrid). Coloured curves: simulation mean (line) with $\pm$\,std band (shaded), bin centres marked. Grey: 4\,776 FZJ empirical points with their binned mean (dotted). Dashed: calibrated Weidmann reference. All four configurations yield nearly indistinguishable trends; the FD is determined by the Weidmann term, not by steering choice. Calibration reduces in-sample RMSE from 0.235 to 0.099\,m/s.}\label{fig:fd}
+\end{figure}
+
+\subsection{Held-Out OOD Validation}
+\label{sec:ood}
+
+To assess out-of-distribution generalisation, we compare the calibrated model's bottleneck flow rates against FZJ empirical bottleneck measurements at five exit widths (Table~\ref{tab:ood}). The model was calibrated exclusively on unidirectional-corridor data; the bottleneck geometry was unseen during fitting. Simulated flow rates systematically underestimate empirical values by 26.5\% to 42.9\%. The gap motivates the diagnostic approach of this paper: rather than claiming the calibrated model generalises across geometries, we characterise where each steering paradigm fails and use the ablation to locate the throughput deficit. Reporting the gap explicitly -- rather than re-tuning until it disappears -- also establishes an honest calibration bound against which future work can be benchmarked.
+
+\begin{table}[h]
+\caption{Held-out OOD validation: simulated vs.\ FZJ empirical bottleneck flow rates. All relative errors are negative (systematic underestimation).}\label{tab:ood}
+\centering\scriptsize
+\input{../results_analysis/ood_table.tex}
+\end{table}
+
+A four-configuration per-paradigm decomposition at $w\in\{2.4,3.6\}$\,m ($n=25$, $n_{\text{agents}}=50$) shows that all configurations underestimate empirical flow by essentially the same margin (Table~\ref{tab:ood-per-paradigm}): at $w=2.4$\,m the bias ranges from $-39.1\%$ (C4) to $-40.3\%$ (C1), a 1.2-percentage-point spread; at $w=3.6$\,m from $-42.8\%$ (C3) to $-44.7\%$ (C2). ORCA-enabled configurations close the bias marginally, and the ordering $C_3{\approx}C_4\!<\!C_1{\approx}C_2$ is consistent with the ablation findings in \S\ref{sec:ablation}. The 1--2\,pp effect is, however, far too small to constitute a mechanistic explanation of the 40\% gap, which we instead attribute to a systematic FD-versus-bottleneck protocol mismatch that no choice within the steering triad can close.
+
+\paragraph{Relative-comparison firewall.} Because the $\sim$40\% bias is approximately uniform across configurations (1.2\,pp at $w=2.4$\,m; 1.9\,pp at $w=3.6$\,m; Table~\ref{tab:ood-per-paradigm}), relative comparisons between configurations are invariant to the absolute offset. All quantitative ablation results in \S\S\ref{sec:ablation}--\ref{sec:bottleneck-evac} are framed as configuration-vs-configuration differences; the OOD bias therefore constrains deployment, not diagnosis.
+
+\paragraph{Likely sources of the OOD gap.} The Weidmann FD is a steady-state speed--density relation in a periodic corridor, whereas bottleneck flow is a transient discharge through a pressure gradient at the throat. Three mechanisms plausibly contribute: (i) FZJ reports flow over a finite counting line downstream of the throat while we report through-throat flux (10--20\% placement differences are routine in published pedestrian data); (ii) the FZJ experiments feature a finite-length holding area upstream that sustains higher approach densities than our 10$\times$10\,m domain; (iii) the Weidmann reduction $v^{\mathrm{eff}}_i$ is isotropic, but pedestrians approaching a bottleneck preferentially maintain forward over lateral speed, so an isotropic reduction over-suppresses throat-directed velocity. A geometry-specific refit with bottleneck flow in the loss and an anisotropic speed-reduction term aligned with $\hat{e}_i$ are the two most promising closures; we flag them for future work (§6).
+
+\begin{table}[h]
+\caption{Per-paradigm OOD decomposition at $w=2.4$ and $3.6$\,m ($n=25$, $n_{\mathrm{agents}}=50$). $J_{\mathrm{sim}}$ mean\,$\pm$\,sd (ped/s) and relative error vs.\ $J_{\mathrm{emp}}$ (Table~\ref{tab:ood}).}\label{tab:ood-per-paradigm}
+\centering\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+$w$ (m) & C1 & C2 & C3 & C4 \\
+\midrule
+2.4 & 3.06 ($-40.3$) & 3.07 ($-40.1$) & 3.11 ($-39.3$) & \textbf{3.12 ($-39.1$)} \\
+3.6 & 3.85 ($-44.5$) & 3.84 ($-44.7$) & \textbf{3.97 ($-42.8$)} & 3.92 ($-43.5$) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Density-Adaptive Gate}
+\label{sec:force-diag}
+
+The density-adaptive gate $w_o(\rho){=}1{-}\sigma(\rho;\rho_0,k)$ transitions across $\rho\!\in\![2.9,5.1]$\,ped/m$^2$, centred at $\rho_0{=}4.0$. Figure~\ref{fig:force} plots the per-component force magnitudes versus local Voronoi density from 55\,727 agent-timestep samples (C4, $w=1.0$\,m, $n=5$ seeds). Two features deserve emphasis. First, the SFM and ORCA magnitudes cross near $\rho\!\approx\!0.07$\,ped/m$^2$ (dotted), essentially the first-contact density at which SFM's social-repulsion term ceases to be small. Second, all observed densities sit below $\rho\!\approx\!1.56$\,ped/m$^2$ (99.9th percentile), orders of magnitude below the $\rho_0{=}4.0$ transition band (dashed); the gate's transition region is never exercised in our experiments and the sigmoid therefore functions as a fixed blend ($w_o\!\approx\!1$ throughout) rather than as an adaptive transition. The empirical force-magnitude crossover and the Fruin LoS-E gate centre measure different quantities (raw force-magnitude equality versus paradigm applicability), and we retain the literature-motivated value for $\rho_0$. Scenarios that sustain densities in the transition band, together with a sensitivity sweep over $(\rho_0,k)$, are future work.
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=\columnwidth]{../figures/force_magnitude.pdf}
+\caption{Force-component magnitudes vs.\ local Voronoi density (C4, $w=1.0$\,m, $n=5$ seeds, 55\,727 samples; per-seed median per log-spaced bin, across-seed mean $\pm$ 1\,std). The SFM and ORCA curves cross near $\rho\!\approx\!0.07$\,ped/m$^2$ (dotted). The gate centre $\rho_0 = 4.0$~ped/m$^2$ (dashed) is orders of magnitude above the observed density range, so the sigmoid functions as a fixed blend rather than an adaptive transition; scenarios that traverse the transition band are future work (\S\ref{sec:discussion}).}\label{fig:force}
+\end{figure}
+
+\subsection{Paradigm Ablation Across Scenarios}
+\label{sec:ablation}
+
+We compare C1--C4 across three scenarios at $n=25$ per cell. Bottleneck uses 50 agents through variable exit widths; bidirectional uses $100{+}100$ counter-flowing agents in a corridor; crossing uses $100{+}100$ agents at a 90\textdegree{} intersection. Bottleneck contact-overlaps are classified by spatial zone relative to the exit at $x=10$\,m: upstream ($x\!<\!8$, queue formation), throat ($8\!\le\!x\!\le\!10.5$, the aperture itself), and downstream ($x\!>\!10.5$, post-exit). This classification separates mechanisms that aggregate metrics would otherwise conflate.
+
+\textbf{TTC eliminates persistent throat overlaps at narrow bottlenecks.}
+Persistent contact-overlaps during the exit-throat squeeze are rare events: at $w=1.0$\,m, C1 produces $1.20\!\pm\!1.96$ overlap-timesteps per run whereas TTC-containing configurations (C2, C4) produce zero (paired Wilcoxon $p=0.011$; Table~\ref{tab:zonal}, Figure~\ref{fig:zonal}). C3 (ORCA without TTC) yields $0.80\!\pm\!2.87$: ORCA's reciprocal yielding produces transient aperture-squeeze overlaps that TTC's anticipatory braking avoids. The pattern persists at $w\!\in\!\{1.2,1.8\}$\,m (C1 $0.80$, $0.32$; C3 $0.76$, $0.56$; C2 and C4 identically zero) and vanishes at $w\!\geq\!2.4$\,m, so the mechanism is specific to narrow exits. All overlaps localise to the throat band ($8\!\leq\!x\!\leq\!10.5$\,m); upstream agents have room to manoeuvre and do not persistently overlap.
+
+\textbf{Methodological note on contact-overlap measurement.}
+An earlier version of this pipeline counted all $d_{ij}<r_i+r_j$ events per timestep from $t=0$, including those produced by the random initial placement of agents inside the spawn region before any queue dynamics developed. A diagnostic showed that $\sim$100\% of the raw overlap-step count in the default pipeline occurred within the first $\sim$40\,ms of simulated time, reflecting spawn-placement artefacts rather than steering behaviour. The numbers reported above use rejection-sampled initial placement (no pairwise overlap at $t=0$), which is now the default in our release artefact. Evacuation times and deadlock-completion rates are unaffected by the change ($|{\Delta t_{\mathrm{evac}}}|\!\leq\!0.5$\,s across all C1/C4 cells); what changes is that the contact-overlap signal now measures runtime queue dynamics only.
+
+\begin{table}[h]
+\caption{Mean contact-overlaps by spatial zone ($n=25$, mean\,$\pm$\,std).}\label{tab:zonal}
+\centering\scriptsize
+\input{../results_analysis/zonal_collisions_table.tex}
+\end{table}
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=0.92\columnwidth]{../figures/zonal_collisions_w1m.pdf}
+\caption{Contact-overlaps by zone at $w=1.0$\,m ($n=25$, mean $\pm$ std) after spawn-artefact removal (\S\ref{sec:ablation}). Persistent overlaps are rare and localise in the throat band (exit aperture); upstream and downstream zones are empty in all configurations. C2 and C4 (TTC-containing) are identically zero across every zone.}\label{fig:zonal}
+\end{figure}
+
+\textbf{Crossing scenario.}
+At the 90\textdegree{} intersection, SFM-only (C1) agents reach force-balance standoffs at the crossing centre, with only 5.9 of 200 agents exiting within the 60\,s window. C2 roughly triples throughput (16.1/200; LMM coef.\ $+10.16$, ratio-of-means IRR $=2.72$, $p_{\mathrm{HS}}\!<\!10^{-40}$) and C4 matches or slightly exceeds C2 (17.1/200; IRR $=2.89$, $p_{\mathrm{HS}}\!<\!10^{-48}$). ORCA alone (C3) yields no gain (6.4/200; $p_{\mathrm{HS}}{=}0.95$): the predictive component of TTC, not ORCA's LP-selected avoidance velocity, is what dissolves the force-balance standoff. The 90\textdegree{} intersection is pathological for force-balance models; we read this as relative mitigation within a scenario where C1 performs poorly, not a claim of strong absolute intersection performance.
+
+\textbf{Bidirectional scenario.}
+In counter-flowing groups ($n=25$), the full hybrid increases mean speed relative to C1 (LMM coef.\ $+0.074$\,m/s, 95\% CI $[0.048,0.100]$, $p_{\mathrm{HS}}\!<\!10^{-6}$). Throughput is not significantly different from C1 (LMM coef.\ $+4.76$ exits in 60\,s; $p_{\mathrm{HS}}{=}0.60$); we frame this as comparable throughput at a faster steady-state flow. ORCA alone (C3) shows slightly reduced throughput (coef.\ $-5.0$; $p_{\mathrm{HS}}{=}0.60$), while C4 recovers it. The interpretation is that TTC's contact-overlap reduction prevents the counterflow gridlock that pure ORCA yielding would otherwise precipitate -- a second instance of paradigm complementarity, mirroring the bottleneck/crossing distinction.
+
+\textbf{Oracle baseline.}
+To quantify the blend's benefit over naive paradigm selection, we compare against a \emph{per-scenario best-paradigm baseline}: for each scenario, the single paradigm (C1, C2, or C3) that performs best on the primary metric across $n=25$ seeds. We call this an \emph{oracle} because it assumes scenario identity is known at selection time -- information that is unavailable to any runtime controller and that the density-gated blend does not use. Across eight scenario--metric pairs, C4 improves over the oracle in 5, matches within 1\% in 2, and underperforms in 1 by 1.4\% (paired Wilcoxon across seeds). The largest oracle gap is $+7.7\%$ on $w=0.8$\,m deadlock completion (C4 56\% vs.\ oracle C3 52\%); the single underperformance is $+1.4\%$ evacuation time at $w=3.6$\,m, where throughput is already saturated. We do not claim that the blend strictly dominates the best single paradigm, only that it avoids worst-case selection without requiring runtime scenario classification.
+
+\subsection{Bottleneck Deadlock and Mechanism}
+\label{sec:bottleneck-evac}
+
+Table~\ref{tab:bottleneck} reports mean evacuation times ($n=25$) across five exit widths, with C1 vs.\ C4 differences tested by Holm--\v{S}id\'ak-corrected LMM.
+
+\textbf{Normal exits (1.0--3.6\,m).} The hybrid produces a statistically significant evacuation-time reduction at narrow exits: 9.3\% at $w=1.0$\,m and 7.4\% at $w=1.2$\,m, a marginal 2.9\% at $w=1.8$\,m, and convergence at $w\!\ge\!2.4$\,m (Figure~\ref{fig:evac_width}).
+
+\textbf{Narrow-exit deadlock ($w=0.8$\,m).}
+At a 0.8\,m exit with 100 agents ($n=25$, seeds 42--66), completion rates are:
+\begin{center}\scriptsize
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Config} & \textbf{Success} & \textbf{Rate} \\
+\midrule
+C1 (SFM)         & 0/25  & 0\% \\
+C2 (SFM+TTC)     & 0/25  & 0\% \\
+C3 (SFM+ORCA)    & 13/25 & 52\% \\
+C4 (full hybrid) & 14/25 & 56\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+Neither plain SFM nor SFM+TTC resolved the $w=0.8$\,m arch within the 600\,s window; both ORCA-enabled configurations resolved roughly half of trials. The qualitative gap between $\{C1, C2\}$ and $\{C3, C4\}$ is therefore categorical in the sense of Fisher's exact test (complete separation), which is itself diagnostic: a simulator choice fully determines whether the crowd evacuates.
+
+\textbf{$\sigma$-sweep mechanism study.}
+To separate geometric symmetry-breaking from ORCA's velocity-space optimisation, we ran a $\sigma$-sweep of the $C_1{+}\varepsilon$ control (plain SFM with per-step isotropic Gaussian velocity noise of standard deviation $\sigma$) over $\sigma\!\in\!\{0,0.02,0.03,0.04,0.05,0.06,0.07,0.10,0.20\}$\,m/s, $n=25$ seeds per $\sigma$. Completions out of 25 were $\{0,1,3,9,13,18,23,24,25\}$, yielding a well-defined monotone transition. A logistic fit gives $\sigma_{50}=0.049$\,m/s (95\% CI $[0.044,0.053]$), where $\sigma_{50}$ denotes the noise standard deviation at which the fitted evacuation probability reaches 50\%; the completion probability at $\sigma=0.05$ is $0.52$ (95\% CI $[0.32,0.72]$). The noise-vs-ORCA attribution ratio at $\sigma=0.05$ is $1.00$ (95\% CI $[0.54,1.83]$): within $n=25$, passive Gaussian noise at $\sigma\!\approx\!\sigma_{50}$ is indistinguishable from ORCA's LP-based velocity selection as a deadlock-breaking mechanism (Figure~\ref{fig:sigma-sweep}). We therefore report $\sigma_{50}$ with CI rather than a point attribution between symmetry-breaking and velocity-space optimisation; the residual velocity-space-optimisation contribution of ORCA, if any, is below our sampling resolution at $n=25$, and larger-$n$ separation is future work. The result is consistent with a physical picture in which a symmetric arch at a narrow exit is a force-balance configuration that SFM alone cannot spontaneously break, and in which any perturbation sufficient to break the symmetry -- whether microscopic velocity noise or ORCA's coordinated LP target -- is sufficient to set evacuation in motion.
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=\columnwidth]{../figures/sigma_sweep_logistic.pdf}
+\caption{$C_1{+}\varepsilon$ deadlock-resolution probability vs.\ Gaussian velocity noise $\sigma$ ($w=0.8$\,m, 100 agents, $n=25$); $C_1{+}\varepsilon$ is plain SFM (\textbf{C1}) with per-step isotropic Gaussian velocity noise added to each agent. Blue: logistic fit. Vertical dotted line: $\sigma_{50}=0.049$\,m/s, 95\% CI $[0.044,0.053]$ (shaded). Horizontal dashed line: completion rate of the SFM+ORCA configuration \textbf{C3} (13/25) as a reference.}\label{fig:sigma-sweep}
+\end{figure}
+
+The Cox proportional hazards model (Holm--\v{S}id\'ak-corrected across the family \{C1 vs.\ C2, C1 vs.\ C3, C1 vs.\ C4\}) is consistent with the contingency-table result: C3 vs.\ C1 HR $=17.2$, $p_{\mathrm{HS}}{=}0.048$; C4 vs.\ C1 HR $=19.6$, $p_{\mathrm{HS}}{=}0.044$; C2 shows complete separation and is reported via Fisher's exact.
+
+\textbf{Arch lifetime.}
+We quantify deadlock stability via the \emph{terminal stall}: the duration of the final plateau in active-agent count, from the last successful evacuation to the end of the 600\,s simulation window. Across the 25 non-evacuating C1 seeds at $w=0.8$\,m, the median terminal stall is 457\,s with a mean of 3.2 agents frozen at the throat; 24/25 (96\%) seeds sustain the stall for more than 100\,s. Inspection of the trajectories shows the remaining three to four agents entirely stationary during the stall, with zero exit crossings (Figure~\ref{fig:traj}); the arches are therefore not transient congestion but force-balance configurations that SFM's symmetric pair repulsion cannot resolve passively. The stalls we observe are horizon-limited lower bounds (600\,s simulation window), not finite steady-state lifetimes; no upper bound can be inferred without a longer horizon.
+
+\begin{table}[h]
+\caption{Bottleneck evacuation time and contact-overlaps (mean\,$\pm$\,std, $n=25$; rejection-sampled initial placement, \S\ref{sec:ablation}). Evacuation time: $^{**}$\,$p_{\mathrm{HS}}\!<\!0.01$; $^{*}$\,$p_{\mathrm{HS}}\!<\!0.05$ for C1 vs.\ C4 via LMM. Contact-overlap counts after removing spawn-placement artefacts are rare events; C2 and C4 (TTC-containing) are identically zero at every tested width.}\label{tab:bottleneck}
+\centering\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}cllll@{}}
+\toprule
+\multicolumn{5}{l}{\textit{Evacuation time (s)}} \\
+$w$\,(m) & \textbf{C1} & \textbf{C2} & \textbf{C3} & \textbf{C4} \\
+\midrule
+1.0 & 56.5$\pm$5.5 & 54.7$\pm$5.2 & 50.3$\pm$3.7 & \textbf{50.8$\pm$4.4}$^{**}$ \\
+1.2 & 38.6$\pm$2.7 & 38.7$\pm$2.9 & 36.2$\pm$3.1 & \textbf{36.1$\pm$2.5}$^{**}$ \\
+1.8 & 21.4$\pm$1.2 & 21.3$\pm$1.2 & 20.6$\pm$1.1 & \textbf{20.7$\pm$1.0}$^{*}$ \\
+2.4 & 16.4$\pm$0.9 & 16.3$\pm$0.8 & 16.1$\pm$0.8 & \textbf{16.1$\pm$0.9} \\
+3.6 & 13.0$\pm$0.7 & 13.1$\pm$0.8 & 12.6$\pm$0.7 & \textbf{12.8$\pm$0.7} \\
+\midrule
+\multicolumn{5}{l}{\textit{Contact-overlap count (persistent queue overlaps)}} \\
+1.0 & 1.2$\pm$2.0 & \textbf{0.0$\pm$0.0} & 0.8$\pm$2.9 & \textbf{0.0$\pm$0.0} \\
+1.2 & 0.8$\pm$1.8 & \textbf{0.0$\pm$0.0} & 0.8$\pm$1.9 & \textbf{0.0$\pm$0.0} \\
+1.8 & 0.3$\pm$1.0 & \textbf{0.0$\pm$0.0} & 0.6$\pm$2.8 & \textbf{0.0$\pm$0.0} \\
+2.4 & 0.0$\pm$0.0 & 0.0$\pm$0.0 & 0.0$\pm$0.0 & 0.0$\pm$0.0 \\
+3.6 & 0.0$\pm$0.0 & 0.0$\pm$0.0 & 0.0$\pm$0.0 & 0.0$\pm$0.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=\columnwidth]{../figures/evac_vs_width.pdf}
+\caption{Evacuation time vs.\ exit width for C1 and C4. Error bars: 95\% CIs, $n=25$.}\label{fig:evac_width}
+\end{figure}
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=\columnwidth]{../figures/trajectories.pdf}
+\caption{Agent trajectories at $w=0.8$\,m (100 agents, seed 46). \textbf{Left:} C1 forms a stable arching deadlock at the exit throat. \textbf{Right:} C4 destabilises the arch and evacuates all 100 agents. Colour: normalised time.}\label{fig:traj}
+\end{figure}
+
+\subsection{External Simulator Comparison}
+\label{sec:external}
+
+We compared C1 and C4 against JuPedSim v1.3.2 at the $w=1.0$\,m bottleneck (50 agents, $n=25$, tool-default parameters) as a qualitative external sanity check. Parameters are not harmonised across the two simulators (desired speed, agent radius, and relaxation time all differ between tool defaults and our Table~\ref{tab:params}), so this comparison does not constitute an external quantitative validation; it asks only whether the qualitative ordering of steering paradigms reproduces in an independent implementation. JuPedSim's CollisionFreeSpeed (CFS) model evacuates in $33.6\!\pm\!1.2$\,s, 34\% faster than our C4; JuPedSim SocialForce (SF), the closest analogue to our C1, exits only $31.3\!\pm\!2.3$ of 50 agents in 60\,s (0/25 complete) compared to 50/50 for our C1. The parameter gap produces opposite-direction deviations, illustrating that identical parameter differences can either hurt or help evacuation depending on the steering paradigm in use. The qualitative ordering (velocity-based models evacuate faster than force-based models at moderate bottleneck widths) is consistent across both frameworks, supporting the interpretation that the ordering is a property of the steering paradigms themselves rather than an implementation artefact. JuPedSim's C++ core runs approximately 39$\times$ faster than our pure-Python implementation (Table~\ref{tab:external}); this is a well-understood performance gap and does not affect the diagnostic conclusions of the paper.
+
+\input{../results_analysis/external_comparison.tex}
+
+\subsection{Computational Performance}
+\label{sec:scaling-eval}
+
+All timings were measured on Apple M1, 8\,GB RAM, Python 3.13.12 (single core). Figure~\ref{fig:scaling} shows per-step wall-time scaling. C1 rises from 2.0\,ms at 50 agents to 744\,ms at 1000 agents, consistent with the sparse $O(N{\cdot}k)$ KDTree pair computation that dominates force-based steering. C4 is dominated by ORCA's per-agent 2D linear program: 58.7\,ms at 50 agents and 6\,347\,ms at 500 agents. ORCA introduces 29--36$\times$ overhead over SFM at the tested agent counts. The dominant hotspot is the ORCA LP solve (38\% of C4 wall-time at 200 agents; 82\% including the half-plane construction); C/C++ acceleration of the ORCA loop, or parallelisation across agents, would be required for real-time rates ($\le 33$\,ms/step at $\Delta t=0.01$\,s) beyond approximately 30 agents for C4. We did not profile beyond 500 agents for C4 owing to cost; linear extrapolation of the observed trend predicts $\sim\!13$\,s/step at 1\,000 agents, which is consistent with the real-time-ineligible conclusion at larger populations.
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=\columnwidth]{../figures/scaling.pdf}
+\caption{Per-step wall-time scaling (log--log) for \textbf{C1} (SFM only) and \textbf{C4} (full hybrid: SFM+TTC+density-gated ORCA). C1 measured to 1\,000 agents; C4 to 500. ORCA introduces 29--36$\times$ overhead over SFM. Hardware: Apple M1, Python 3.13.12. Dotted line: real-time threshold (33\,ms/step at $\Delta t=0.01$\,s).}\label{fig:scaling}
+\end{figure}
+
+
+%% ============================================================
+%% SECTION 5: DISCUSSION
+%% ============================================================
+\section{\uppercase{Discussion}}
+\label{sec:discussion}
+
+\textbf{Why each component matters, and why each can also harm.}
+The $\sigma$-sweep control isolates the mechanism by which ORCA breaks deadlock: passive Gaussian velocity noise at $\sigma_{50}=0.049$\,m/s (95\% CI $[0.044,0.053]$) recovers ORCA's resolution rate within sampling resolution, indicating that symmetry-breaking -- not velocity-space optimisation -- is the operative mechanism at $n=25$. The ablation further reveals that TTC and ORCA serve distinct, complementary roles, and each is harmful in the wrong regime. TTC-containing configurations drive exit-throat overlaps to zero at $w\!\in\!\{1.0,1.2,1.8\}$\,m and triple crossing throughput, yet TTC alone cannot break symmetric arches (C2: 0/25 at $w=0.8$\,m). ORCA-enabled configurations resolve the arch in 52--56\% of trials but depress counterflow throughput (C3 coef.\ $-5.0$ exits in 60\,s) because collision-free velocity selection produces mutual yielding and gridlock. C4 recovers counterflow throughput because TTC dampens the gridlock ORCA would otherwise precipitate. Both negative findings -- TTC harming deadlock, ORCA harming counterflow -- show that na\"ive always-on superposition of paradigms can be \emph{worse} than any single paradigm, motivating the density-gated architecture.
+
+\textbf{Theoretical contribution.}
+Beyond the specific numerical findings, the paper makes a methodological point that generalises beyond the SFM/TTC/ORCA triad. The $C_1{+}\varepsilon$ control shows that, within our sampling resolution, ORCA's headline advantage over SFM at narrow bottlenecks -- resolving arching deadlocks -- is explained by passive symmetry-breaking rather than by LP-based velocity-space optimisation. The methodological lesson is that claimed mechanistic benefits of a steering paradigm should be audited with a minimum-intervention control before they are attributed to the paradigm's distinctive machinery. Applied to hybrid-steering research more broadly, the same principle suggests that any claim of the form ``paradigm X resolves failure Y because of mechanism M'' should be accompanied by a noise-injection control that isolates M from trivial alternatives (thermal fluctuation, initial-condition heterogeneity, or spawn-placement artefacts of the kind corrected in \S\ref{sec:ablation}).
+
+\textbf{Implications for practitioners.}
+Three observations follow. First, plain SFM underestimates narrow-exit evacuation safety categorically (0/25 vs.\ 14/25 at $w=0.8$\,m); downstream safety analyses built on plain SFM should be audited for symmetry-breaking artefacts. Second, single-paradigm simulators mispredict flow on neighbouring scenario classes: TTC alone mispredicts deadlock, ORCA alone mispredicts counterflow. Third, the 26--43\% underestimation after FD-only calibration is a consistent bias no steering choice closes; applied users should expect a geometry-specific calibration step before trusting absolute predictions.
+
+\textbf{Phenomenological calibration.}
+The 2-parameter $(\gamma,\rho_{\max})$ Nelder--Mead fit reduces in-sample FD RMSE by 57.7\%; because Figure~\ref{fig:fd} shows the FD is identical across C1--C4, this is a phenomenological alignment rather than evidence for the blend. A 4-parameter refit with multi-restart global search is future work.
+
+\textbf{What this paper does not claim.}
+The additive blend is a mitigation probe, not a deployable controller; we make no production-readiness claim. Calibration and ablation results are validated at the FD and flow-rate level, not at the steering-trajectory level. The scaling analysis characterises computational cost on a single workstation rather than demonstrating real-time deployment. The held-out bottleneck bias of $-26\%$ to $-43\%$ indicates the framework does not generalise quantitatively across geometries even when qualitative orderings are preserved. The density-adaptive gate is not exercised in its intended transition regime in any scenario reported -- observed densities sit below the transition band, so the gate functions as a near-fixed blend rather than an adaptive switch. At $n=25$ the $C_1{+}\varepsilon$ experiment cannot separate passive Gaussian noise from ORCA's LP-based velocity selection.
+
+\textbf{Limitations.}
+Replication counts of $n=25$ reflect a fixed compute budget set by the ORCA LP cost (\S\ref{sec:scaling-eval}); the per-paradigm OOD decomposition (Table~\ref{tab:ood-per-paradigm}) covers 2 of 5 held-out widths for the same reason. Calibration is in-sample on FZJ corridor data. The force-magnitude crossover $\rho\!\approx\!0.07$\,ped/m$^2$ is offset from the literature-motivated $\rho_0{=}4.0$ by orders of magnitude because the two quantities measure different things; we retained the Fruin value without a sensitivity sweep over $(\rho_0,k)$, deferred along with experiments that traverse the transition band. The external simulator comparison uses tool-default parameters rather than a harmonised comparison. Sigmoid transitions are not hysteretic; no oscillation artefacts were observed but hysteresis is recommended for deployments at densities sustained near $\rho_0$.
+
+
+%% ============================================================
+%% SECTION 6: CONCLUSIONS
+%% ============================================================
+\section{\uppercase{Conclusions}}
+\label{sec:conclusion}
+
+\textbf{Findings.} We presented a diagnostic failure-mode ablation of three pedestrian steering paradigms (SFM, TTC, ORCA). Four findings stand out. (i) TTC anticipation does not break symmetric arching deadlocks at narrow exits (0/25 evacuations for C1 and C2 at $w=0.8$\,m), while ORCA-enabled configurations resolve 52--56\%. (ii) ORCA-style reciprocal yielding depresses counterflow throughput, recovered only when combined with TTC in the full blend; symmetrically, TTC-containing configurations eliminate persistent exit-throat overlaps at narrow bottlenecks while non-TTC configurations retain a non-zero baseline. (iii) The $C_1{+}\varepsilon$ noise-threshold control ($\sigma_{50}\!\approx\!0.049$\,m/s, 95\% CI $[0.044,0.053]$) shows that at $n=25$ passive Gaussian velocity noise is indistinguishable from ORCA's LP-based velocity selection as a deadlock-breaking mechanism. (iv) Held-out FZJ bottleneck flow rates are systematically underestimated by 26--43\%, indicating that FD-only calibration generalises within-corridor but not across-geometry; the FD itself is identical across C1--C4, so aligning it (57.7\% in-sample RMSE reduction) does not validate steering. Taken together, these findings support a methodological reorientation: in pedestrian simulation, failure-mode ablation with controlled interventions and honest OOD reporting are more informative than aggregate benchmarks, and blends that gate only the paradigm whose applicability is regime-dependent are a natural mitigation architecture. Code, data, and reproduction scripts will be released upon acceptance.
+
+\textbf{Future work.} Future work targets (i) a sensitivity analysis over the density-gate and steering hyperparameters ($\rho_0$, $k$, $A$, $B$); (ii) trajectory-level validation on additional geometries (ETH--UCY and further FZJ scenarios); (iii) higher-density scenarios that genuinely exercise the adaptive transition region; (iv) a larger-$n$ $\sigma$-sweep to separate passive-noise symmetry-breaking from ORCA's velocity-space optimisation; (v) C/C++ acceleration of the ORCA LP to unlock real-time scale; and (vi) a full 4-parameter multi-restart calibration of $(\gamma, \rho_{\mathrm{max}}, A, B)$ with bottleneck flow included in the loss, together with an anisotropic desired-speed term, to close the held-out OOD gap (§4.3).
+
+%% ============================================================
+%% REFERENCES
+%% ============================================================
+
+\bibliographystyle{apalike}
+{\small
+\bibliography{references}}
+
+\appendix
+
+\section{\uppercase{Reproducibility}}
+\label{sec:appendix}
+
+\footnotesize
+
+\textbf{A.1 Environment.} Apple M1, 8\,GB RAM, macOS 26.3, Python 3.13.12 (single CPU for serial sims; \texttt{multiprocessing.Pool(10)} for cross-bin calibration). Packages: numpy 2.4.4, scipy 1.17.1, shapely 2.1.2, statsmodels 0.14, lifelines 0.28. Commit hash: \texttt{[anonymized for review]}.
+
+\textbf{A.2 Geometry.} Corridor $18{\times}5$\,m (periodic-$x$, FD calibration); bottleneck $10{\times}10$\,m with exit width $w\!\in\!\{0.8,1.0,1.2,1.8,2.4,3.6\}$\,m; bidirectional corridor $20{\times}3.6$\,m; 90\textdegree{} crossing (two 20\,m perpendicular corridors 3.6\,m wide). Wall thickness 0.1\,m. Agents: $v_0{=}1.34$\,m/s, $r{=}0.25$\,m, $m{=}80$\,kg, $\tau{=}0.5$\,s.
+
+\textbf{A.3 Hyperparameters.} All parameters in Table~\ref{tab:params}. Key values: $\gamma^*{=}0.833$, $\rho_{\max}^*{=}5.98$, $\rho_0{=}4.0$\,ped/m$^2$ (gate centre), $\Delta t{=}0.01$\,s (Euler).
+
+\textbf{A.4 Voronoi density.} Shapely tessellation clipped to scenario boundary; Mullick mirror-points (4 reflections per boundary agent) eliminate unbounded cells. $\rho_i{=}1/\text{area}(\text{cell}_i)$.
+
+\textbf{A.5 Calibration.} Nelder--Mead, single-start, 2 free params ($\gamma,\rho_{\max}$), $A$/$B$ fixed. Bounds $\gamma\!\in\![0.3,3.0]$, $\rho_{\max}\!\in\![3.0,7.0]$; $x_{\text{atol}}{=}10^{-3}$, $f_{\text{atol}}{=}10^{-4}$; seeds-per-eval $=3$ (seeds 42--44); 10 FD density bins in $[0.5,5.0]$\,ped/m$^2$. Terminated at evaluation 53 (simplex oscillating $\pm 0.003$\,m/s at the seed-noise floor). Baseline RMSE $0.23509\!\to\!0.09945$\,m/s.
+
+\textbf{A.6 Statistics.} NB GLM (statsmodels, log link, MoM $\alpha$, duration offset); Cox PH (lifelines, Efron ties); LMM (statsmodels MixedLM, random intercept per seed); Holm--\v{S}id\'ak correction within per-scenario comparison families; all seeds retained. LMM diagnostics (QQ plots) in the artefact repository.
+
+\textbf{A.7 Data.} FZJ unidirectional corridor: 4\,776 $(\rho,v)$ points aggregated from 952 trajectories (\texttt{data/fzj/unidirectional/}). FZJ bottleneck (held-out OOD): per-width flow rates (\texttt{data/fzj/bottleneck/}).
+
+\textbf{A.8 Reproduction and artefacts.} Per-pipeline entry points (\texttt{scripts/}, \texttt{analysis/}, \texttt{new\_experiments/}) and a sha256 artefact manifest mapping outputs to paper sections are in the release repository.
+
+\normalsize
+
+\end{document}
